@@ -23,8 +23,10 @@ func GetMyAccountSummary(w http.ResponseWriter, r *http.Request) {
   //
   //  return userSummary
   //
-  IdPUserId := r.Context().Value("IdPUserId").(string)
+  IdPUserId := r.Context().Value("IdPUserId")
   w.Header().Set("Content-Type", "text")
   w.WriteHeader(http.StatusOK)
-  log.Printf("IdPUserId: " + IdPUserId)
+  if IdPUserId != nil {
+    log.Printf("IdPUserId: " + IdPUserId.(string))
+  }
 }
