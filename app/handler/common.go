@@ -1,21 +1,118 @@
 package handler
 
 import (
+  "crypto/rand"
+  "encoding/base64"
   "encoding/json"
+  "log"
   "net/http"
+  "os"
+
+  "golang.org/x/crypto/nacl/secretbox"
+  "golang.org/x/oauth2"
+  "golang.org/x/oauth2/google"
+  oidcgoogle "google.golang.org/api/oauth2/v2"
 )
+
+// Google OAuth config
+var googleOAuthConfig = &oauth2.Config{
+    ClientID: "259289499727-9651anf8l16948g36u0bphrs2u217ofl.apps.googleusercontent.com",
+    ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+    RedirectURL: "http://localhost:3000/auth/google/callback",
+    Scopes: []string{oidcgoogle.UserinfoProfileScope},
+    Endpoint: google.Endpoint,
+}
+
+/************************ COOKIES ************************/
+// Key for encrypting cookies
+var key [32]byte
+
+// Set encrypted cookie
+func setCookie(w http.ResponseWriter, name string, payload interface{}) {
+  encodedJSONPayload, err := json.Marshal(payload)
+  if err != nil {
+    log.Fatal("Failed to marshal payload", err)
+  }
+
+  // Create nonce, append to front, and encrypt
+  var nonce [24]byte
+  _, err = rand.Read(nonce[:])
+  if err != nil {
+    log.Fatal("Failed to generate nonce", err)
+  }
+  encryptedPayload := secretbox.Seal(nonce[:], encodedJSONPayload, &nonce, &key)
+  encodedB64Payload := base64.StdEncoding.EncodeToString(encryptedPayload)
+
+  // Set cookie
+  cookie := http.Cookie{
+    Name: name,
+    Value: encodedB64Payload,
+    Path: "/",
+  }
+  http.SetCookie(w, &cookie)
+}
+
+// Get cookie and decrypt
+func getCookie(r *http.Request, name string, payload interface{}) error {
+  payloadCookie, err := r.Cookie(name)
+  if err != nil {
+    return err
+  }
+
+  encodedB64Payload := payloadCookie.Value
+  encryptedPayload, err := base64.StdEncoding.DecodeString(encodedB64Payload)
+  if err != nil {
+    return err
+  }
+  if len(encryptedPayload) < 24 {
+    return &errInvalidPayload{"Payload is invalid length"}
+  }
+
+  // Get nonce and decrypt
+  var nonce [24]byte
+  copy(nonce[:], encryptedPayload[:24])
+  encodedJSONPayload, ok := secretbox.Open(nil, encryptedPayload[24:], &nonce, &key)
+  if !ok {
+    return &errInvalidPayload{"Payload failed to decrypt"}
+  }
+
+  err = json.Unmarshal(encodedJSONPayload, payload)
+  if err != nil {
+    log.Fatal("Failed to unmarshal decrypted payload", err)
+  }
+
+  return nil
+}
+
+// Delete Cookie
+func deleteCookie(w http.ResponseWriter, name string) {
+  cookie := http.Cookie{
+    Name: name,
+    Value: "",
+    Path: "/",
+    MaxAge: -1,
+  }
+  http.SetCookie(w, &cookie)
+}
+/************************ COOKIES ************************/
 
 // Properly return JSON response
 func respondJSON(w http.ResponseWriter, status int, payload interface{}) {
   response, err := json.Marshal(payload)
   if err != nil {
     w.WriteHeader(http.StatusInternalServerError)
-    w.Write([]byte("Error encountered marshalling JSON payload: " + err.Error()))
+    _, err = w.Write([]byte("Error marshalling JSON payload: " + err.Error()))
+    if err != nil {
+      log.Fatal("Failed writing response: ", err.Error())
+    }
     return
   }
   w.Header().Set("Content-Type", "application/json")
   w.WriteHeader(status)
-  w.Write([]byte(response))
+  _, err = w.Write([]byte(response))
+  if err != nil {
+    log.Fatal("Failed writing response: ", err.Error())
+  }
 }
 
 // Return error message as JSON

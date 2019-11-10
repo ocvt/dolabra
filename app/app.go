@@ -1,45 +1,39 @@
 package app
 
 import (
-  //  "fmt"
+  "context"
   "log"
   "net/http"
+  "os"
+  "os/signal"
+  "time"
 
   "github.com/go-chi/chi"
   "github.com/go-chi/chi/middleware"
-  //  _ "github.com/lib/pq"
+  "github.com/rs/cors"
 
   "gitlab.com/ocvt/api/app/handler"
-  "gitlab.com/ocvt/api/config"
 )
 
 var r *chi.Mux
 
-//var db *sql.DB
+// Initialize api
+func Initialize() {
+  log.SetFlags(log.Lshortfile)
 
-// Initialize with predefined configuration
-func Initialize(config *config.Config) {
-  //  dbURI := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True",
-  //    config.DB.Username,
-  //    config.DB.Password,
-  //    config.DB.Host,
-  //    config.DB.Port,
-  //    config.DB.Name,
-  //    config.DB.Charset)
-  //
-  //  db, err := gorm.Open(config.DB.Dialect, dbURI)
-  //  if err != nil {
-  //    log.Fatal("err")
-  //  }
-  //
-  //  db = model.DBMigrate(db)
+  // Setup handlers
+  handler.Initialize()
+
+  // Finally, configure routes
   r = chi.NewRouter()
   setRouters()
 }
 
 // Set routes
 func setRouters() {
+  // TODO configure CORS
   // Set middleware
+  r.Use(cors.Default().Handler)
   r.Use(middleware.RequestID)
   r.Use(middleware.RealIP)
   r.Use(middleware.Logger)
@@ -47,13 +41,52 @@ func setRouters() {
   // Process JWT is present
   r.Use(handler.ProcessClientAuth)
 
+  r.Route("/auth", func(r chi.Router) {
+    r.Get("/google", handler.GoogleLogin)
+    r.Get("/google/callback", handler.GoogleCallback)
+  })
+
   r.Route("/myaccount", func(r chi.Router) {
-    //r.Get("/", handler.GetMyAccount)
-    r.Get("/summary", handler.GetMyAccountSummary)
-    //r.Post("/register", handler.PostMyAccountRegister)
+    r.Delete("/delete", handler.DeleteMyAccountDelete)
+    r.Get("/", handler.GetMyAccount)
+    r.Get("/name", handler.GetMyAccountName)
+    r.Patch("/deactivate", handler.PatchMyAccountDeactivate)
+    r.Patch("/reactivate", handler.PatchMyAccountReactivate)
+    r.Post("/register", handler.PostMyAccountRegister)
   })
 }
 
 func Run(host string) {
-  log.Fatal(http.ListenAndServe(host, r))
+  server := &http.Server{Addr: host, Handler: r}
+
+  // Start server in separate goroutine
+  go func() {
+    log.Printf("Server starting on %s", host)
+    log.Fatal(server.ListenAndServe())
+  }()
+
+  // Wait for SIGINT
+  stop := make(chan os.Signal, 1)
+  signal.Notify(stop, os.Interrupt)
+  <-stop
+
+  // Stop any remaining tasks
+  ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+  defer cancel()
+
+  // Shutdown server
+  err := server.Shutdown(ctx)
+  if err != nil {
+    log.Printf("Server failed to shutdown: %s", err.Error())
+  } else  {
+    log.Printf("Server successfully shutdown")
+  }
+
+  // Close DB
+  err = handler.DBClose()
+  if err != nil {
+    log.Printf("DB failed to close: %s", err.Error())
+  } else {
+    log.Printf("DB successfully closed")
+  }
 }
