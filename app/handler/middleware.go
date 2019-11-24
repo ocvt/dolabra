@@ -61,7 +61,7 @@ func ProcessClientAuth(next http.Handler) http.Handler {
 
       // Store user id for later access
       ctx = context.WithValue(ctx, "idp", "GOOGLE")
-      ctx = context.WithValue(ctx, "userSub", response.Id)
+      ctx = context.WithValue(ctx, "subject", response.Id)
     }
 
     next.ServeHTTP(w, r.WithContext(ctx))

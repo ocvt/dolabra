@@ -8,7 +8,7 @@ import (
 
   _ "github.com/mattn/go-sqlite3"
 
-  "gitlab.com/ocvt/api/utils"
+  "gitlab.com/ocvt/dolabra/utils"
 )
 
 var db *sql.DB

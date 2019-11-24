@@ -11,14 +11,14 @@ type Config struct {
 
 func GetConfig() *Config {
   var ClientUrlEnv string
-  if os.Getenv("OCVT_CLIENT_URL") == "" {
-    ClientUrlEnv = "https://ocvt.club"
+  if os.Getenv("DOLABRA_CLIENT_URL") == "" {
+    ClientUrlEnv = "http://localhost:1313"
   } else {
-    ClientUrlEnv = os.Getenv("OCVT_CLIENT_URL")
+    ClientUrlEnv = os.Getenv("DOLABRA_CLIENT_URL")
   }
 
   return &Config{
-    DBName: "ocvt-sqlite",
+    DBName: "dolabra-sqlite",
     ClientUrl: ClientUrlEnv,
   }
 }

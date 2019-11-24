@@ -1,12 +1,12 @@
-# ocvt-api
+# dolabra
 
-The main OCVT Api
+dolabra is a Trip Management System, aimed to be help outdoor clubs / organizations organize and plan trips. Unlike a generic meetup service (meetup.com for example), dolabra has many features that would be unused for non-outdoor trips.
 
 
 ## Configuration
 
-Create `postgres.env` with the following variables defined:
-* `POSTGRES_PASSWORD`: Found in OCVT Keepass. By default postgres does not enforce password auth for any connections from localhost, so this is if we ever need to remotely connect.
+Create `dolabra.env` with the following variables defined:
+
 
 ## Running it
 

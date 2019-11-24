@@ -6,8 +6,8 @@ WORKDIR /go/src/app
 COPY . .
 
 RUN go mod download
-RUN go build -o ocvt-api .
+RUN go build -o dolabra .
 
 EXPOSE 3000
 
-CMD ["./ocvt-api"]
+CMD ["./dolabra"]

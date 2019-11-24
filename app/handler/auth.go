@@ -6,7 +6,7 @@ import (
 
   "golang.org/x/oauth2"
 
-  "gitlab.com/ocvt/api/utils"
+  "gitlab.com/ocvt/dolabra/utils"
 )
 
 func GoogleLogin(w http.ResponseWriter, r *http.Request) {

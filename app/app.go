@@ -12,12 +12,11 @@ import (
   "github.com/go-chi/chi/middleware"
   "github.com/rs/cors"
 
-  "gitlab.com/ocvt/api/app/handler"
+  "gitlab.com/ocvt/dolabra/app/handler"
 )
 
 var r *chi.Mux
 
-// Initialize api
 func Initialize() {
   log.SetFlags(log.Lshortfile)
 
@@ -47,12 +46,27 @@ func setRouters() {
   })
 
   r.Route("/myaccount", func(r chi.Router) {
-    r.Delete("/delete", handler.DeleteMyAccountDelete)
+    r.Delete("/", handler.DeleteMyAccountDelete)
     r.Get("/", handler.GetMyAccount)
     r.Get("/name", handler.GetMyAccountName)
     r.Patch("/deactivate", handler.PatchMyAccountDeactivate)
     r.Patch("/reactivate", handler.PatchMyAccountReactivate)
-    r.Post("/register", handler.PostMyAccountRegister)
+    r.Post("/", handler.PostMyAccount)
+//    r.Route("/cars", func(r chi.Router) {
+//      r.Get("/", handler.GetCars)
+//      r.Post("/", handler.PostCars)
+//      r.Delete("/{license}", handler.DeleteCars)
+//    })
+  })
+
+  r.Route("/trips", func(r chi.Router) {
+    r.Get("/", handler.GetTrips)
+    r.Get("/archive", handler.GetTripsArchive)
+    r.Get("/archive/*", handler.GetTripsArchive)
+    r.Get("/types", handler.GetTripsTypes)
+    r.Patch("/{tripId}/cancel", handler.PatchTripsCancel)
+    r.Post("/", handler.PostTrips)
+    r.Post("/{tripId}/jointrip", handler.PostTripsJointrip)
   })
 }
 

@@ -1,0 +1,15 @@
+{
+  "tripId": 1,
+  "memberId": 1,
+  "leader": true,
+  "attendingCode": "FORCE",
+  "bootReason": "",
+  "shortNotice": true,
+  "driver": true,
+  "carpool": false,
+  "capCapacityTotal": 100,
+  "notes": "signup notes",
+  "pet": true,
+  "attended": false
+}
+

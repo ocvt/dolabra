@@ -16,9 +16,9 @@ import (
 
 // Google OAuth config
 var googleOAuthConfig = &oauth2.Config{
-    ClientID: "259289499727-9651anf8l16948g36u0bphrs2u217ofl.apps.googleusercontent.com",
+    ClientID: os.Getenv("GOOGLE_CLIENT_ID"),
     ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-    RedirectURL: "http://localhost:3000/auth/google/callback",
+    RedirectURL: "http://localhost:3000/auth/google/callback", //TODO change to be relative
     Scopes: []string{oidcgoogle.UserinfoProfileScope},
     Endpoint: google.Endpoint,
 }
@@ -98,6 +98,11 @@ func deleteCookie(w http.ResponseWriter, name string) {
 
 // Properly return JSON response
 func respondJSON(w http.ResponseWriter, status int, payload interface{}) {
+  if payload == nil {
+    w.WriteHeader(status)
+    return
+  }
+
   response, err := json.Marshal(payload)
   if err != nil {
     w.WriteHeader(http.StatusInternalServerError)
