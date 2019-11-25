@@ -90,6 +90,28 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
     return
   }
 
+  stmt = `
+    UPDATE trip_signup
+    SET
+      trip_id = 0,
+      leader = false,
+      signup_datetime = 0,
+      paid_member = false,
+      attending_code = 'ATTEN',
+      boot_reason = '',
+      short_notice = false,
+      driver = false,
+      carpool = false,
+      car_capacity_total = 0,
+      notes = '',
+      pet = false,
+      attended = false
+    WHERE member_id = ?`
+  _, err = db.Exec(stmt, memberId)
+  if !checkError(w, err) {
+    return
+  }
+
   respondJSON(w, http.StatusNoContent, nil)
 }
 

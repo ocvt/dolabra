@@ -43,17 +43,6 @@ func createTables(db *sql.DB) {
   `)
 
   execHelper(db, `
-    CREATE TABLE IF NOT EXISTS car (
-      id INTEGER UNIQUE NOT NULL PRIMARY KEY AUTOINCREMENT,
-      member_id INTEGER REFERENCES member (id) NOT NULL UNIQUE,
-      license TEXT NOT NULL COLLATE NOCASE,
-      YEAR INTEGER NOT NULL,
-      MAKE TEXT NOT NULL COLLATE NOCASE,
-      MODEL TEXT NOT NULL COLLATE NOCASE
-    );
-  `)
-
-  execHelper(db, `
     CREATE TABLE IF NOT EXISTS member_log (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
       member_id INTEGER REFERENCES member (id) UNIQUE NOT NULL,

@@ -52,11 +52,6 @@ func setRouters() {
     r.Patch("/deactivate", handler.PatchMyAccountDeactivate)
     r.Patch("/reactivate", handler.PatchMyAccountReactivate)
     r.Post("/", handler.PostMyAccount)
-//    r.Route("/cars", func(r chi.Router) {
-//      r.Get("/", handler.GetCars)
-//      r.Post("/", handler.PostCars)
-//      r.Delete("/{license}", handler.DeleteCars)
-//    })
   })
 
   r.Route("/trips", func(r chi.Router) {

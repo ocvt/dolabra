@@ -51,7 +51,7 @@ type tripSignupStruct struct {
   ShortNotice bool `json:"shortNotice"`
   Driver bool `json:"driver"` // Dependent on if cars are added to profile
   Carpool bool `json:"carpool"` // Dependent on driver
-  CarCapacityTotal int `json:carCapacityTotal"` // remove TODO
+  CarCapacityTotal int `json:carCapacityTotal"`
   Notes string `json:"notes"`
   Pet bool `json:"pet"`
   Attended bool `json:"attended"`
@@ -455,6 +455,8 @@ func PostTripsJointrip(w http.ResponseWriter, r *http.Request) {
     return
   }
 
+  // TODO check car data
+
   // TODO update or insert new signup
   //exists, err = dbIsMemberOnTrip(w, tripSignup.TripId, tripSignup.MemberId)
   //if err != nil {
@@ -543,7 +545,7 @@ func PostTripsJointrip(w http.ResponseWriter, r *http.Request) {
       notes,
       pet,
       attended)
-    VALUES (?, ?, ?, datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?, ?, false)`
+    VALUES (?, ?, datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, false)`
   _, err = db.Exec(
     stmt,
     tripId,
