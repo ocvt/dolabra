@@ -32,14 +32,9 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  // Ensure user exists
-  if !dbEnsureMemberExists(w, subject) {
-    return
-  }
-
   // Get memberId
-  memberId, err := dbGetMemberId(w, subject)
-  if err != nil {
+  memberId, ok := dbGetActiveMemberId(w, subject)
+  if !ok {
     return
   }
 
@@ -60,7 +55,7 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
       paid_expire_datetime = 0,
       notification_preference = 0
     WHERE id = ?`
-  _, err = db.Exec(stmt, memberId)
+  _, err := db.Exec(stmt, memberId)
   if !checkError(w, err) {
     return
   }
@@ -121,8 +116,9 @@ func GetMyAccount(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  // Ensure user exists
-  if !dbEnsureMemberExists(w, subject) {
+  // Get memberId
+  memberId, ok := dbGetActiveMemberId(w, subject)
+  if !ok {
     return
   }
 
@@ -145,13 +141,12 @@ func GetMyAccount(w http.ResponseWriter, r *http.Request) {
     emergency_contact.name,
     emergency_contact.number,
     emergency_contact.relationship
-  FROM auth
+  FROM member
   INNER JOIN
-    member ON member.id = auth.member_id,
-    emergency_contact ON emergency_contact.member_id = auth.member_id
-  WHERE auth.subject = ?`
+    emergency_contact ON emergency_contact.member_id = member.id
+  WHERE member.id = ?`
   var member memberStruct
-  err := db.QueryRow(stmt, subject).Scan(
+  err := db.QueryRow(stmt, memberId).Scan(
     &member.Id,
     &member.Email,
     &member.FirstName,
@@ -181,24 +176,24 @@ func GetMyAccountName(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  // Ensure user exists
-  if !dbEnsureMemberExists(w, subject) {
+  // Get memberId
+  memberId, ok := dbGetActiveMemberId(w, subject)
+  if !ok {
     return
   }
 
   // Only get users first name
   stmt := `
-    SELECT member.first_name
-    FROM auth
-    INNER JOIN member ON auth.member_id = member.id
-    WHERE auth.subject = ?`
-  var firstname string
-  err := db.QueryRow(stmt, subject).Scan(&firstname)
+    SELECT first_name
+    FROM member
+    WHERE id = ?`
+  var firstName string
+  err := db.QueryRow(stmt, memberId).Scan(&firstName)
   if !checkError(w, err) {
     return
   }
 
-  respondJSON(w, http.StatusOK, map[string]string{"firstName": firstname})
+  respondJSON(w, http.StatusOK, map[string]string{"firstName": firstName})
 }
 
 func PatchMyAccountDeactivate(w http.ResponseWriter, r *http.Request) {
@@ -207,8 +202,9 @@ func PatchMyAccountDeactivate(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  // Ensure user exists
-  if !dbEnsureMemberExists(w, subject) {
+  // Get memberId
+  memberId, ok := dbGetActiveMemberId(w, subject)
+  if !ok {
     return
   }
 
@@ -216,11 +212,8 @@ func PatchMyAccountDeactivate(w http.ResponseWriter, r *http.Request) {
   stmt := `
     UPDATE member
     SET active = 0
-    WHERE EXISTS (
-      SELECT member_id
-      FROM auth
-      WHERE auth.subject = ?)`
-  _, err := db.Exec(stmt, subject)
+    WHERE id = ?`
+  _, err := db.Exec(stmt, memberId)
   if !checkError(w, err) {
     return
   }
@@ -234,8 +227,9 @@ func PatchMyAccountReactivate(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  // Ensure user exists
-  if !dbEnsureMemberExists(w, subject) {
+  // Get memberId
+  memberId, ok := dbGetMemberId(w, subject)
+  if !ok {
     return
   }
 
@@ -243,11 +237,8 @@ func PatchMyAccountReactivate(w http.ResponseWriter, r *http.Request) {
   stmt := `
     UPDATE member
     SET active = 1
-    WHERE EXISTS (
-      SELECT member_id
-      FROM auth
-      WHERE auth.subject = ?)`
-  _, err := db.Exec(stmt, subject)
+    WHERE id = ?`
+  _, err := db.Exec(stmt, memberId)
   if !checkError(w, err) {
     return
   }

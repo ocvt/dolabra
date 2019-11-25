@@ -26,6 +26,40 @@ func checkError(w http.ResponseWriter, err error) bool {
 }
 
 /* Error Checking & Handling */
+func dbGetMemberId(w http.ResponseWriter, subject string) (int, bool) {
+  if !dbEnsureMemberExists(w, subject) {
+    return 0, false
+  }
+
+  stmt := `
+    SELECT member_id
+    FROM auth
+    WHERE subject = ?`
+  var memberId int
+  err := db.QueryRow(stmt, subject).Scan(&memberId)
+  if !checkError(w, err) {
+    return 0, false
+  }
+  return memberId, true
+}
+
+func dbGetActiveMemberId(w http.ResponseWriter, subject string) (int, bool) {
+  memberId, ok := dbGetMemberId(w, subject)
+  if !ok {
+    return 0, false
+  }
+
+  isActive, err := dbIsActiveMember(w, memberId)
+  if err != nil {
+    return 0, false
+  }
+  if !isActive {
+    respondError(w, http.StatusBadRequest, "Member is not active.")
+    return 0, false
+  }
+  return memberId, true
+}
+
 func dbEnsureMemberExists(w http.ResponseWriter, subject string) bool {
   exists, err := dbIsMemberWithSubject(w, subject)
   if err == nil && !exists {
@@ -50,19 +84,19 @@ func dbEnsureMemberDoesNotExist(w http.ResponseWriter, subject string) bool {
   return false
 }
 
-/* Getters */
-func dbGetMemberId(w http.ResponseWriter, subject string) (int, error) {
+/* Misc checkers */
+func dbIsActiveMember(w http.ResponseWriter, memberId int) (bool, error) {
   stmt := `
-    SELECT member_id
-    FROM auth
-    WHERE subject = ?`
-  var memberId int
-  err := db.QueryRow(stmt, subject).Scan(&memberId)
+    SELECT EXISTS (
+      SELECT 1
+      FROM member
+      WHERE id = ? AND active = true)`
+  var exists bool
+  err := db.QueryRow(stmt, memberId).Scan(&exists)
   checkError(w, err)
-  return memberId, err
+  return exists, err
 }
 
-/* Misc checkers */
 func dbIsPaidMember(w http.ResponseWriter, memberId int) (bool, error) {
   stmt := `
     SELECT EXISTS (

@@ -230,8 +230,8 @@ func PatchTripsCancel(w http.ResponseWriter, r *http.Request) {
   }
 
   // Get member id, trip id
-  memberId, err := dbGetMemberId(w, subject)
-  if err != nil {
+  memberId, ok := dbGetActiveMemberId(w, subject)
+  if !ok {
     return
   }
   tripId, err := strconv.Atoi(chi.URLParam(r, "tripId"))
@@ -287,8 +287,8 @@ func PostTrips(w http.ResponseWriter, r *http.Request) {
   }
 
   // Get member id
-  memberId, err := dbGetMemberId(w, subject)
-  if err != nil {
+  memberId, ok := dbGetActiveMemberId(w, subject)
+  if !ok {
     return
   }
 
@@ -365,8 +365,8 @@ func PostTripsJointrip(w http.ResponseWriter, r *http.Request) {
   }
 
   // Get member id, trip id
-  memberId, err := dbGetMemberId(w, subject)
-  if err != nil {
+  memberId, ok := dbGetActiveMemberId(w, subject)
+  if !ok {
     return
   }
   tripId, err := strconv.Atoi(chi.URLParam(r, "tripId"))
