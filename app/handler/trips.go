@@ -41,20 +41,14 @@ type tripStruct struct {
 }
 
 type tripSignupStruct struct {
-  Cancel bool `json:"cancel"`
   SignupDatetime string `json:"signupDatetime,omitempty"`
   /* Required fields for signing up for a trip */
-  MemberId int `json:"memberId"`
-  Leader bool `json:"leader"`
-  AttendingCode string `json:"attendingCode"`
-  BootReason string `json:"bootReason"` // Only checked for BOOT action
   ShortNotice bool `json:"shortNotice"`
-  Driver bool `json:"driver"` // Dependent on if cars are added to profile
-  Carpool bool `json:"carpool"` // Dependent on driver
+  Driver bool `json:"driver"`
+  Carpool bool `json:"carpool"`
   CarCapacityTotal int `json:carCapacityTotal"`
   Notes string `json:"notes"`
   Pet bool `json:"pet"`
-  Attended bool `json:"attended"`
 }
 
 func GetTrips(w http.ResponseWriter, r *http.Request) {
@@ -358,7 +352,7 @@ func PostTrips(w http.ResponseWriter, r *http.Request) {
   respondJSON(w, http.StatusCreated, map[string]int64{"tripId": tripId})
 }
 
-func PostTripsJointrip(w http.ResponseWriter, r *http.Request) {
+func PostTripsSignup(w http.ResponseWriter, r *http.Request) {
   _, subject, ok := checkLogin(w, r)
   if !ok {
     return
@@ -381,24 +375,6 @@ func PostTripsJointrip(w http.ResponseWriter, r *http.Request) {
   err = decoder.Decode(&tripSignup)
   if err != nil {
     respondError(w, http.StatusBadRequest, err.Error())
-    return
-  }
-
-  // Ensure trip exists and active
-  exists, err := dbTripExists(w, tripId)
-  if err != nil {
-    return
-  }
-  if !exists {
-    respondError(w, http.StatusBadRequest, "Trip does not exist.")
-    return
-  }
-  canceled, err := dbIsTripCanceled(w, tripId)
-  if err != nil {
-    return
-  }
-  if canceled {
-    respondError(w, http.StatusBadRequest, "Trip is canceled.")
     return
   }
 
@@ -439,47 +415,25 @@ func PostTripsJointrip(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  // Ensure tripSignup.MemberId is a member
-  isMember, err := dbIsMemberWithMemberId(w, tripSignup.MemberId)
+  /* Mandatory checks for any trip signup or modification */
+  exists, err := dbTripExists(w, tripId)
   if err != nil {
     return
   }
-  if !isMember {
-    respondError(w, http.StatusBadRequest, "User does not exist.")
+  if !exists {
+    respondError(w, http.StatusBadRequest, "Trip does not exist.")
     return
   }
 
-  // Ensure tripSignup.Member is paid
-  isPaid, err := dbIsPaidMember(w, tripSignup.MemberId)
+  isCanceled, err := dbIsTripCanceled(w, tripId)
   if err != nil {
     return
   }
-
-  // TODO check car data
-
-  // TODO update or insert new signup
-  //exists, err = dbIsMemberOnTrip(w, tripSignup.TripId, tripSignup.MemberId)
-  //if err != nil {
-  //  return
-  //}
-  //updateExistingSignup := exists
-
-  // Check for admin
-  isLeader, err := dbIsTripLeader(w, tripId, memberId)
-  if err != nil {
+  if isCanceled {
+    respondError(w, http.StatusBadRequest, "Trip is canceled.")
     return
   }
-  isOfficer, err := dbIsOfficer(w, memberId)
-  if err != nil {
-    return
-  }
-  isCreator := (memberId == trip.MemberId)
 
-  admin := isLeader || isOfficer || isCreator
-
-  tripSignupIsLoggedInMember := (memberId == tripSignup.MemberId)
-
-  // Ensure trip is in future
   inPast, err := dbIsTripInPast(w, tripId)
   if err != nil {
     return
@@ -489,46 +443,48 @@ func PostTripsJointrip(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  // Ensure not late signup
+  /* Checks only applicable for new signups */
+  onTrip, err := dbIsMemberOnTrip(w, tripId, memberId)
+  if err != nil {
+    return
+  }
+  if onTrip {
+    respondError(w, http.StatusBadRequest, "Member is already on trip.")
+    return
+  }
+
   lateSignup, err := dbIsLateSignup(w, tripId)
   if err != nil {
     return
   }
-  if lateSignup && !trip.AllowLateSignups &&
-      !admin && tripSignup.AttendingCode == "ATTEN" {
+  if lateSignup && !trip.AllowLateSignups {
     respondError(w, http.StatusBadRequest, "Past trip signup deadline.")
     return
   }
 
-  if !isCreator && !*trip.Publish {
-    respondError(w, http.StatusUnauthorized, "Not authorized to signup for unpublished trip")
+  if tripSignup.Carpool && !tripSignup.Driver {
+    respondError(w, http.StatusBadRequest, "Cannot carpool without being a driver.")
+    return
+  }
+  if tripSignup.CarCapacityTotal < 0 {
+    respondError(w, http.StatusBadRequest, "Cannot have negative car capacity.")
     return
   }
 
-  if (!admin && tripSignup.Leader) {
-    respondError(w, http.StatusUnauthorized, "Not authorized to add a trip leader.")
+  if tripSignup.Pet && !trip.PetsAllowed {
+    respondError(w, http.StatusBadRequest, "Cannot bring pet on trip.")
     return
   }
 
-  if (!admin && !tripSignupIsLoggedInMember) {
-    respondError(w, http.StatusUnauthorized, "Not authorized to modify others attendance.")
-    return
-  }
+  /* Booleans for insertion */
+  isCreator := memberId == trip.MemberId
 
-  if ((!admin && tripSignup.AttendingCode != "ATTEN") ||
-      (!admin && tripSignup.AttendingCode != "CANCL")) {
-    respondError(w, http.StatusUnauthorized, "Not authorized to use attending code.")
-    return
-  }
-
-  if (tripSignup.AttendingCode == "BOOT" &&
-      tripSignup.BootReason == "") {
-    respondError(w, http.StatusBadRequest, "BOOT requests must include a reason.")
+  isPaid, err := dbIsPaidMember(w, memberId)
+  if err != nil {
     return
   }
 
   // Insert new trip person
-  // TODO change order based on web form
   stmt = `
     INSERT INTO trip_signup (
       trip_id,
@@ -545,15 +501,14 @@ func PostTripsJointrip(w http.ResponseWriter, r *http.Request) {
       notes,
       pet,
       attended)
-    VALUES (?, ?, datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, false)`
+    VALUES (?, ?, datetime('now'), ?, ?, ?, "", ?, ?, ?, ?, ?, ?, false)`
   _, err = db.Exec(
     stmt,
     tripId,
-    tripSignup.MemberId,
-    tripSignup.Leader,
+    memberId,
+    isCreator,
     isPaid,
-    tripSignup.AttendingCode,
-    tripSignup.BootReason,
+    "ATTEN",
     tripSignup.ShortNotice,
     tripSignup.Driver,
     tripSignup.Carpool,

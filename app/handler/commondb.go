@@ -84,7 +84,8 @@ func dbEnsureMemberDoesNotExist(w http.ResponseWriter, subject string) bool {
   return false
 }
 
-/* Misc checkers */
+/* EXISTS checkers */
+// Account related
 func dbIsActiveMember(w http.ResponseWriter, memberId int) (bool, error) {
   stmt := `
     SELECT EXISTS (
@@ -109,7 +110,6 @@ func dbIsPaidMember(w http.ResponseWriter, memberId int) (bool, error) {
   return exists, err
 }
 
-/* EXISTS checkers */
 func dbIsMemberWithSubject(w http.ResponseWriter, subject string) (bool, error) {
   stmt := `
     SELECT EXISTS (
@@ -122,7 +122,7 @@ func dbIsMemberWithSubject(w http.ResponseWriter, subject string) (bool, error) 
   return exists, err
 }
 
-func dbIsMemberWithMemberId(w http.ResponseWriter, memberId int) (bool, error) {
+func dbIsActiveMemberWithMemberId(w http.ResponseWriter, memberId int) (bool, error) {
   stmt := `
     SELECT EXISTS (
       SELECT 1
@@ -158,6 +158,7 @@ func dbIsOfficer(w http.ResponseWriter, memberId int) (bool, error) {
   return exists, err
 }
 
+// Trips related
 func dbIsTripCreator(w http.ResponseWriter, tripId int, memberId int) (bool, error) {
   stmt := `
     SELECT EXISTS (

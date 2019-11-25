@@ -61,7 +61,10 @@ func setRouters() {
     r.Get("/types", handler.GetTripsTypes)
     r.Patch("/{tripId}/cancel", handler.PatchTripsCancel)
     r.Post("/", handler.PostTrips)
-    r.Post("/{tripId}/jointrip", handler.PostTripsJointrip)
+    r.Route("/{tripId}/signup", func(r chi.Router) {
+//      r.Patch("/{memberId}/cancel", handler.PatchTripsSignupCancel)
+      r.Post("/", handler.PostTripsSignup)
+    })
   })
 }
 
