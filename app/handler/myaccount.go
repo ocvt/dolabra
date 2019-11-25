@@ -49,8 +49,8 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
       cell_number = '',
       gender = '',
       birth_year = 0,
-      active = 0,
-      medical_cond = 0,
+      active = false,
+      medical_cond = false,
       medical_cond_desc = '',
       paid_expire_datetime = 0,
       notification_preference = 0
@@ -211,7 +211,7 @@ func PatchMyAccountDeactivate(w http.ResponseWriter, r *http.Request) {
   // Set active to 0
   stmt := `
     UPDATE member
-    SET active = 0
+    SET active = false
     WHERE id = ?`
   _, err := db.Exec(stmt, memberId)
   if !checkError(w, err) {

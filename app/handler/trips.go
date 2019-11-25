@@ -55,7 +55,7 @@ func GetTrips(w http.ResponseWriter, r *http.Request) {
   stmt := `
     SELECT *
     FROM trip
-    WHERE cancel = 0 AND datetime(start_datetime) >= datetime('now')
+    WHERE cancel = false AND datetime(start_datetime) >= datetime('now')
     ORDER BY datetime(start_datetime) DESC`
   rows, err := db.Query(stmt)
   if !checkError(w, err) {
@@ -131,7 +131,7 @@ func GetTripsArchive(w http.ResponseWriter, r *http.Request) {
     SELECT *
     FROM trip
     WHERE id <= ?
-    ORDER BY id DESC
+    ORDER BY datetime(start_datetime) DESC
     LIMIT ?`
   rows, err := db.Query(stmt, tripStartId, tripsPerPage)
   if !checkError(w, err) {
