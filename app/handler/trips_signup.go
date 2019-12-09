@@ -3,10 +3,339 @@ package handler
 import (
   "encoding/json"
   "net/http"
-  "strconv"
-
-  "github.com/go-chi/chi"
 )
+
+func GetTripsSignup(w http.ResponseWriter, r *http.Request) {
+  _, subject, ok := checkLogin(w, r)
+  if !ok {
+    return
+  }
+
+  // Get member id and trip id
+  memberId, ok := dbGetActiveMemberId(w, subject)
+  if !ok {
+    return
+  }
+  tripId, ok := checkURLParam(w, r, "tripId")
+  if !ok {
+    return
+  }
+
+  // Ensure user is on trip
+  signupExists, err := dbIsMemberOnTrip(w, tripId, memberId)
+  if err != nil {
+    return
+  }
+  if !signupExists {
+    respondError(w, http.StatusBadRequest, "Not on on trip.")
+    return
+  }
+
+  // Get signup info
+  stmt := `
+    SELECT *
+    FROM trip_signup
+    WHERE trip_id = ? AND member_id = ?`
+  var tripSignup tripSignupStruct
+  err = db.QueryRow(stmt, tripId, memberId).Scan(
+    &tripSignup.Id,
+    &tripSignup.TripId,
+    &tripSignup.MemberId,
+    &tripSignup.Leader,
+    &tripSignup.SignupDatetime,
+    &tripSignup.PaidMember,
+    &tripSignup.AttendingCode,
+    &tripSignup.BootReason,
+    &tripSignup.ShortNotice,
+    &tripSignup.Driver,
+    &tripSignup.Carpool,
+    &tripSignup.CarCapacityTotal,
+    &tripSignup.Notes,
+    &tripSignup.Pet,
+    &tripSignup.Attended)
+  if !checkError(w, err) {
+    return
+  }
+
+  respondJSON(w, http.StatusOK, tripSignup)
+}
+
+func PatchTripsSignupAbsent(w http.ResponseWriter, r *http.Request) {
+  _, subject, ok := checkLogin(w, r)
+  if !ok {
+    return
+  }
+
+  // Get member id
+  memberId, ok := dbGetActiveMemberId(w, subject)
+  if !ok {
+    return
+  }
+
+  // Get trip id and validate
+  tripId, ok := checkURLParam(w, r, "tripId")
+  if !ok {
+    return
+  }
+  signupId, ok := checkURLParam(w, r, "signupId")
+  if !ok {
+    return
+  }
+
+  isTrip, err := dbIsTrip(w, tripId)
+  if err != nil {
+    return
+  }
+  if !isTrip {
+    return
+  }
+
+  if !dbEnsureMemberCanModifySignup(w, tripId, memberId, signupId) {
+    return
+  }
+  if !dbEnsureOfficerOrTripLeader(w, tripId, memberId) {
+    return
+  }
+
+  // Mark as absent
+  stmt := `
+    UPDATE trip_signup
+    SET attended = false
+    WHERE trip_id = ? and member_id = ?`
+  _, err = db.Exec(stmt, tripId, signupId)
+  if !checkError(w, err) {
+    return
+  }
+
+  respondJSON(w, http.StatusNoContent, nil)
+}
+
+func PatchTripsSignupBoot(w http.ResponseWriter, r *http.Request) {
+  _, subject, ok := checkLogin(w, r)
+  if !ok {
+    return
+  }
+
+  // Get member id
+  memberId, ok := dbGetActiveMemberId(w, subject)
+  if !ok {
+    return
+  }
+
+  // Get request body
+  decoder := json.NewDecoder(r.Body)
+  var tripSignupBoot tripSignupBootStruct
+  err := decoder.Decode(&tripSignupBoot)
+  if err != nil {
+    respondError(w, http.StatusBadRequest, err.Error())
+    return
+  }
+  if tripSignupBoot.BootReason == "" {
+    respondError(w, http.StatusBadRequest, "BOOT action must have reason.")
+    return
+  }
+
+  // Get trip id, signup id
+  tripId, ok := checkURLParam(w, r, "tripId")
+  if !ok {
+    return
+  }
+  signupId, ok := checkURLParam(w, r, "signupId")
+  if !ok {
+    return
+  }
+
+  if !dbEnsureMemberCanModifySignup(w, tripId, memberId, signupId) {
+    return
+  }
+  if !dbEnsureOfficerOrTripLeader(w, tripId, memberId) {
+    return
+  }
+
+  boot, err := dbCheckTripSignupCode(w, tripId, signupId, "BOOT")
+  if err != nil {
+    return
+  }
+  if boot {
+    respondError(w, http.StatusBadRequest, "User is already booted.")
+    return
+  }
+  if !dbEnsureTripSignupNotCanceled(w, tripId, signupId) {
+    return
+  }
+
+  // Change to BOOT code
+  stmt := `
+    UPDATE trip_signup
+    SET
+      leader = false,
+      attending_code = 'BOOT',
+      boot_reason = ?,
+      attended = false
+    WHERE trip_id = ? AND member_id = ?`
+  _, err = db.Exec(stmt, tripSignupBoot.BootReason, tripId, signupId)
+  if !checkError(w, err) {
+    return
+  }
+
+  respondJSON(w, http.StatusNoContent, nil)
+}
+
+func PatchTripsSignupCancel(w http.ResponseWriter, r *http.Request) {
+  _, subject, ok := checkLogin(w, r)
+  if !ok {
+    return
+  }
+
+  // Get member id
+  memberId, ok := dbGetActiveMemberId(w, subject)
+  if !ok {
+    return
+  }
+
+  // Get trip id and validate
+  tripId, ok := checkURLParam(w, r, "tripId")
+  if !ok {
+    return
+  }
+
+  if !dbEnsureMemberCanModifySignup(w, tripId, memberId, memberId) {
+    return
+  }
+
+  // Ensure not already canceled
+  cancel, err := dbCheckTripSignupCode(w, tripId, memberId, "CANCEL")
+  if err != nil {
+    return
+  }
+  if cancel {
+    respondError(w, http.StatusBadRequest, "User is already canceled.")
+    return
+  }
+
+  // Change to CANCEL code
+  stmt := `
+    UPDATE trip_signup
+    SET
+      leader = false,
+      attending_code = 'CANCEL',
+      attended = false
+    WHERE trip_id = ? AND member_id = ?`
+  _, err = db.Exec(stmt, tripId, memberId)
+  if !checkError(w, err) {
+    return
+  }
+
+  respondJSON(w, http.StatusNoContent, nil)
+}
+
+func PatchTripsSignupForceadd(w http.ResponseWriter, r *http.Request) {
+  _, subject, ok := checkLogin(w, r)
+  if !ok {
+    return
+  }
+
+  // Get member id
+  memberId, ok := dbGetActiveMemberId(w, subject)
+  if !ok {
+    return
+  }
+
+  // Get trip id, signup id
+  tripId, ok := checkURLParam(w, r, "tripId")
+  if !ok {
+    return
+  }
+  signupId, ok := checkURLParam(w, r, "signupId")
+  if !ok {
+    return
+  }
+
+  if !dbEnsureMemberCanModifySignup(w, tripId, memberId, signupId) {
+    return
+  }
+  if !dbEnsureOfficerOrTripLeader(w, tripId, memberId) {
+    return
+  }
+
+  // Validate not already forceadded or canceled
+  force, err := dbCheckTripSignupCode(w, tripId, signupId, "FORCE")
+  if err != nil {
+    return
+  }
+  if force {
+    respondError(w, http.StatusBadRequest, "User is already force-added or canceled.")
+    return
+  }
+  if !dbEnsureTripSignupNotCanceled(w, tripId, signupId) {
+    return
+  }
+
+  // Change to FORCE code
+  stmt := `
+    UPDATE trip_signup
+    SET attending_code = 'FORCE'
+    WHERE trip_id = ? AND member_id = ?`
+  _, err = db.Exec(stmt, tripId, signupId)
+  if !checkError(w, err) {
+    return
+  }
+
+  respondJSON(w, http.StatusNoContent, nil)
+}
+
+func PatchTripsSignupTripLeaderPromote(w http.ResponseWriter, r *http.Request) {
+  _, subject, ok := checkLogin(w, r)
+  if !ok {
+    return
+  }
+
+  // Get member id
+  memberId, ok := dbGetActiveMemberId(w, subject)
+  if !ok {
+    return
+  }
+
+  // Get trip id, signup id
+  tripId, ok := checkURLParam(w, r, "tripId")
+  if !ok {
+    return
+  }
+  signupId, ok := checkURLParam(w, r, "signupId")
+  if !ok {
+    return
+  }
+  promote, ok := checkURLParam(w, r, "promote")
+  if !ok {
+    return
+  }
+
+  if !dbEnsureMemberCanModifySignup(w, tripId, memberId, signupId) {
+    return
+  }
+  if !dbEnsureOfficerOrTripLeader(w, tripId, memberId) {
+    return
+  }
+
+  // Validate not already canceled
+  if !dbEnsureTripSignupNotCanceled(w, tripId, signupId) {
+    return
+  }
+
+  // Change to promote user
+  stmt := `
+    UPDATE trip_signup
+    SET
+      leader = ?,
+      attending_code = 'FORCE'
+    WHERE trip_id = ? AND member_id = ?`
+  _, err = db.Exec(stmt, promote, tripId, signupId)
+  if !checkError(w, err) {
+    return
+  }
+
+  respondJSON(w, http.StatusNoContent, nil)
+}
 
 func PostTripsSignup(w http.ResponseWriter, r *http.Request) {
   _, subject, ok := checkLogin(w, r)
@@ -19,129 +348,49 @@ func PostTripsSignup(w http.ResponseWriter, r *http.Request) {
   if !ok {
     return
   }
-  tripId, err := strconv.Atoi(chi.URLParam(r, "tripId"))
-  if err != nil {
-    respondError(w, http.StatusBadRequest, err.Error())
+  tripId, ok := checkURLParam(w, r, "tripId")
+  if !ok {
     return
   }
 
   // Get request body
   decoder := json.NewDecoder(r.Body)
   var tripSignup tripSignupStruct
-  err = decoder.Decode(&tripSignup)
+  err := decoder.Decode(&tripSignup)
   if err != nil {
     respondError(w, http.StatusBadRequest, err.Error())
     return
   }
 
-  // Get trip data
-  var trip tripStruct
-  stmt := `
-    SELECT *
-    FROM trip
-    WHERE id = ?`
-  err = db.QueryRow(stmt, tripId).Scan(
-    &trip.Id,
-    &trip.CreateDatetime,
-    &trip.Cancel,
-    &trip.Publish,
-    &trip.MemberId,
-    &trip.MembersOnly,
-    &trip.AllowLateSignups,
-    &trip.DrivingRequired,
-    &trip.HasCost,
-    &trip.CostDescription,
-    &trip.MaxPeople,
-    &trip.Name,
-    &trip.TripTypeId,
-    &trip.StartDatetime,
-    &trip.EndDatetime,
-    &trip.Summary,
-    &trip.Description,
-    &trip.Location,
-    &trip.LocationDirections,
-    &trip.MeetupLocation,
-    &trip.Distance,
-    &trip.Difficulty,
-    &trip.DifficultyDescription,
-    &trip.Instructions,
-    &trip.PetsAllowed,
-    &trip.PetsDescription)
-  if !checkError(w, err) {
-    return
-  }
-
-  /* Mandatory checks for any trip signup or modification */
-  exists, err := dbTripExists(w, tripId)
+  // Validate signup
+  isCreator, err := dbIsTripCreator(w, tripId, memberId)
   if err != nil {
     return
   }
-  if !exists {
-    respondError(w, http.StatusBadRequest, "Trip does not exist.")
-    return
-  }
 
-  isCanceled, err := dbIsTripCanceled(w, tripId)
-  if err != nil {
-    return
-  }
-  if isCanceled {
-    respondError(w, http.StatusBadRequest, "Trip is canceled.")
-    return
-  }
+  attendingCode := "FORCE"
+  attended := true
 
-  inPast, err := dbIsTripInPast(w, tripId)
-  if err != nil {
-    return
-  }
-  if inPast {
-    respondError(w, http.StatusBadRequest, "Trip is in past.")
-    return
-  }
+  if !isCreator {
+    attendingCode = "ATTEND"
 
-  /* Checks only applicable for new signups */
-  onTrip, err := dbIsMemberOnTrip(w, tripId, memberId)
-  if err != nil {
-    return
-  }
-  if onTrip {
-    respondError(w, http.StatusBadRequest, "Member is already on trip.")
-    return
-  }
+    if !dbEnsureActiveTrip(w, tripId) {
+      return
+    }
 
-  lateSignup, err := dbIsLateSignup(w, tripId)
-  if err != nil {
-    return
+    if !dbEnsureValidSignup(w, tripId, memberId, tripSignup.Carpool,
+        tripSignup.Driver, tripSignup.CarCapacityTotal, tripSignup.Pet) {
+      return
+    }
   }
-  if lateSignup && !trip.AllowLateSignups {
-    respondError(w, http.StatusBadRequest, "Past trip signup deadline.")
-    return
-  }
-
-  if tripSignup.Carpool && !tripSignup.Driver {
-    respondError(w, http.StatusBadRequest, "Cannot carpool without being a driver.")
-    return
-  }
-  if tripSignup.CarCapacityTotal < 0 {
-    respondError(w, http.StatusBadRequest, "Cannot have negative car capacity.")
-    return
-  }
-
-  if tripSignup.Pet && !trip.PetsAllowed {
-    respondError(w, http.StatusBadRequest, "Cannot bring pet on trip.")
-    return
-  }
-
-  /* Booleans for insertion */
-  isCreator := memberId == trip.MemberId
 
   isPaid, err := dbIsPaidMember(w, memberId)
   if err != nil {
     return
   }
 
-  // Insert new trip person
-  stmt = `
+  // Insert signup
+  stmt := `
     INSERT INTO trip_signup (
       trip_id,
       member_id,
@@ -157,20 +406,21 @@ func PostTripsSignup(w http.ResponseWriter, r *http.Request) {
       notes,
       pet,
       attended)
-    VALUES (?, ?, datetime('now'), ?, ?, ?, "", ?, ?, ?, ?, ?, ?, false)`
+    VALUES (?, ?, ?, datetime('now'), ?, ?, '', ?, ?, ?, ?, ?, ?, ?)`
   _, err = db.Exec(
     stmt,
     tripId,
     memberId,
     isCreator,
     isPaid,
-    "ATTEN",
+    attendingCode,
     tripSignup.ShortNotice,
     tripSignup.Driver,
     tripSignup.Carpool,
     tripSignup.CarCapacityTotal,
     tripSignup.Notes,
-    tripSignup.Pet)
+    tripSignup.Pet,
+    attended)
   if !checkError(w, err) {
     return
   }

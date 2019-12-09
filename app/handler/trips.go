@@ -10,10 +10,11 @@ import (
 )
 
 type tripStruct struct {
+  /* Managed server side */
   Id int `json:"id,omitempty"`
   CreateDatetime string `json:"createDatetime,omitempty"`
-  Cancel *bool `json:"cancel,omitempty"`
-  Publish *bool `json:"publish,omitempty"`
+  Cancel bool `json:"cancel,omitempty"`
+  Publish bool `json:"publish,omitempty"`
   MemberName string `json:"memberName,omitempty"` // Used client side
   MemberId int `json:"memberId,omitempty"` // Used server side
   /* Required fields for creating a trip */
@@ -41,7 +42,30 @@ type tripStruct struct {
 }
 
 type tripSignupStruct struct {
+  /* Managed server side */
+  // from trip_signup table
+  Id int `json:"id,omitempty"`
+  TripId int `json:"tripId,omitempty"`
+  MemberId int `json:"memberId,omitempty"`
+  Leader bool `json:"leader,omitempty"`
   SignupDatetime string `json:"signupDatetime,omitempty"`
+  PaidMember bool `json:"paidMember,omitempty"`
+  AttendingCode string `json:"attendingCode,omitempty"`
+  BootReason string `json:"bootReason,omitempty"`
+  Attended bool `json:"attended,omitempty"`
+  // from member table
+  Email string `json:"email,omitempty"`
+  FirstName string `json:"firstName,omitempty"`
+  LastName string `json:"lastName,omitempty"`
+  CellNumber string `json:"cellNumber,omitempty"`
+  Gender string `json:"gender,omitempty"`
+  BirthYear int `json:"birthYear,omitempty"`
+  MedicalCond bool `json:"medicalCond,omitempty"`
+  MedicalCondDesc string `json:"medicalCondDesc,omitempty"`
+  // from emergency_contact table
+  EmergencyContactName string `json:"emergencyContactName,omitempty"`
+  EmergencyContactNumber string `json:"emergencyContactNumber,omitempty"`
+  EmergencyContactRelationship string `json:"emergencyContactRelationship,omitempty"`
   /* Required fields for signing up for a trip */
   ShortNotice bool `json:"shortNotice"`
   Driver bool `json:"driver"`
@@ -51,11 +75,18 @@ type tripSignupStruct struct {
   Pet bool `json:"pet"`
 }
 
+type tripSignupBootStruct struct {
+  BootReason string `json:"bootReason"`
+}
+
 func GetTrips(w http.ResponseWriter, r *http.Request) {
   stmt := `
     SELECT *
     FROM trip
-    WHERE cancel = false AND datetime(start_datetime) >= datetime('now')
+    WHERE
+      cancel = false
+      AND publish = true
+      AND datetime(start_datetime) >= datetime('now')
     ORDER BY datetime(start_datetime) DESC`
   rows, err := db.Query(stmt)
   if !checkError(w, err) {
@@ -64,40 +95,40 @@ func GetTrips(w http.ResponseWriter, r *http.Request) {
   defer rows.Close() // TODO needed?
 
   var trips = []*tripStruct{}
-  tripIndex := 0
+  i := 0
   for rows.Next() {
     trips = append(trips, &tripStruct{})
     err = rows.Scan(
-      &trips[tripIndex].Id,
-      &trips[tripIndex].CreateDatetime,
-      &trips[tripIndex].Cancel,
-      &trips[tripIndex].Publish,
-      &trips[tripIndex].MemberId,
-      &trips[tripIndex].MembersOnly,
-      &trips[tripIndex].AllowLateSignups,
-      &trips[tripIndex].DrivingRequired,
-      &trips[tripIndex].HasCost,
-      &trips[tripIndex].CostDescription,
-      &trips[tripIndex].MaxPeople,
-      &trips[tripIndex].Name,
-      &trips[tripIndex].TripTypeId,
-      &trips[tripIndex].StartDatetime,
-      &trips[tripIndex].EndDatetime,
-      &trips[tripIndex].Summary,
-      &trips[tripIndex].Description,
-      &trips[tripIndex].Location,
-      &trips[tripIndex].LocationDirections,
-      &trips[tripIndex].MeetupLocation,
-      &trips[tripIndex].Distance,
-      &trips[tripIndex].Difficulty,
-      &trips[tripIndex].DifficultyDescription,
-      &trips[tripIndex].Instructions,
-      &trips[tripIndex].PetsAllowed,
-      &trips[tripIndex].PetsDescription)
+      &trips[i].Id,
+      &trips[i].CreateDatetime,
+      &trips[i].Cancel,
+      &trips[i].Publish,
+      &trips[i].MemberId,
+      &trips[i].MembersOnly,
+      &trips[i].AllowLateSignups,
+      &trips[i].DrivingRequired,
+      &trips[i].HasCost,
+      &trips[i].CostDescription,
+      &trips[i].MaxPeople,
+      &trips[i].Name,
+      &trips[i].TripTypeId,
+      &trips[i].StartDatetime,
+      &trips[i].EndDatetime,
+      &trips[i].Summary,
+      &trips[i].Description,
+      &trips[i].Location,
+      &trips[i].LocationDirections,
+      &trips[i].MeetupLocation,
+      &trips[i].Distance,
+      &trips[i].Difficulty,
+      &trips[i].DifficultyDescription,
+      &trips[i].Instructions,
+      &trips[i].PetsAllowed,
+      &trips[i].PetsDescription)
     if !checkError(w, err) {
       return
     }
-    tripIndex++
+    i++
   }
 
   err = rows.Err()
@@ -108,13 +139,122 @@ func GetTrips(w http.ResponseWriter, r *http.Request) {
   respondJSON(w, http.StatusOK, map[string][]*tripStruct{"trips": trips})
 }
 
+func GetTripsAdmin(w http.ResponseWriter, r *http.Request) {
+   _, subject, ok := checkLogin(w, r)
+  if !ok {
+    return
+  }
+
+  // Get member id and trip id
+  memberId, ok := dbGetActiveMemberId(w, subject)
+  if !ok {
+    return
+  }
+  tripId, ok := checkURLParam(w, r, "tripId")
+  if !ok {
+    return
+  }
+
+  // Ensure user has permissions
+  if !dbEnsureOfficerOrTripLeader(w, tripId, memberId) {
+    return
+  }
+
+  // Get signup info
+  stmt := `
+    SELECT *
+    FROM trip_signup
+    WHERE trip_id = ?
+    ORDER BY datetime(signup_datetime) DESC`
+  rows, err := db.Query(stmt, tripId)
+  if !checkError(w, err) {
+    return
+  }
+  defer rows.Close() // TODO needed?
+
+  var tripSignups = []*tripSignupStruct{}
+  i := 0
+  for rows.Next() {
+    tripSignups = append(tripSignups, &tripSignupStruct{})
+    err = rows.Scan(
+      &tripSignups[i].Id,
+      &tripSignups[i].TripId,
+      &tripSignups[i].MemberId,
+      &tripSignups[i].Leader,
+      &tripSignups[i].SignupDatetime,
+      &tripSignups[i].PaidMember,
+      &tripSignups[i].AttendingCode,
+      &tripSignups[i].BootReason,
+      &tripSignups[i].ShortNotice,
+      &tripSignups[i].Driver,
+      &tripSignups[i].Carpool,
+      &tripSignups[i].CarCapacityTotal,
+      &tripSignups[i].Notes,
+      &tripSignups[i].Pet,
+      &tripSignups[i].Attended)
+    if !checkError(w, err) {
+      return
+    }
+
+    stmt = `
+      SELECT
+        email,
+        first_name,
+        last_name,
+        cell_number,
+        gender,
+        birth_year,
+        medical_cond,
+        medical_cond_desc
+      FROM member
+      WHERE id = ?`
+    err := db.QueryRow(stmt, tripSignups[i].MemberId).Scan(
+      &tripSignups[i].Email,
+      &tripSignups[i].FirstName,
+      &tripSignups[i].LastName,
+      &tripSignups[i].CellNumber,
+      &tripSignups[i].Gender,
+      &tripSignups[i].BirthYear,
+      &tripSignups[i].MedicalCond,
+      &tripSignups[i].MedicalCondDesc)
+    if !checkError(w, err) {
+      return
+    }
+
+    stmt = `
+      SELECT name, number, relationship
+      FROM emergency_contact
+      WHERE member_id = ?`
+    err = db.QueryRow(stmt, tripSignups[i].MemberId).Scan(
+      &tripSignups[i].EmergencyContactName,
+      &tripSignups[i].EmergencyContactNumber,
+      &tripSignups[i].EmergencyContactRelationship)
+    if !checkError(w, err) {
+      return
+    }
+
+    if !redactDataIfOldTrip(w, tripId, tripSignups[i]) {
+      return
+    }
+
+    i++
+  }
+
+  err = rows.Err()
+  if !checkError(w, err) {
+    return
+  }
+
+  respondJSON(w, http.StatusOK, map[string][]*tripSignupStruct{"tripSignups": tripSignups})
+}
+
 func GetTripsArchive(w http.ResponseWriter, r *http.Request) {
   path := chi.URLParam(r, "*")
   pathVars := strings.Split(path, "/")
 
   tripStartId := MAX_INT
   tripsPerPage := 20
-  if len(pathVars) > 0 || len(pathVars) < 3 {
+  if len(pathVars) > 0 && len(pathVars) < 3 {
     i, _ := strconv.Atoi(pathVars[0])
     if i != 0 {
       tripStartId = i
@@ -137,7 +277,6 @@ func GetTripsArchive(w http.ResponseWriter, r *http.Request) {
   if !checkError(w, err) {
     return
   }
-
   defer rows.Close() // TODO needed?
 
   var trips = []*tripStruct{}
@@ -256,6 +395,45 @@ func PatchTripsCancel(w http.ResponseWriter, r *http.Request) {
   stmt := `
     UPDATE trip
     SET cancel = true
+    WHERE id = ?`
+  _, err = db.Exec(stmt, tripId)
+  if !checkError(w, err) {
+    return
+  }
+
+  respondJSON(w, http.StatusNoContent, nil)
+}
+
+func PatchTripsPublish(w http.ResponseWriter, r *http.Request) {
+  _, subject, ok := checkLogin(w, r)
+  if !ok {
+    return
+  }
+
+  // Get member id, trip id
+  memberId, ok := dbGetActiveMemberId(w, subject)
+  if !ok {
+    return
+  }
+  tripId, err := strconv.Atoi(chi.URLParam(r, "tripId"))
+  if err != nil {
+    respondError(w, http.StatusBadRequest, err.Error())
+    return
+  }
+
+  // Only creator can signup while not published
+  isLeader, err := dbIsTripLeader(w, tripId, memberId)
+  if err != nil {
+    return
+  }
+  if !isLeader {
+    respondError(w, http.StatusBadRequest, "Only creator can publish trip.")
+    return
+  }
+
+  stmt := `
+    UPDATE trip
+    SET publish = true
     WHERE id = ?`
   _, err = db.Exec(stmt, tripId)
   if !checkError(w, err) {

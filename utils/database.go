@@ -244,12 +244,11 @@ func insertData(db *sql.DB) {
   execHelper(db, `
     INSERT OR IGNORE INTO trip_attending_code (id, description)
     VALUES
-      ('ATTEN', 'User is attending'),
+      ('ATTEND', 'User is attending'),
       ('BOOT', 'User has been manually booted'),
       ('WAIT', 'User is on waiting list'),
-      ('CANCL', 'User has chosen to cancel '),
-      ('FORCE', 'User is force added'),
-      ('TBD', 'User status is to be determined');
+      ('CANCEL', 'User has chosen to cancel '),
+      ('FORCE', 'User is force added')
   `)
 }
 
