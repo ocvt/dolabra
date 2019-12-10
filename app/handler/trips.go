@@ -92,7 +92,7 @@ func GetTrips(w http.ResponseWriter, r *http.Request) {
   if !checkError(w, err) {
     return
   }
-  defer rows.Close() // TODO needed?
+  defer rows.Close()
 
   var trips = []*tripStruct{}
   i := 0
@@ -155,12 +155,11 @@ func GetTripsAdmin(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  // Ensure user has permissions
+  // Permissions
   if !dbEnsureOfficerOrTripLeader(w, tripId, memberId) {
     return
   }
 
-  // Get signup info
   stmt := `
     SELECT *
     FROM trip_signup
@@ -170,7 +169,7 @@ func GetTripsAdmin(w http.ResponseWriter, r *http.Request) {
   if !checkError(w, err) {
     return
   }
-  defer rows.Close() // TODO needed?
+  defer rows.Close()
 
   var tripSignups = []*tripSignupStruct{}
   i := 0
@@ -254,7 +253,8 @@ func GetTripsArchive(w http.ResponseWriter, r *http.Request) {
 
   tripStartId := MAX_INT
   tripsPerPage := 20
-  if len(pathVars) > 0 && len(pathVars) < 3 {
+  // Process dynamic path variables
+  if len(pathVars) == 1 || len(pathVars) == 2 {
     i, _ := strconv.Atoi(pathVars[0])
     if i != 0 {
       tripStartId = i
@@ -277,43 +277,43 @@ func GetTripsArchive(w http.ResponseWriter, r *http.Request) {
   if !checkError(w, err) {
     return
   }
-  defer rows.Close() // TODO needed?
+  defer rows.Close()
 
   var trips = []*tripStruct{}
-  tripIndex := 0
+  i := 0
   for rows.Next() {
     trips = append(trips, &tripStruct{})
     err = rows.Scan(
-      &trips[tripIndex].Id,
-      &trips[tripIndex].CreateDatetime,
-      &trips[tripIndex].Cancel,
-      &trips[tripIndex].Publish,
-      &trips[tripIndex].MemberId,
-      &trips[tripIndex].MembersOnly,
-      &trips[tripIndex].AllowLateSignups,
-      &trips[tripIndex].DrivingRequired,
-      &trips[tripIndex].HasCost,
-      &trips[tripIndex].CostDescription,
-      &trips[tripIndex].MaxPeople,
-      &trips[tripIndex].Name,
-      &trips[tripIndex].TripTypeId,
-      &trips[tripIndex].StartDatetime,
-      &trips[tripIndex].EndDatetime,
-      &trips[tripIndex].Summary,
-      &trips[tripIndex].Description,
-      &trips[tripIndex].Location,
-      &trips[tripIndex].LocationDirections,
-      &trips[tripIndex].MeetupLocation,
-      &trips[tripIndex].Distance,
-      &trips[tripIndex].Difficulty,
-      &trips[tripIndex].DifficultyDescription,
-      &trips[tripIndex].Instructions,
-      &trips[tripIndex].PetsAllowed,
-      &trips[tripIndex].PetsDescription)
+      &trips[i].Id,
+      &trips[i].CreateDatetime,
+      &trips[i].Cancel,
+      &trips[i].Publish,
+      &trips[i].MemberId,
+      &trips[i].MembersOnly,
+      &trips[i].AllowLateSignups,
+      &trips[i].DrivingRequired,
+      &trips[i].HasCost,
+      &trips[i].CostDescription,
+      &trips[i].MaxPeople,
+      &trips[i].Name,
+      &trips[i].TripTypeId,
+      &trips[i].StartDatetime,
+      &trips[i].EndDatetime,
+      &trips[i].Summary,
+      &trips[i].Description,
+      &trips[i].Location,
+      &trips[i].LocationDirections,
+      &trips[i].MeetupLocation,
+      &trips[i].Distance,
+      &trips[i].Difficulty,
+      &trips[i].DifficultyDescription,
+      &trips[i].Instructions,
+      &trips[i].PetsAllowed,
+      &trips[i].PetsDescription)
     if !checkError(w, err) {
       return
     }
-    tripIndex++
+    i++
   }
 
   err = rows.Err()
@@ -367,28 +367,13 @@ func PatchTripsCancel(w http.ResponseWriter, r *http.Request) {
   if !ok {
     return
   }
-  tripId, err := strconv.Atoi(chi.URLParam(r, "tripId"))
-  if err != nil {
-    respondError(w, http.StatusBadRequest, err.Error())
+  tripId, ok := checkURLParam(w, r, "tripId")
+  if !ok {
     return
   }
 
-  // Check if admin
-  isCreator, err := dbIsTripCreator(w, tripId, memberId)
-  if err != nil {
-    return
-  }
-  isLeader, err := dbIsTripLeader(w, tripId, memberId)
-  if err != nil {
-    return
-  }
-  isOfficer, err := dbIsOfficer(w, memberId)
-  if err != nil {
-    return
-  }
-
-  if !isCreator && !isLeader && !isOfficer {
-    respondError(w, http.StatusUnauthorized, "Not authorized to cancel trip.")
+  // Permissions
+  if !dbEnsureOfficerOrTripLeader(w, tripId, memberId) {
     return
   }
 
@@ -396,7 +381,7 @@ func PatchTripsCancel(w http.ResponseWriter, r *http.Request) {
     UPDATE trip
     SET cancel = true
     WHERE id = ?`
-  _, err = db.Exec(stmt, tripId)
+   _, err := db.Exec(stmt, tripId)
   if !checkError(w, err) {
     return
   }
@@ -415,19 +400,13 @@ func PatchTripsPublish(w http.ResponseWriter, r *http.Request) {
   if !ok {
     return
   }
-  tripId, err := strconv.Atoi(chi.URLParam(r, "tripId"))
-  if err != nil {
-    respondError(w, http.StatusBadRequest, err.Error())
+  tripId, ok := checkURLParam(w, r, "tripId")
+  if !ok {
     return
   }
 
   // Only creator can signup while not published
-  isLeader, err := dbIsTripLeader(w, tripId, memberId)
-  if err != nil {
-    return
-  }
-  if !isLeader {
-    respondError(w, http.StatusBadRequest, "Only creator can publish trip.")
+  if !dbEnsureTripLeader(w, tripId, memberId) {
     return
   }
 
@@ -435,7 +414,7 @@ func PatchTripsPublish(w http.ResponseWriter, r *http.Request) {
     UPDATE trip
     SET publish = true
     WHERE id = ?`
-  _, err = db.Exec(stmt, tripId)
+  _, err := db.Exec(stmt, tripId)
   if !checkError(w, err) {
     return
   }
@@ -449,18 +428,18 @@ func PostTrips(w http.ResponseWriter, r *http.Request) {
     return
   }
 
+  // Get member id
+  memberId, ok := dbGetActiveMemberId(w, subject)
+  if !ok {
+    return
+  }
+
   // Get request body
   decoder := json.NewDecoder(r.Body)
   var trip tripStruct
   err := decoder.Decode(&trip)
   if err != nil {
     respondError(w, http.StatusBadRequest, err.Error())
-    return
-  }
-
-  // Get member id
-  memberId, ok := dbGetActiveMemberId(w, subject)
-  if !ok {
     return
   }
 
