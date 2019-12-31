@@ -124,27 +124,26 @@ func GetMyAccount(w http.ResponseWriter, r *http.Request) {
 
   // Get account data
   stmt := `
-  SELECT
-    member.id,
-    member.email,
-    member.first_name,
-    member.last_name,
-    member.create_datetime,
-    member.cell_number,
-    member.gender,
-    member.birth_year,
-    member.active,
-    member.medical_cond,
-    member.medical_cond_desc,
-    member.paid_expire_datetime,
-    member.notification_preference,
-    emergency_contact.name,
-    emergency_contact.number,
-    emergency_contact.relationship
-  FROM member
-  INNER JOIN
-    emergency_contact ON emergency_contact.member_id = member.id
-  WHERE member.id = ?`
+    SELECT
+      member.id,
+      member.email,
+      member.first_name,
+      member.last_name,
+      member.create_datetime,
+      member.cell_number,
+      member.gender,
+      member.birth_year,
+      member.active,
+      member.medical_cond,
+      member.medical_cond_desc,
+      member.paid_expire_datetime,
+      member.notification_preference,
+      emergency_contact.name,
+      emergency_contact.number,
+      emergency_contact.relationship
+    FROM member
+    INNER JOIN emergency_contact ON emergency_contact.member_id = member.id
+    WHERE member.id = ?`
   var member memberStruct
   err := db.QueryRow(stmt, memberId).Scan(
     &member.Id,

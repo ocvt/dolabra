@@ -324,6 +324,74 @@ func GetTripsArchive(w http.ResponseWriter, r *http.Request) {
   respondJSON(w, http.StatusOK, map[string][]*tripStruct{"trips": trips})
 }
 
+func GetTripsMyTrips(w http.ResponseWriter, r *http.Request) {
+  _, subject, ok := checkLogin(w, r)
+  if !ok {
+    return
+  }
+
+  // Get member id and trip id
+  memberId, ok := dbGetActiveMemberId(w, subject)
+  if !ok {
+    return
+  }
+ 
+  stmt := `
+    SELECT *
+    FROM trip
+    WHERE
+      member_id = ?`
+  rows, err := db.Query(stmt, memberId)
+  if !checkError(w, err) {
+    return
+  }
+  defer rows.Close()
+
+  var trips = []*tripStruct{}
+  i := 0
+  for rows.Next() {
+    trips = append(trips, &tripStruct{})
+    err = rows.Scan(
+      &trips[i].Id,
+      &trips[i].CreateDatetime,
+      &trips[i].Cancel,
+      &trips[i].Publish,
+      &trips[i].MemberId,
+      &trips[i].MembersOnly,
+      &trips[i].AllowLateSignups,
+      &trips[i].DrivingRequired,
+      &trips[i].HasCost,
+      &trips[i].CostDescription,
+      &trips[i].MaxPeople,
+      &trips[i].Name,
+      &trips[i].TripTypeId,
+      &trips[i].StartDatetime,
+      &trips[i].EndDatetime,
+      &trips[i].Summary,
+      &trips[i].Description,
+      &trips[i].Location,
+      &trips[i].LocationDirections,
+      &trips[i].MeetupLocation,
+      &trips[i].Distance,
+      &trips[i].Difficulty,
+      &trips[i].DifficultyDescription,
+      &trips[i].Instructions,
+      &trips[i].PetsAllowed,
+      &trips[i].PetsDescription)
+    if !checkError(w, err) {
+      return
+    }
+    i++
+  }
+
+  err = rows.Err()
+  if !checkError(w, err) {
+    return
+  }
+
+  respondJSON(w, http.StatusOK, map[string][]*tripStruct{"trips": trips})
+}
+
 func GetTripsTypes(w http.ResponseWriter, r *http.Request) {
   stmt := `
     SELECT *
@@ -332,7 +400,7 @@ func GetTripsTypes(w http.ResponseWriter, r *http.Request) {
   if !checkError(w, err) {
     return
   }
-  defer rows.Close() // TODO needed
+  defer rows.Close()
 
   var tripTypes = map[string]map[string]string{}
   for rows.Next() {
@@ -384,6 +452,31 @@ func PatchTripsCancel(w http.ResponseWriter, r *http.Request) {
    _, err := db.Exec(stmt, tripId)
   if !checkError(w, err) {
     return
+  }
+
+  // Notify signups
+  var signups = []int{}
+  if !dbGetTripSignupGroup(w, tripId, "ATTEND", &signups) {
+    return
+  }
+  if !dbGetTripSignupGroup(w, tripId, "FORCE", &signups) {
+    return
+  }
+  if !dbGetTripSignupGroup(w, tripId, "WAIT", &signups) {
+    return
+  }
+  emailSubject := "Trip \"%s\" has been canceled"
+  emailBody :=
+      "This email is a notification that the trip you were signed up for, " +
+      "\"%s\", has been canceled"
+  for i := 0; i < len(signups); i++ {
+    if signups[i] == memberId {
+      if !sendEmailToTripSignup(w, 0, signups[i], tripId, emailSubject, emailBody) {
+        return
+      }
+    } else if !sendEmailToTripSignup(w, memberId, signups[i], tripId, emailSubject, emailBody) {
+      return
+    }
   }
 
   respondJSON(w, http.StatusNoContent, nil)

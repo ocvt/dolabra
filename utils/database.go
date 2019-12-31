@@ -246,9 +246,9 @@ func insertData(db *sql.DB) {
     VALUES
       ('ATTEND', 'User is attending'),
       ('BOOT', 'User has been manually booted'),
-      ('WAIT', 'User is on waiting list'),
       ('CANCEL', 'User has chosen to cancel '),
-      ('FORCE', 'User is force added')
+      ('FORCE', 'User is force added'),
+      ('WAIT', 'User is on waiting list')
   `)
 }
 

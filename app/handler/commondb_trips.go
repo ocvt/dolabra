@@ -11,6 +11,51 @@ import (
 */
 
 /* General helpers */
+func dbGetTripName(w http.ResponseWriter, tripId int) (string, bool) {
+  stmt := `
+    SELECT name
+    FROM trip
+    WHERE trip.id = ?`
+  var name string
+  err := db.QueryRow(stmt, tripId).Scan(&name)
+  if !checkError(w, err) {
+    return "", false
+  }
+
+  return name, true
+}
+
+func dbGetTripSignupGroup(w http.ResponseWriter, tripId int, groupId string, signups *[]int) bool {
+  stmt := `
+    SELECT member_id
+    FROM trip_signup
+    WHERE trip_signup.trip_id = ? AND trip_signup.attending_code = ?`
+  rows, err := db.Query(stmt, tripId, groupId)
+  if !checkError(w, err) {
+    return false
+  }
+  defer rows.Close()
+
+  i := 0
+  for rows.Next() {
+    var memberId int
+    err = rows.Scan(&memberId)
+    if !checkError(w, err) {
+      return false
+    }
+
+    *signups = append(*signups, memberId)
+    i++
+  }
+
+  err = rows.Err()
+  if !checkError(w, err) {
+    return false
+  }
+
+  return true
+}
+
 func redactDataIfOldTrip(w http.ResponseWriter, tripId int, tripSignup *tripSignupStruct) bool {
   stmt := `
     SELECT EXISTS (
@@ -157,7 +202,12 @@ func dbEnsureTripLeader(w http.ResponseWriter, tripId int, memberId int) bool {
 
 func dbEnsureValidSignup(w http.ResponseWriter, tripId int, memberId int,
     carpool bool, driver bool, carCapacityTotal int, pet bool) bool {
-  if !dbEnsureMemberIsOnTrip(w, tripId, memberId) {
+  onTrip, err := dbIsMemberOnTrip(w, tripId, memberId)
+  if err != nil {
+    return false
+  }
+  if onTrip {
+    respondError(w, http.StatusBadRequest, "Member is already on trip.")
     return false
   }
 
@@ -232,7 +282,7 @@ func dbIsTooLateSignup(w http.ResponseWriter, tripId int) (bool, error) {
   stmt := `
     SELECT EXISTS (
       SELECT 1
-      FROm trip
+      FROM trip
       WHERE id = ? AND datetime(start_datetime) < datetime('now', '+12 hours') AND allow_late_signups = true)`
   var exists bool
   err := db.QueryRow(stmt, tripId).Scan(&exists)

@@ -91,6 +91,16 @@ func PatchTripsSignupAbsent(w http.ResponseWriter, r *http.Request) {
     return
   }
 
+  // Notify signup
+  emailSubject :=
+      "You have been marked as Absent on trip \"%s\""
+  emailBody :=
+      "This email is a notification that you have been marked as Absent on " +
+      "trip \"%s\"."
+  if !sendEmailToTripSignup(w, memberId, signupId, tripId, emailSubject, emailBody) {
+    return
+  }
+
   respondJSON(w, http.StatusNoContent, nil)
 }
 
@@ -150,6 +160,16 @@ func PatchTripsSignupBoot(w http.ResponseWriter, r *http.Request) {
     return
   }
 
+  // Notify signup
+  emailSubject :=
+      "You have been Booted from the trip \"%s\""
+  emailBody :=
+      "This email is a notification that you have been Booted from the trip " +
+      "\"%s\" with the message " + tripSignupBoot.BootReason
+  if !sendEmailToTripSignup(w, memberId, signupId, tripId, emailSubject, emailBody) {
+    return
+  }
+
   respondJSON(w, http.StatusNoContent, nil)
 }
 
@@ -188,6 +208,16 @@ func PatchTripsSignupCancel(w http.ResponseWriter, r *http.Request) {
     WHERE trip_id = ? AND member_id = ?`
   _, err := db.Exec(stmt, tripId, memberId)
   if !checkError(w, err) {
+    return
+  }
+
+  // Notify signup
+  emailSubject :=
+      "You have canceled your signup for trip \"%s\""
+  emailBody :=
+      "This email is a notification that you have canceled your signup on " +
+      "trip \"%s\". Note, you cannot signup again after you have canceled."
+  if !sendEmailToTripSignup(w, 0, memberId, tripId, emailSubject, emailBody) {
     return
   }
 
@@ -231,6 +261,16 @@ func PatchTripsSignupForceadd(w http.ResponseWriter, r *http.Request) {
     WHERE trip_id = ? AND member_id = ?`
   _, err := db.Exec(stmt, tripId, signupId)
   if !checkError(w, err) {
+    return
+  }
+
+  // Notify signup
+  emailSubject :=
+      "You have been Force Added to the trip \"%s\""
+  emailBody :=
+      "This email is a notification that you have been Force Added to the " +
+      "trip \"%s\"."
+  if !sendEmailToTripSignup(w, memberId, signupId, tripId, emailSubject, emailBody) {
     return
   }
 
@@ -282,6 +322,16 @@ func PatchTripsSignupTripLeaderPromote(w http.ResponseWriter, r *http.Request) {
     return
   }
 
+  // Notify signup
+  emailSubject :=
+      "You have been promoted to Trip Leader for the trip \"%s\""
+  emailBody :=
+      "This email is a notification that you have been promoted to Trip " +
+      "Leader for the trip \"%s\""
+  if !sendEmailToTripSignup(w, memberId, signupId, tripId, emailSubject, emailBody) {
+    return
+  }
+
   respondJSON(w, http.StatusNoContent, nil)
 }
 
@@ -319,7 +369,6 @@ func PostTripsSignup(w http.ResponseWriter, r *http.Request) {
   if err != nil {
     return
   }
-
 
   // Permissions if not creator
   attendingCode := "FORCE"

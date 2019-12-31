@@ -40,9 +40,14 @@ func setRouters() {
   // Process JWT is present
   r.Use(handler.ProcessClientAuth)
 
+  r.Get("/homephotos", handler.GetHomePhotos)
+
   r.Route("/auth", func(r chi.Router) {
     r.Get("/google", handler.GoogleLogin)
     r.Get("/google/callback", handler.GoogleCallback)
+    if len(os.Getenv("DEV")) > 0 {
+      r.Get("/dev/{subject}", handler.DevLogin)
+    }
   })
 
   r.Route("/myaccount", func(r chi.Router) {
@@ -58,11 +63,18 @@ func setRouters() {
     r.Get("/", handler.GetTrips)
     r.Get("/archive", handler.GetTripsArchive)
     r.Get("/archive/*", handler.GetTripsArchive)
+    r.Get("/mytrips", handler.GetTripsMyTrips)
+    r.Get("/photos", handler.GetAllTripsPhotos)
     r.Get("/types", handler.GetTripsTypes)
     r.Get("/{tripId}/admin", handler.GetTripsAdmin)
+    r.Get("/{tripId}/photos", handler.GetTripsPhotos)
     r.Patch("/{tripId}/cancel", handler.PatchTripsCancel)
     r.Patch("/{tripId}/publish", handler.PatchTripsPublish)
+    r.Post("/{tripId}/notify/signup/{signupId}", handler.PostTripsNotifySignup)
+    r.Post("/{tripId}/notify/{groupId}", handler.PostTripsNotifyGroup)
     r.Post("/", handler.PostTrips)
+    r.Post("/{tripId}/mainphoto", handler.PostTripsMainphoto)
+    r.Post("/{tripId}/photos", handler.PostTripsPhotos)
     r.Route("/{tripId}/signup", func(r chi.Router) {
       r.Get("/", handler.GetTripsSignup)
       r.Patch("/cancel", handler.PatchTripsSignupCancel)
@@ -73,6 +85,10 @@ func setRouters() {
       r.Post("/", handler.PostTripsSignup)
     })
   })
+
+//  r.Route("/webtools", func(r chi.Router) {
+//    r.Get("/newsitem", handler.NotifyPaul)
+//  })
 }
 
 func Run(host string) {

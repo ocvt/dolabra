@@ -44,6 +44,36 @@ func checkURLParam(w http.ResponseWriter, r *http.Request, param string) (int, b
 }
 
 /* "Ensure" helpers */
+func dbGetActiveMemberId(w http.ResponseWriter, subject string) (int, bool) {
+  memberId, ok := dbGetMemberId(w, subject)
+  if !ok {
+    return 0, false
+  }
+
+  isActive, err := dbIsActiveMember(w, memberId)
+  if err != nil {
+    return 0, false
+  }
+  if !isActive {
+    respondError(w, http.StatusBadRequest, "Member is not active.")
+    return 0, false
+  }
+  return memberId, true
+}
+
+func dbGetMemberEmail(w http.ResponseWriter, memberId int) (string, bool) {
+  stmt := `
+    SELECT email
+    FROM member
+    WHERE id = ?`
+  var email string
+  err := db.QueryRow(stmt, memberId).Scan(&email)
+  if !checkError(w, err) {
+    return "", false
+  }
+  return email, true
+}
+
 func dbGetMemberId(w http.ResponseWriter, subject string) (int, bool) {
   if !dbEnsureMemberExists(w, subject) {
     return 0, false
@@ -61,21 +91,17 @@ func dbGetMemberId(w http.ResponseWriter, subject string) (int, bool) {
   return memberId, true
 }
 
-func dbGetActiveMemberId(w http.ResponseWriter, subject string) (int, bool) {
-  memberId, ok := dbGetMemberId(w, subject)
-  if !ok {
-    return 0, false
+func dbGetMemberName(w http.ResponseWriter, memberId int) (string, bool) {
+  stmt := `
+    SELECT first_name || ' ' || last_name AS full_name
+    FROM member
+    WHERE id = ?`
+  var fullName string
+  err := db.QueryRow(stmt, memberId).Scan(&fullName)
+  if !checkError(w, err) {
+    return "", false
   }
-
-  isActive, err := dbIsActiveMember(w, memberId)
-  if err != nil {
-    return 0, false
-  }
-  if !isActive {
-    respondError(w, http.StatusBadRequest, "Member is not active.")
-    return 0, false
-  }
-  return memberId, true
+  return fullName, true
 }
 
 func dbEnsureMemberExists(w http.ResponseWriter, subject string) bool {

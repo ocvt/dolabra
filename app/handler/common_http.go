@@ -6,22 +6,9 @@ import (
   "encoding/json"
   "log"
   "net/http"
-  "os"
 
   "golang.org/x/crypto/nacl/secretbox"
-  "golang.org/x/oauth2"
-  "golang.org/x/oauth2/google"
-  oidcgoogle "google.golang.org/api/oauth2/v2"
 )
-
-// Google OAuth config
-var googleOAuthConfig = &oauth2.Config{
-    ClientID: os.Getenv("GOOGLE_CLIENT_ID"),
-    ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-    RedirectURL: "http://localhost:3000/auth/google/callback", //TODO change to be relative
-    Scopes: []string{oidcgoogle.UserinfoProfileScope},
-    Endpoint: google.Endpoint,
-}
 
 /************************ COOKIES ************************/
 // Key for encrypting cookies
