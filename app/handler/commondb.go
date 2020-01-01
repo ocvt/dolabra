@@ -13,7 +13,7 @@ import (
    - EXISTS helpers
 */
 
-var MAX_INT = 9223372036854775807
+var MAX_INT = 4294967295
 
 /* General helpers */
 func checkLogin(w http.ResponseWriter, r *http.Request) (string, string, bool) {

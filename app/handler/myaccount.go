@@ -9,6 +9,7 @@ import (
 type memberStruct struct {
   Id int `json:"id,omitempty"`
   CreateDatetime string `json:"createDatetime,omitempty"`
+  NotificationPreference int `json:"notificationPreference,omitempty"`
   /* Required fields for creating an account */
   Email string `json:"email"`
   FirstName string `json:"firstName"`
@@ -20,7 +21,6 @@ type memberStruct struct {
   MedicalCond bool `json:"medicalCond"`
   MedicalCondDesc string `json:"medicalCondDesc"`
   PaidExpireDatetime string `json:"paidExpireDatetime"`
-  NotificationPreference int `json:"notificationPreference"`
   EmergencyContactName string `json:"emergencyContactName"`
   EmergencyContactNumber string `json:"emergencyContactNumber"`
   EmergencyContactRelationship string `json:"emergencyContactRelationship"`
@@ -38,7 +38,12 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  // Clear member fields
+  // Get new notifications
+  notificationsStr, err := json.Marshal(notificationsStruct{})
+  if !checkError(w, err) {
+    return
+  }
+
   stmt := `
     UPDATE member
     SET
@@ -53,14 +58,13 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
       medical_cond = false,
       medical_cond_desc = '',
       paid_expire_datetime = 0,
-      notification_preference = 0
+      notification_preference = ?
     WHERE id = ?`
-  _, err := db.Exec(stmt, memberId)
+  _, err = db.Exec(stmt, notificationsStr, memberId)
   if !checkError(w, err) {
     return
   }
 
-  // Clear emergency_contact entry
   stmt = `
     UPDATE emergency_contact
     SET
@@ -73,7 +77,6 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  // Clear auth data
   stmt = `
     UPDATE auth
     SET
@@ -122,7 +125,6 @@ func GetMyAccount(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  // Get account data
   stmt := `
     SELECT
       member.id,
@@ -137,7 +139,6 @@ func GetMyAccount(w http.ResponseWriter, r *http.Request) {
       member.medical_cond,
       member.medical_cond_desc,
       member.paid_expire_datetime,
-      member.notification_preference,
       emergency_contact.name,
       emergency_contact.number,
       emergency_contact.relationship
@@ -158,7 +159,6 @@ func GetMyAccount(w http.ResponseWriter, r *http.Request) {
     &member.MedicalCond,
     &member.MedicalCondDesc,
     &member.PaidExpireDatetime,
-    &member.NotificationPreference,
     &member.EmergencyContactName,
     &member.EmergencyContactNumber,
     &member.EmergencyContactRelationship)
@@ -181,7 +181,6 @@ func GetMyAccountName(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  // Only get users first name
   stmt := `
     SELECT first_name
     FROM member
@@ -207,7 +206,6 @@ func PatchMyAccountDeactivate(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  // Set active to 0
   stmt := `
     UPDATE member
     SET active = false
@@ -232,7 +230,6 @@ func PatchMyAccountReactivate(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  // Set active to 1
   stmt := `
     UPDATE member
     SET active = 1
@@ -266,7 +263,13 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  // Insert new member
+  // Default to prefer all notifications
+  notifications := setAllPreferences()
+  notificationsStr, err := json.Marshal(notifications)
+  if !checkError(w, err) {
+    return
+  }
+
   stmt := `
     INSERT INTO member (
       email,
@@ -294,7 +297,7 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
     member.MedicalCond,
     member.MedicalCondDesc,
     member.PaidExpireDatetime,
-    member.NotificationPreference)
+    notificationsStr)
   if !checkError(w, err) {
     return
   }

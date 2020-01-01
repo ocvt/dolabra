@@ -28,7 +28,7 @@ func createTables(db *sql.DB) {
       medical_cond BOOLEAN NOT NULL,
       medical_cond_desc TEXT NOT NULL COLLATE NOCASE,
       paid_expire_datetime DATETIME NOT NULL,
-      notification_preference INTEGER NOT NULL
+      notification_preference TEXT NOT NULL
     );
   `)
 
