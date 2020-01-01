@@ -36,7 +36,6 @@ func dbGetTripSignupGroup(w http.ResponseWriter, tripId int, groupId string, sig
   }
   defer rows.Close()
 
-  i := 0
   for rows.Next() {
     var memberId int
     err = rows.Scan(&memberId)
@@ -45,7 +44,6 @@ func dbGetTripSignupGroup(w http.ResponseWriter, tripId int, groupId string, sig
     }
 
     *signups = append(*signups, memberId)
-    i++
   }
 
   err = rows.Err()

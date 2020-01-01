@@ -44,6 +44,18 @@ func checkURLParam(w http.ResponseWriter, r *http.Request, param string) (int, b
 }
 
 /* "Ensure" helpers */
+func dbEnsureOfficer(w http.ResponseWriter, memberId int) bool {
+  isOfficer, err := dbIsOfficer(w, memberId)
+  if err != nil {
+    return false
+  }
+  if !isOfficer {
+    respondError(w, http.StatusBadRequest, "Must be officer.")
+    return false
+  }
+  return true
+}
+
 func dbGetActiveMemberId(w http.ResponseWriter, subject string) (int, bool) {
   memberId, ok := dbGetMemberId(w, subject)
   if !ok {
@@ -182,7 +194,7 @@ func dbIsOfficer(w http.ResponseWriter, memberId int) (bool, error) {
     SELECT EXISTS (
       SELECT 1
       FROM officer
-      WHERE member_id = ?)`
+      WHERE member_id = ? AND date(expire_datetime) > datetime('now'))`
   var exists bool
   err := db.QueryRow(stmt, memberId).Scan(&exists)
   checkError(w, err)

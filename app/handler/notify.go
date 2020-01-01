@@ -8,7 +8,7 @@ import (
   "github.com/go-chi/chi"
 )
 
-func PostTripsNotifySignup(w http.ResponseWriter, r * http.Request) {
+func PostTripsNotifySignup(w http.ResponseWriter, r *http.Request) {
   _, subject, ok := checkLogin(w, r)
   if !ok {
     return
@@ -53,7 +53,7 @@ func PostTripsNotifySignup(w http.ResponseWriter, r * http.Request) {
   respondJSON(w, http.StatusNoContent, nil)
 }
 
-func PostTripsNotifyGroup(w http.ResponseWriter, r * http.Request) {
+func PostTripsNotifyGroup(w http.ResponseWriter, r *http.Request) {
   _, subject, ok := checkLogin(w, r)
   if !ok {
     return
