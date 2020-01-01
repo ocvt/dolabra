@@ -16,6 +16,27 @@ func deleteAuthCookies(w http.ResponseWriter) {
   deleteCookie(w, "token")
 }
 
+func EnsureOfficer(next http.Handler) http.Handler {
+  return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    _, subject, ok := checkLogin(w, r)
+    if !ok {
+      return
+    }
+
+    // Get memberId
+    memberId, ok := dbGetActiveMemberId(w, subject)
+    if !ok {
+      return
+    }
+
+    if !dbEnsureOfficer(w, memberId) {
+      return
+    }
+
+    next.ServeHTTP(w, r)
+  })
+}
+
 // Get token from cookie and put user id in context
 func ProcessClientAuth(next http.Handler) http.Handler {
   return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -56,6 +56,18 @@ func dbEnsureOfficer(w http.ResponseWriter, memberId int) bool {
   return true
 }
 
+func dbEnsureNotOfficer(w http.ResponseWriter, memberId int) bool {
+  isOfficer, err := dbIsOfficer(w, memberId)
+  if err != nil {
+    return false
+  }
+  if isOfficer {
+    respondError(w, http.StatusBadRequest, "Must not be officer.")
+    return false
+  }
+  return true
+}
+
 func dbGetActiveMemberId(w http.ResponseWriter, subject string) (int, bool) {
   memberId, ok := dbGetMemberId(w, subject)
   if !ok {
@@ -140,6 +152,19 @@ func dbEnsureMemberDoesNotExist(w http.ResponseWriter, subject string) bool {
   return false
 }
 
+func dbEnsureMemberIdExists(w http.ResponseWriter, memberId int) bool {
+  exists, err := dbIsMemberWithMemberId(w, memberId)
+  if err == nil && !exists {
+      respondError(w, http.StatusNotFound, "Member is not registered.")
+  }
+
+  if err == nil {
+    return exists
+  }
+  return false
+}
+
+
 /* EXISTS helpers */
 func dbIsActiveMember(w http.ResponseWriter, memberId int) (bool, error) {
   stmt := `
@@ -177,7 +202,7 @@ func dbIsMemberWithSubject(w http.ResponseWriter, subject string) (bool, error) 
   return exists, err
 }
 
-func dbIsActiveMemberWithMemberId(w http.ResponseWriter, memberId int) (bool, error) {
+func dbIsMemberWithMemberId(w http.ResponseWriter, memberId int) (bool, error) {
   stmt := `
     SELECT EXISTS (
       SELECT 1

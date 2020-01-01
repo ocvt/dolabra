@@ -87,11 +87,11 @@ func setRouters() {
   })
 
   r.Route("/webtools", func(r chi.Router) {
-    // TODO add middleware
+    r.Use(handler.EnsureOfficer)
     r.Get("/officers", handler.GetWebtoolsOfficers)
     r.Delete("/officers/{memberId}", handler.DeleteWebtoolsOfficers)
-//    r.Patch("/officers/{memberId}/update", handler.PatchWebtoolsOfficers)
-//    r.Post("/officers/", handler.PostWebtoolsOfficers)
+    r.Patch("/officers/{memberId}/{action}", handler.PatchWebtoolsOfficers)
+    r.Post("/officers/", handler.PostWebtoolsOfficers)
   })
 }
 
