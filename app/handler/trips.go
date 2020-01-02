@@ -25,7 +25,7 @@ type tripStruct struct {
   CostDescription string `json:"costDescription"`
   MaxPeople int `json:"maxPeople"`
   Name string `json:"name"`
-  TripTypeId string `json:"tripTypeId"`
+  NotificationTypeId string `json:"notificationTypeId"`
   StartDatetime string `json:"startDatetime"`
   EndDatetime string `json:"endDatetime"`
   Summary string `json:"summary"`
@@ -111,7 +111,7 @@ func GetTrips(w http.ResponseWriter, r *http.Request) {
       &trips[i].CostDescription,
       &trips[i].MaxPeople,
       &trips[i].Name,
-      &trips[i].TripTypeId,
+      &trips[i].NotificationTypeId,
       &trips[i].StartDatetime,
       &trips[i].EndDatetime,
       &trips[i].Summary,
@@ -296,7 +296,7 @@ func GetTripsArchive(w http.ResponseWriter, r *http.Request) {
       &trips[i].CostDescription,
       &trips[i].MaxPeople,
       &trips[i].Name,
-      &trips[i].TripTypeId,
+      &trips[i].NotificationTypeId,
       &trips[i].StartDatetime,
       &trips[i].EndDatetime,
       &trips[i].Summary,
@@ -364,7 +364,7 @@ func GetTripsMyTrips(w http.ResponseWriter, r *http.Request) {
       &trips[i].CostDescription,
       &trips[i].MaxPeople,
       &trips[i].Name,
-      &trips[i].TripTypeId,
+      &trips[i].NotificationTypeId,
       &trips[i].StartDatetime,
       &trips[i].EndDatetime,
       &trips[i].Summary,
@@ -395,14 +395,14 @@ func GetTripsMyTrips(w http.ResponseWriter, r *http.Request) {
 func GetTripsTypes(w http.ResponseWriter, r *http.Request) {
   stmt := `
     SELECT *
-    FROM trip_type`
+    FROM notification_type`
   rows, err := db.Query(stmt)
   if !checkError(w, err) {
     return
   }
   defer rows.Close()
 
-  var tripTypes = map[string]map[string]string{}
+  var notificationTypes = map[string]map[string]string{}
   for rows.Next() {
     var id, name, description string
     err = rows.Scan(&id, &name, &description)
@@ -410,7 +410,7 @@ func GetTripsTypes(w http.ResponseWriter, r *http.Request) {
       return
     }
 
-    tripTypes[id] = map[string]string{
+    notificationTypes[id] = map[string]string{
       "typeName": name,
       "typeDescription": description,
     }
@@ -421,7 +421,7 @@ func GetTripsTypes(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  respondJSON(w, http.StatusOK, tripTypes)
+  respondJSON(w, http.StatusOK, notificationTypes)
 }
 
 func PatchTripsCancel(w http.ResponseWriter, r *http.Request) {
@@ -465,16 +465,21 @@ func PatchTripsCancel(w http.ResponseWriter, r *http.Request) {
   if !dbGetTripSignupGroup(w, tripId, "WAIT", &signups) {
     return
   }
+
   emailSubject := "Trip \"%s\" has been canceled"
   emailBody :=
       "This email is a notification that the trip you were signed up for, " +
       "\"%s\", has been canceled"
+  if !logEmail(w, "TRIP_ALERT", tripId, memberId, emailSubject, emailBody) {
+    return
+  }
+
   for i := 0; i < len(signups); i++ {
     if signups[i] == memberId {
-      if !sendEmailToTripSignup(w, 0, signups[i], tripId, emailSubject, emailBody) {
+      if !sendEmailToTripSignup(w, "TRIP_ALERT", 0, signups[i], tripId, emailSubject, emailBody) {
         return
       }
-    } else if !sendEmailToTripSignup(w, memberId, signups[i], tripId, emailSubject, emailBody) {
+    } else if !sendEmailToTripSignup(w, "TRIP_ALERT", memberId, signups[i], tripId, emailSubject, emailBody) {
       return
     }
   }
@@ -550,7 +555,7 @@ func PostTrips(w http.ResponseWriter, r *http.Request) {
       cost_description,
       max_people,
       name,
-      trip_type_id,
+      notification_type_id,
       start_datetime,
       end_datetime,
       summary,
@@ -575,7 +580,7 @@ func PostTrips(w http.ResponseWriter, r *http.Request) {
     trip.CostDescription,
     trip.MaxPeople,
     trip.Name,
-    trip.TripTypeId,
+    trip.NotificationTypeId,
     trip.StartDatetime,
     trip.EndDatetime,
     trip.Summary,

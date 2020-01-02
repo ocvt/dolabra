@@ -97,7 +97,7 @@ func PatchTripsSignupAbsent(w http.ResponseWriter, r *http.Request) {
   emailBody :=
       "This email is a notification that you have been marked as Absent on " +
       "trip \"%s\"."
-  if !sendEmailToTripSignup(w, memberId, signupId, tripId, emailSubject, emailBody) {
+  if !sendEmailToTripSignup(w, "TRIP_ALERT", memberId, signupId, tripId, emailSubject, emailBody) {
     return
   }
 
@@ -166,7 +166,7 @@ func PatchTripsSignupBoot(w http.ResponseWriter, r *http.Request) {
   emailBody :=
       "This email is a notification that you have been Booted from the trip " +
       "\"%s\" with the message " + tripSignupBoot.BootReason
-  if !sendEmailToTripSignup(w, memberId, signupId, tripId, emailSubject, emailBody) {
+  if !sendEmailToTripSignup(w, "TRIP_ALERT", memberId, signupId, tripId, emailSubject, emailBody) {
     return
   }
 
@@ -217,7 +217,7 @@ func PatchTripsSignupCancel(w http.ResponseWriter, r *http.Request) {
   emailBody :=
       "This email is a notification that you have canceled your signup on " +
       "trip \"%s\". Note, you cannot signup again after you have canceled."
-  if !sendEmailToTripSignup(w, 0, memberId, tripId, emailSubject, emailBody) {
+  if !sendEmailToTripSignup(w, "TRIP_ALERT", 0, memberId, tripId, emailSubject, emailBody) {
     return
   }
 
@@ -270,7 +270,7 @@ func PatchTripsSignupForceadd(w http.ResponseWriter, r *http.Request) {
   emailBody :=
       "This email is a notification that you have been Force Added to the " +
       "trip \"%s\"."
-  if !sendEmailToTripSignup(w, memberId, signupId, tripId, emailSubject, emailBody) {
+  if !sendEmailToTripSignup(w, "TRIP_ALERT", memberId, signupId, tripId, emailSubject, emailBody) {
     return
   }
 
@@ -328,7 +328,7 @@ func PatchTripsSignupTripLeaderPromote(w http.ResponseWriter, r *http.Request) {
   emailBody :=
       "This email is a notification that you have been promoted to Trip " +
       "Leader for the trip \"%s\""
-  if !sendEmailToTripSignup(w, memberId, signupId, tripId, emailSubject, emailBody) {
+  if !sendEmailToTripSignup(w, "TRIP_ALERT", memberId, signupId, tripId, emailSubject, emailBody) {
     return
   }
 

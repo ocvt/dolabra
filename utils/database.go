@@ -98,21 +98,12 @@ func createTables(db *sql.DB) {
 
   /* Trip related tables */
   execHelper(db, `
-    CREATE TABLE IF NOT EXISTS trip_type (
-      id TEXT PRIMARY KEY NOT NULL UNIQUE,
-      name TEXT UNIQUE NOT NULL COLLATE NOCASE,
-      description TEXT NOT NULL COLLATE NOCASE
-    );
-  `)
-
-  execHelper(db, `
     CREATE TABLE IF NOT EXISTS trip_attending_code (
       id TEXT NOT NULL COLLATE NOCASE UNIQUE PRIMARY KEY,
       description TEXT NOT NULL COLLATE NOCASE UNIQUE
     );
   `)
 
-  //TODO don't append trip_ to every field??
   execHelper(db, `
     CREATE TABLE IF NOT EXISTS trip (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
@@ -127,7 +118,7 @@ func createTables(db *sql.DB) {
       cost_description TEXT NOT NULL COLLATE NOCASE,
       max_people INTEGER NOT NULL,
       name TEXT NOT NULL COLLATE NOCASE,
-      trip_type_id TEXT NOT NULL REFERENCES trip_type (id),
+      notification_type_id TEXT NOT NULL REFERENCES notification_type (id),
       start_datetime DATETIME NOT NULL,
       end_datetime DATETIME NOT NULL,
       summary TEXT NOT NULL COLLATE NOCASE,
@@ -171,19 +162,17 @@ func createTables(db *sql.DB) {
     );
   `)
 
-  /* Notification related tables */
-  // clarification about type & subtype TODO
+  /* Notification & Announcement related tables */
+  // Note: member_id of 0 means sent by system (instead of a specific member)
   execHelper(db, `
     CREATE TABLE IF NOT EXISTS email (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
-      type TEXT NOT NULL COLLATE NOCASE,
-      subtype TEXT NOT NULL COLLATE NOCASE,
-      subject TEXT NOT NULL COLLATE NOCASE,
-      content TEXT NOT NULL COLLATE NOCASE,
-      member_id INTEGER REFERENCES member (id) NOT NULL,
+      notification_type_id TEXT NOT NULL REFERENCES notification_type (id),
+      trip_id INTEGER NOT NULL,
+      member_id INTEGER NOT NULL,
       reply_to TEXT NOT NULL COLLATE NOCASE,
-      return_path TEXT NOT NULL COLLATE NOCASE,
-      sent BOOLEAN NOT NULL,
+      subject TEXT NOT NULL COLLATE NOCASE,
+      body TEXT NOT NULL COLLATE NOCASE,
       create_datetime DATETIME NOT NULL
     );
   `)
@@ -195,6 +184,15 @@ func createTables(db *sql.DB) {
       create_datetime DATETIME NOT NULL,
       title TEXT NOT NULL COLLATE NOCASE,
       content TEXT NOT NULL COLLATE NOCASE
+    );
+  `)
+
+  // TODO ensure announcement & trips use correct notification type
+  execHelper(db, `
+    CREATE TABLE IF NOT EXISTS notification_type (
+      id TEXT PRIMARY KEY NOT NULL UNIQUE,
+      name TEXT UNIQUE NOT NULL COLLATE NOCASE,
+      description TEXT NOT NULL COLLATE NOCASE
     );
   `)
 
@@ -217,27 +215,34 @@ func createTables(db *sql.DB) {
 }
 
 func insertData(db *sql.DB) {
-  // Populate trip types
+  // Populate notification types
   execHelper(db, `
-    INSERT OR IGNORE INTO trip_type (id, name, description)
+    INSERT OR IGNORE INTO notification_type (id, name, description)
     VALUES
-      ('TR01', 'Dayhike', 'In and out on the same day.'),
-      ('TR02', 'Worktrip', 'Trail work or other maintenance.'),
-      ('TR03', 'Backpacking', 'Multi day hikes.'),
-      ('TR04', 'Camping', 'Single overnight trips. 	'),
-      ('TR05', 'Official Meeting', 'An official OCVT meeting'),
-      ('TR06', 'Social', 'Strictly social, potluck, movie nights, games or other casual gatherings'),
-      ('TR07', 'Rafting / Canoeing / Kayaking', 'Rafting / Canoeing / Kayaking'),
-      ('TR08', 'Water / Other', 'Swimming, tubing anything else in the water.'),
-      ('TR09', 'Biking', 'Road or mountain biking.'),
-      ('TR10', 'Team Sports / Misc.', 'Football, basketball ultimate Frisbee etc.'),
-      ('TR11', 'Climbing', 'Rock climbing or bouldering.'),
-      ('TR12', 'Skiing / Snowboarding', 'Skiing / Snowboarding'),
-      ('TR13', 'Snow / Other', 'Sledding snowshoeing etc'),
-      ('TR14', 'Road Trip', 'Just getting out and about, Ex a trip to Busch Gardens or DC etc'),
-      ('TR15', 'Special Event', 'A special event.'),
-      ('TR16', 'Other', 'Anything else not covered. '),
-      ('TR17', 'Laser Tag', 'Laser Tag with LCAT');
+      ('GENERAL_EVENTS', 'General Events', 'Gobblerfest, parade, etc'),
+      ('GENERAL_IMPORTANT', 'General Important Items', 'Important Club Announcements'),
+      ('GENERAL_ITEMS_FOR_SALE', 'General Items for Sale', 'Items for sale through the club'),
+      ('GENERAL_MEETINGS', 'General Meeting', 'Announcements about Club Meetings'),
+      ('GENERAL_NEWS', 'General News', 'News from the Club'),
+      ('GENERAL_OTHER', 'General Other', 'Miscellaneous Club Announcements'),
+      ('TRIP_ALERT', 'Trip Alerts', 'Important alerts for trips you are on. Cannot unsubscribe.'),
+      ('TRIP_BACKPACKING', 'Backpacking', 'Multi day hikes.'),
+      ('TRIP_BIKING', 'Biking', 'Road or mountain biking.'),
+      ('TRIP_CAMPING', 'Camping', 'Single overnight trips. 	'),
+      ('TRIP_CLIMBING', 'Climbing', 'Rock climbing or bouldering.'),
+      ('TRIP_DAYHIKE', 'Dayhike', 'In and out on the same day.'),
+      ('TRIP_LASER_TAG', 'Laser Tag', 'Laser Tag with LCAT'),
+      ('TRIP_OFFICIAL_MEETING', 'Official Meeting', 'An official OCVT meeting'),
+      ('TRIP_OTHER', 'Other', 'Anything else not covered. '),
+      ('TRIP_RAFTING_CANOEING_KAYAKING', 'Rafting / Canoeing / Kayaking', 'Rafting / Canoeing / Kayaking'),
+      ('TRIP_ROAD_TRIP', 'Road Trip', 'Just getting out and about, Ex a trip to Busch Gardens or DC etc'),
+      ('TRIP_SKIING_SNOWBOARDING', 'Skiing / Snowboarding', 'Skiing / Snowboarding'),
+      ('TRIP_SNOW_OTHER', 'Snow / Other', 'Sledding snowshoeing etc'),
+      ('TRIP_SOCIAL', 'Social', 'Strictly social, potluck, movie nights, games or other casual gatherings'),
+      ('TRIP_SPECIAL_EVENT', 'Special Event', 'A special event.'),
+      ('TRIP_TEAM_SPORTS_MISC', 'Team Sports / Misc.', 'Football, basketball ultimate Frisbee etc.'),
+      ('TRIP_WATER_OTHER', 'Water / Other', 'Swimming, tubing anything else in the water.'),
+      ('TRIP_WORK_TRIP', 'Worktrip', 'Trail work or other maintenance.')
   `)
 
   // Populate attending codes

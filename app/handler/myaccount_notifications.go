@@ -12,13 +12,14 @@ type notificationsStruct struct {
   GeneralMeetings bool `json:"generalMeetings"`
   GeneralNews bool `json:"generalNews"`
   GeneralOther bool `json:"generalOther"`
+  TripAlert bool `json:"tripAlerts"`
   TripBackpacking bool `json:"tripBackpacking"`
   TripBiking bool `json:"tripBiking"`
   TripCamping bool `json:"tripCamping"`
   TripClimbing bool `json:"tripClimbing"`
   TripDayhike bool `json:"tripDayhike"`
   TripLaserTag bool `json:"tripLaserTag"`
-  TripMeeting bool `json:"tripMeeting"`
+  TripOfficialMeeting bool `json:"tripOfficialMeeting"`
   TripOther bool `json:"tripOther"`
   TripRaftingCanoeingKayaking bool `json:"tripRaftingCanoeingKayaking"`
   TripRoadTrip bool `json:"tripRoadTrip"`
@@ -27,8 +28,8 @@ type notificationsStruct struct {
   TripSocial bool `json:"tripSocial"`
   TripSpecialEvent bool `json:"tripSpecialEvent"`
   TripTeamSportsMisc bool `json:"tripTeamSportsMisc"`
-  TripWorkTrip bool `json:"tripWorkTrip"`
   TripWaterOther bool `json:"tripWaterOther"`
+  TripWorkTrip bool `json:"tripWorkTrip"`
 }
 
 func setAllPreferences() notificationsStruct {
@@ -39,13 +40,14 @@ func setAllPreferences() notificationsStruct {
     GeneralMeetings: true,
     GeneralNews: true,
     GeneralOther: true,
+    TripAlert: true,
     TripBackpacking: true,
     TripBiking: true,
     TripCamping: true,
     TripClimbing: true,
     TripDayhike: true,
     TripLaserTag: true,
-    TripMeeting: true,
+    TripOfficialMeeting: true,
     TripOther: true,
     TripRaftingCanoeingKayaking: true,
     TripRoadTrip: true,
@@ -54,8 +56,8 @@ func setAllPreferences() notificationsStruct {
     TripSocial: true,
     TripSpecialEvent: true,
     TripTeamSportsMisc: true,
-    TripWorkTrip: true,
     TripWaterOther: true,
+    TripWorkTrip: true,
   }
 }
 
@@ -71,23 +73,13 @@ func GetMyAccountNotifications(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  stmt := `
-    SELECT notification_preference
-    FROM member
-    WHERE id = ?`
-  var notificationsStr string
-  err := db.QueryRow(stmt, memberId).Scan(&notificationsStr)
-  if !checkError(w, err) {
+  notifications, ok := dbGetMemberNotifications(w, memberId)
+  if !ok {
     return
   }
 
-  var notifications = notificationsStruct{}
-  err = json.Unmarshal([]byte(notificationsStr), &notifications)
-  if !checkError(w, err) {
-    return
-  }
-
-  respondJSON(w, http.StatusOK, map[string]notificationsStruct{"notifications": notifications})
+  respondJSON(w, http.StatusOK,
+      map[string]notificationsStruct{"notifications": notifications})
 }
 
 func PatchMyAccountNotifications(w http.ResponseWriter, r *http.Request) {
@@ -111,6 +103,7 @@ func PatchMyAccountNotifications(w http.ResponseWriter, r *http.Request) {
     respondError(w, http.StatusBadRequest, err.Error())
     return
   }
+  notifications.TripAlert = true
 
   notificationsStr, err := json.Marshal(notifications)
   if !checkError(w, err) {

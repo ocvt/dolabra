@@ -50,8 +50,54 @@ func sendEmail(w http.ResponseWriter, replyName string, replyEmail string,
 }
 
 /* HELPERS */
-func sendEmailToMember(w http.ResponseWriter, fromId int, toId int,
-    subject string, body string) bool {
+func logEmail(w http.ResponseWriter, notificationType string, tripId int,
+    fromId int, subject string, body string) bool {
+
+  replyTo := ""
+  if fromId != 0 {
+    name, ok := dbGetMemberName(w, fromId)
+    if !ok {
+      return false
+    }
+    email, ok := dbGetMemberEmail(w, fromId)
+    if !ok {
+      return false
+    }
+    replyTo = fmt.Sprintf("%s <%s>", name, email)
+  }
+
+  stmt := `
+    INSERT INTO email(
+      notification_type_id,
+      trip_id,
+      member_id,
+      reply_to,
+      subject,
+      body,
+      create_datetime)
+    VALUES (?, ?, ?, ?, ?, datetime('now'))`
+  _, err := db.Exec(
+    stmt,
+    notificationType,
+    tripId,
+    fromId,
+    replyTo,
+    subject,
+    body)
+  if !checkError(w, err) {
+    return false
+  }
+
+  return true
+}
+
+func sendEmailToMember(w http.ResponseWriter, notificationType string,
+    fromId int, toId int, subject string, body string) bool {
+
+  // Permissions
+  if !dbEnsureMemberWantsNotification(w, toId, notificationType) {
+    return true
+  }
 
   fromName := ""
   fromEmail := ""
@@ -79,8 +125,8 @@ func sendEmailToMember(w http.ResponseWriter, fromId int, toId int,
   return sendEmail(w, fromName, fromEmail, toName, toEmail, subject, body)
 }
 
-func sendEmailToTripSignup(w http.ResponseWriter, fromId int, toId int,
-    tripId int, subject string, body string) bool {
+func sendEmailToTripSignup(w http.ResponseWriter, notificationType string,
+    fromId int, toId int, tripId int, subject string, body string) bool {
 
   tripName, ok := dbGetTripName(w, tripId)
   if !ok {
@@ -90,5 +136,5 @@ func sendEmailToTripSignup(w http.ResponseWriter, fromId int, toId int,
   subject = fmt.Sprintf(subject, tripName)
   body = fmt.Sprintf(subject, tripName)
 
-  return sendEmailToMember(w, fromId, toId, subject, body)
+  return sendEmailToMember(w, notificationType, fromId, toId, subject, body)
 }

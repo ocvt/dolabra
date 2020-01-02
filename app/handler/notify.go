@@ -46,7 +46,8 @@ func PostTripsNotifySignup(w http.ResponseWriter, r *http.Request) {
   }
 
   // Send email
-  if !sendEmailToMember(w, memberId, signupId, emailSubject, emailBody) {
+  if !logEmail(w, "TRIP_ALERT", tripId, memberId, emailSubject, emailBody) ||
+     !sendEmailToMember(w, "TRIP_ALERT", memberId, signupId, emailSubject, emailBody) {
     return
   }
 
@@ -107,18 +108,22 @@ func PostTripsNotifyGroup(w http.ResponseWriter, r *http.Request) {
     }
   }
 
+  if !logEmail(w, "TRIP_ALERT", tripId, memberId, emailSubject, emailBody) {
+    return
+  }
+
   for i := 0; i < len(signups); i++ {
     if signups[i] == memberId {
       continue
     }
 
-    if !sendEmailToMember(w, memberId, signups[i], emailSubject, emailBody) {
+    if !sendEmailToMember(w, "TRIP_ALERT", memberId, signups[i], emailSubject, emailBody) {
       return
     }
   }
 
   emailBody = fmt.Sprintf("You are receiving this message because you sent it\n\n%s", emailBody)
-  if !sendEmailToMember(w, 0, memberId, emailSubject, emailBody) {
+  if !sendEmailToMember(w, "TRIP_ALERT", 0, memberId, emailSubject, emailBody) {
     return
   }
 

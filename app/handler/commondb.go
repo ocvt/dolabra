@@ -1,6 +1,7 @@
 package handler
 
 import (
+  "encoding/json"
   "net/http"
   "strconv"
 
@@ -44,6 +45,26 @@ func checkURLParam(w http.ResponseWriter, r *http.Request, param string) (int, b
 }
 
 /* "Ensure" helpers */
+func dbEnsureMemberWantsNotification(w http.ResponseWriter, memberId int, notificationType string) bool {
+  notifications, ok := dbGetMemberNotifications(w, memberId)
+  if !ok {
+    return false
+  }
+
+  notificationsStr, err := json.Marshal(notifications)
+  if !checkError(w, err) {
+    return false
+  }
+
+  var notificationsStrMap = map[string]bool{}
+  err = json.Unmarshal([]byte(notificationsStr), &notificationsStrMap)
+  if !checkError(w, err) {
+    return false
+  }
+
+  return notificationsStrMap[notificationType]
+}
+
 func dbEnsureOfficer(w http.ResponseWriter, memberId int) bool {
   isOfficer, err := dbIsOfficer(w, memberId)
   if err != nil {
@@ -126,6 +147,26 @@ func dbGetMemberName(w http.ResponseWriter, memberId int) (string, bool) {
     return "", false
   }
   return fullName, true
+}
+
+func dbGetMemberNotifications(w http.ResponseWriter, memberId int) (notificationsStruct, bool) {
+  stmt := `
+    SELECT notification_preference
+    FROM member
+    WHERE id = ?`
+  var notificationsStr string
+  err := db.QueryRow(stmt, memberId).Scan(&notificationsStr)
+  if !checkError(w, err) {
+    return notificationsStruct{}, false
+  }
+
+  var notifications = notificationsStruct{}
+  err = json.Unmarshal([]byte(notificationsStr), &notifications)
+  if !checkError(w, err) {
+    return notificationsStruct{}, false
+  }
+
+  return notifications, true
 }
 
 func dbEnsureMemberExists(w http.ResponseWriter, subject string) bool {
