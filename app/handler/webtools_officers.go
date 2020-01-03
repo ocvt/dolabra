@@ -76,7 +76,7 @@ func DeleteWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  // Get memberId
+  // Get memberId, officerId
   memberId, ok := dbGetActiveMemberId(w, subject)
   if !ok {
     return

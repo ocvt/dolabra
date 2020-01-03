@@ -41,6 +41,8 @@ func setRouters() {
   r.Use(handler.ProcessClientAuth)
 
   r.Get("/homephotos", handler.GetHomePhotos)
+  r.Get("/news", handler.GetNews)
+  r.Get("/newsArchive", handler.GetNewsArchive)
 
   r.Route("/auth", func(r chi.Router) {
     r.Get("/google", handler.GoogleLogin)
@@ -90,9 +92,11 @@ func setRouters() {
 
   r.Route("/webtools", func(r chi.Router) {
     r.Use(handler.EnsureOfficer)
+    r.Delete("/news/{tripId}", handler.DeleteWebtoolsNews)
     r.Get("/officers", handler.GetWebtoolsOfficers)
     r.Delete("/officers/{memberId}", handler.DeleteWebtoolsOfficers)
     r.Patch("/officers/{memberId}/{action}", handler.PatchWebtoolsOfficers)
+    r.Post("/news", handler.PostWebtoolsNews)
     r.Post("/officers/", handler.PostWebtoolsOfficers)
   })
 }

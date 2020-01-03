@@ -182,7 +182,9 @@ func createTables(db *sql.DB) {
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
       member_id INTEGER REFERENCES member (id) NOT NULL,
       create_datetime DATETIME NOT NULL,
+      publish BOOLEAN NOT NULL,
       title TEXT NOT NULL COLLATE NOCASE,
+      summary TEXT NOT NULL COLLATE NOCASE,
       content TEXT NOT NULL COLLATE NOCASE
     );
   `)
