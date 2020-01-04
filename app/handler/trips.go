@@ -466,22 +466,13 @@ func PatchTripsCancel(w http.ResponseWriter, r *http.Request) {
     return
   }
 
+  // Notify signup, use signupId as notification type for direct alert
   emailSubject := "Trip \"%s\" has been canceled"
   emailBody :=
       "This email is a notification that the trip you were signed up for, " +
       "\"%s\", has been canceled"
-  if !logEmail(w, "TRIP_ALERT", tripId, memberId, emailSubject, emailBody) {
+  if !stageEmail(w, "TRIP_ALERT_ALL", tripId, memberId, emailSubject, emailBody) {
     return
-  }
-
-  for i := 0; i < len(signups); i++ {
-    if signups[i] == memberId {
-      if !sendEmailToTripSignup(w, "TRIP_ALERT", 0, signups[i], tripId, emailSubject, emailBody) {
-        return
-      }
-    } else if !sendEmailToTripSignup(w, "TRIP_ALERT", memberId, signups[i], tripId, emailSubject, emailBody) {
-      return
-    }
   }
 
   respondJSON(w, http.StatusNoContent, nil)
@@ -514,6 +505,13 @@ func PatchTripsPublish(w http.ResponseWriter, r *http.Request) {
     WHERE id = ?`
   _, err := db.Exec(stmt, tripId)
   if !checkError(w, err) {
+    return
+  }
+
+  // TODO approve trip first
+
+  // Notify members
+  if !stageEmailNewTrip(w, tripId) {
     return
   }
 

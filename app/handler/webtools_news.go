@@ -7,7 +7,7 @@ import (
 
 type newsStruct struct {
   /* Managed server side */
-  Id string `json:"id"`
+  Id int `json:"id"`
   CreateDatetime string `json:"createDatetime,omitempty"`
   // from member table
   FirstName string `json:"firstName,omitempty"`

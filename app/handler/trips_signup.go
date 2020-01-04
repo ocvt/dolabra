@@ -3,6 +3,7 @@ package handler
 import (
   "encoding/json"
   "net/http"
+  "strconv"
 )
 
 func GetTripsSignup(w http.ResponseWriter, r *http.Request) {
@@ -91,16 +92,6 @@ func PatchTripsSignupAbsent(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  // Notify signup
-  emailSubject :=
-      "You have been marked as Absent on trip \"%s\""
-  emailBody :=
-      "This email is a notification that you have been marked as Absent on " +
-      "trip \"%s\"."
-  if !sendEmailToTripSignup(w, "TRIP_ALERT", memberId, signupId, tripId, emailSubject, emailBody) {
-    return
-  }
-
   respondJSON(w, http.StatusNoContent, nil)
 }
 
@@ -161,12 +152,13 @@ func PatchTripsSignupBoot(w http.ResponseWriter, r *http.Request) {
   }
 
   // Notify signup
+  signupIdStr := strconv.Itoa(signupId)
   emailSubject :=
       "You have been Booted from the trip \"%s\""
   emailBody :=
       "This email is a notification that you have been Booted from the trip " +
       "\"%s\" with the message " + tripSignupBoot.BootReason
-  if !sendEmailToTripSignup(w, "TRIP_ALERT", memberId, signupId, tripId, emailSubject, emailBody) {
+  if !stageEmail(w, signupIdStr, tripId, memberId, emailSubject, emailBody) {
     return
   }
 
@@ -211,13 +203,14 @@ func PatchTripsSignupCancel(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  // Notify signup
+  // Notify member
+  memberIdStr := strconv.Itoa(memberId)
   emailSubject :=
       "You have canceled your signup for trip \"%s\""
   emailBody :=
       "This email is a notification that you have canceled your signup on " +
       "trip \"%s\". Note, you cannot signup again after you have canceled."
-  if !sendEmailToTripSignup(w, "TRIP_ALERT", 0, memberId, tripId, emailSubject, emailBody) {
+  if !stageEmail(w, memberIdStr, tripId, 0, emailSubject, emailBody) {
     return
   }
 
@@ -265,12 +258,13 @@ func PatchTripsSignupForceadd(w http.ResponseWriter, r *http.Request) {
   }
 
   // Notify signup
+  signupIdStr := strconv.Itoa(signupId)
   emailSubject :=
       "You have been Force Added to the trip \"%s\""
   emailBody :=
       "This email is a notification that you have been Force Added to the " +
       "trip \"%s\"."
-  if !sendEmailToTripSignup(w, "TRIP_ALERT", memberId, signupId, tripId, emailSubject, emailBody) {
+  if !stageEmail(w, signupIdStr, tripId, memberId, emailSubject, emailBody) {
     return
   }
 
@@ -323,12 +317,13 @@ func PatchTripsSignupTripLeaderPromote(w http.ResponseWriter, r *http.Request) {
   }
 
   // Notify signup
+  signupIdStr := strconv.Itoa(signupId)
   emailSubject :=
       "You have been promoted to Trip Leader for the trip \"%s\""
   emailBody :=
       "This email is a notification that you have been promoted to Trip " +
       "Leader for the trip \"%s\""
-  if !sendEmailToTripSignup(w, "TRIP_ALERT", memberId, signupId, tripId, emailSubject, emailBody) {
+  if !stageEmail(w, signupIdStr, tripId, memberId, emailSubject, emailBody) {
     return
   }
 

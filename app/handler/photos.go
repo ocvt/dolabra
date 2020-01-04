@@ -4,6 +4,7 @@ import (
   "context"
   "fmt"
   "net/http"
+  "strconv"
 
   "google.golang.org/api/drive/v3"
 )
@@ -168,7 +169,7 @@ func GetTripsPhotos(w http.ResponseWriter, r *http.Request) {
   }
 
   // Lookup trip folder
-  tripFolderId, ok := getTripFolderId(w, fmt.Sprintf("%d", tripId))
+  tripFolderId, ok := getTripFolderId(w, strconv.Itoa(tripId))
   if !ok {
     return
   }
@@ -202,7 +203,7 @@ func PostTripsMainphoto(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  if !uploadTripPhoto(w, r, fmt.Sprintf("%d", tripId), "mainphoto") {
+  if !uploadTripPhoto(w, r, strconv.Itoa(tripId), "mainphoto") {
     return
   }
 
@@ -230,7 +231,7 @@ func PostTripsPhotos(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  if !uploadTripPhoto(w, r, fmt.Sprintf("%d", tripId), "") {
+  if !uploadTripPhoto(w, r, strconv.Itoa(tripId), "") {
     return
   }
 

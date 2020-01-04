@@ -2,8 +2,8 @@ package handler
 
 import (
   "encoding/json"
-  "fmt"
   "net/http"
+  "strconv"
 
   "github.com/go-chi/chi"
 )
@@ -45,9 +45,9 @@ func PostTripsNotifySignup(w http.ResponseWriter, r *http.Request) {
      return
   }
 
-  // Send email
-  if !logEmail(w, "TRIP_ALERT", tripId, memberId, emailSubject, emailBody) ||
-     !sendEmailToMember(w, "TRIP_ALERT", memberId, signupId, emailSubject, emailBody) {
+  // Notify signup
+  signupIdStr := strconv.Itoa(signupId)
+  if !stageEmail(w, signupIdStr, tripId, memberId, emailSubject, emailBody) {
     return
   }
 
@@ -93,38 +93,22 @@ func PostTripsNotifyGroup(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  // Get emails
-  var signups = []int{}
-   if groupId == "attending" || groupId == "all" {
-    if !dbGetTripSignupGroup(w, tripId, "ATTEND", &signups) {
+  // Nofity signups
+  if groupId == "all" {
+    if !stageEmail(w, "TRIP_ALERT_ALL", tripId, memberId, emailSubject,
+        emailBody) {
       return
     }
-    if !dbGetTripSignupGroup(w, tripId, "FORCE", &signups) {
+  } else if groupId == "attending" {
+    if !stageEmail(w, "TRIP_ALERT_ATTEND", tripId, memberId, emailSubject,
+        emailBody) {
       return
     }
-  } else if groupId == "waitlist" || groupId == "all" {
-    if !dbGetTripSignupGroup(w, tripId, "WAIT", &signups) {
+  } else {
+    if !stageEmail(w, "TRIP_ALERT_WAIT", tripId, memberId, emailSubject,
+        emailBody) {
       return
     }
-  }
-
-  if !logEmail(w, "TRIP_ALERT", tripId, memberId, emailSubject, emailBody) {
-    return
-  }
-
-  for i := 0; i < len(signups); i++ {
-    if signups[i] == memberId {
-      continue
-    }
-
-    if !sendEmailToMember(w, "TRIP_ALERT", memberId, signups[i], emailSubject, emailBody) {
-      return
-    }
-  }
-
-  emailBody = fmt.Sprintf("You are receiving this message because you sent it\n\n%s", emailBody)
-  if !sendEmailToMember(w, "TRIP_ALERT", 0, memberId, emailSubject, emailBody) {
-    return
   }
 
   respondJSON(w, http.StatusNoContent, nil)

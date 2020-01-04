@@ -4,6 +4,8 @@ import (
   "fmt"
   "net/http"
 //  "net/smtp"
+  "strconv"
+  "strings"
 )
 
 var SMTP_PASSWORD string
@@ -13,16 +15,11 @@ var SMTP_PORT string
 var SMTP_FROM_NAME_DEFAULT string
 var SMTP_FROM_EMAIL_DEFAULT string
 
+/*
+ * Actually send an email
+ */
 func sendEmail(w http.ResponseWriter, replyName string, replyEmail string,
     toName string, toEmail string, subject string, body string) bool {
-  if replyEmail == "" {
-    replyEmail = SMTP_FROM_EMAIL_DEFAULT
-  }
-
-  subject = fmt.Sprintf("[OCVT] %s", subject)
-
-  // TODO add unsubscribe body footer
-
   message := fmt.Sprintf("From: %s <%s>\n" +
                          "Reply-To: %s <%s>\n" +
                          "To: %s <%s>\n" +
@@ -49,39 +46,60 @@ func sendEmail(w http.ResponseWriter, replyName string, replyEmail string,
   return true
 }
 
-/* HELPERS */
-func logEmail(w http.ResponseWriter, notificationType string, tripId int,
-    fromId int, subject string, body string) bool {
+/*
+ * Process db fields and send email(s)
+ * - Ratelimits according SES TODO
+ * - MAY take a long time
+ * - Should be called from separate thread checking for emails every 5 minutes
+ */
+func processAndSendEmail(w http.ResponseWriter, emailId int) bool {
+  // Lookup + process all email FIELDS TODO
+  // Send emails
+  // If type is starts with TRIP_ALERT, send separate email to fromId TODO
+  //emailBody = fmt.Sprintf("You are receiving this message because you sent it:\n\n%s", emailBody)
+  return true
+}
 
-  replyTo := ""
-  if fromId != 0 {
-    name, ok := dbGetMemberName(w, fromId)
-    if !ok {
-      return false
-    }
-    email, ok := dbGetMemberEmail(w, fromId)
-    if !ok {
-      return false
-    }
-    replyTo = fmt.Sprintf("%s <%s>", name, email)
+
+/*
+ * Insert entry into email table to eventually send
+ * - TRIP_ALERT_* are special types to indicate direct trip alerts
+ * - tripId field is used ONLY with TRIP_ALERT_* types
+ *   otherwise it is purely for logging the relevant trip
+ */
+func stageEmail(w http.ResponseWriter, notificationType string, tripId int,
+    replyToId int, subject string, body string) bool {
+
+  // fromId should always member id of default Websystem account
+  fromId := 0
+  subject = "[OCVT] " + subject
+
+  isTripAlert := strings.HasPrefix(notificationType, "TRIP_ALERT_")
+  _, err := strconv.Atoi(notificationType)
+  if !isTripAlert && err != nil {
+    body = body +
+           "=========================================\n" +
+           "You received this message because you\n" +
+           "are on the OCVT email list. <Unsubscribe>"
   }
 
   stmt := `
-    INSERT INTO email(
+    INSERT INTO email (
+      create_datetime,
+      sent,
       notification_type_id,
       trip_id,
-      member_id,
-      reply_to,
+      from_id,
+      reply_to_id,
       subject,
-      body,
-      create_datetime)
-    VALUES (?, ?, ?, ?, ?, datetime('now'))`
-  _, err := db.Exec(
+      body)
+    VALUES (datetime('now'), false, ?, ?, ?, ?, ?, ?)`
+  _, err = db.Exec(
     stmt,
     notificationType,
     tripId,
     fromId,
-    replyTo,
+    replyToId,
     subject,
     body)
   if !checkError(w, err) {
@@ -91,50 +109,7 @@ func logEmail(w http.ResponseWriter, notificationType string, tripId int,
   return true
 }
 
-func sendEmailToMember(w http.ResponseWriter, notificationType string,
-    fromId int, toId int, subject string, body string) bool {
-
-  // Permissions
-  if !dbEnsureMemberWantsNotification(w, toId, notificationType) {
-    return true
-  }
-
-  fromName := ""
-  fromEmail := ""
-  if fromId != 0 {
-    var ok bool
-    fromName, ok = dbGetMemberName(w, fromId)
-    if !ok {
-      return false
-    }
-    fromEmail, ok = dbGetMemberEmail(w, fromId)
-    if !ok {
-      return false
-    }
-  }
-
-  toName, ok := dbGetMemberName(w, toId)
-  if !ok {
-    return false
-  }
-  toEmail, ok := dbGetMemberEmail(w, toId)
-  if !ok {
-    return false
-  }
-
-  return sendEmail(w, fromName, fromEmail, toName, toEmail, subject, body)
-}
-
-func sendEmailToTripSignup(w http.ResponseWriter, notificationType string,
-    fromId int, toId int, tripId int, subject string, body string) bool {
-
-  tripName, ok := dbGetTripName(w, tripId)
-  if !ok {
-    return false
-  }
-
-  subject = fmt.Sprintf(subject, tripName)
-  body = fmt.Sprintf(subject, tripName)
-
-  return sendEmailToMember(w, notificationType, fromId, toId, subject, body)
+/* HELPERS */
+func stageEmailNewTrip(w http.ResponseWriter, tripId int) bool {
+  return true
 }

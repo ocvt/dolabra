@@ -155,25 +155,28 @@ func createTables(db *sql.DB) {
       short_notice BOOLEAN NOT NULL,
       driver BOOLEAN NOT NULL,
       carpool BOOLEAN NOT NULL,
-      car_capacity_total INTEGER,
+      car_capacity_total INTEGER NOT NULL,
       notes TEXT NOT NULL COLLATE NOCASE,
       pet BOOLEAN NOT NULL,
-      attended BOOLEAN
+      attended BOOLEAN NOT NULL
     );
   `)
 
   /* Notification & Announcement related tables */
-  // Note: member_id of 0 means sent by system (instead of a specific member)
+  // Note: notification_type_id is a member id for direct alerts
+  // TODO change other file structures
   execHelper(db, `
     CREATE TABLE IF NOT EXISTS email (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
-      notification_type_id TEXT NOT NULL REFERENCES notification_type (id),
-      trip_id INTEGER NOT NULL,
-      member_id INTEGER NOT NULL,
-      reply_to TEXT NOT NULL COLLATE NOCASE,
+      create_datetime DATETIME NOT NULL,
+      sent_datetime DATETIME,
+      sent BOOLEAN NOT NULL,
+      notification_type_id TEXT NOT NULL,
+      trip_id INTEGER REFERENCES trip (id) NOT NULL,
+      from_id INTEGER REFERENCES member (id) NOT NULL,
+      reply_to_id INTEGER REFERENCES member (id) NOT NULL,
       subject TEXT NOT NULL COLLATE NOCASE,
-      body TEXT NOT NULL COLLATE NOCASE,
-      create_datetime DATETIME NOT NULL
+      body TEXT NOT NULL COLLATE NOCASE
     );
   `)
 
@@ -227,7 +230,6 @@ func insertData(db *sql.DB) {
       ('GENERAL_MEETINGS', 'General Meeting', 'Announcements about Club Meetings'),
       ('GENERAL_NEWS', 'General News', 'News from the Club'),
       ('GENERAL_OTHER', 'General Other', 'Miscellaneous Club Announcements'),
-      ('TRIP_ALERT', 'Trip Alerts', 'Important alerts for trips you are on. Cannot unsubscribe.'),
       ('TRIP_BACKPACKING', 'Backpacking', 'Multi day hikes.'),
       ('TRIP_BIKING', 'Biking', 'Road or mountain biking.'),
       ('TRIP_CAMPING', 'Camping', 'Single overnight trips. 	'),

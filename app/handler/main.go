@@ -51,6 +51,9 @@ func Initialize() {
   SMTP_PORT = os.Getenv("SMTP_PORT")
   SMTP_FROM_NAME_DEFAULT = os.Getenv("SMTP_FROM_NAME_DEFAULT")
   SMTP_FROM_EMAIL_DEFAULT = os.Getenv("SMTP_FROM_EMAIL_DEFAULT")
+
+  // TODO create email user if doesn't exist
+  // TODO create and cancel trip if fresh db for announcements
 }
 
 // Allow db to beclosed from app package

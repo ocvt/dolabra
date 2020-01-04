@@ -43,6 +43,7 @@ func setRouters() {
   r.Get("/homephotos", handler.GetHomePhotos)
   r.Get("/news", handler.GetNews)
   r.Get("/newsArchive", handler.GetNewsArchive)
+  r.Post("/quicksignup", handler.PostQuicksignup)
 
   r.Route("/auth", func(r chi.Router) {
     r.Get("/google", handler.GoogleLogin)
@@ -93,6 +94,7 @@ func setRouters() {
   r.Route("/webtools", func(r chi.Router) {
     r.Use(handler.EnsureOfficer)
     r.Delete("/news/{tripId}", handler.DeleteWebtoolsNews)
+    r.Get("/emails", handler.GetWebtoolsEmails)
     r.Get("/officers", handler.GetWebtoolsOfficers)
     r.Delete("/officers/{memberId}", handler.DeleteWebtoolsOfficers)
     r.Patch("/officers/{memberId}/{action}", handler.PatchWebtoolsOfficers)
