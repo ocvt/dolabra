@@ -337,5 +337,14 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
     return
   }
 
+  // Remove from quicksignup table
+  stmt = `
+    DELETE FROM quick_signup
+    WHERE email = ?`
+  _, err = db.Exec(stmt, member.Email)
+  if !checkError(w, err) {
+    return
+  }
+
   respondJSON(w, http.StatusCreated, member)
 }
