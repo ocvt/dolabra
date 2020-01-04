@@ -9,7 +9,6 @@ import (
 type memberStruct struct {
   Id int `json:"id,omitempty"`
   CreateDatetime string `json:"createDatetime,omitempty"`
-  NotificationPreference int `json:"notificationPreference,omitempty"`
   /* Required fields for creating an account */
   Email string `json:"email"`
   FirstName string `json:"firstName"`
