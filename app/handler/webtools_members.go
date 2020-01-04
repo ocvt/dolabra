@@ -4,6 +4,11 @@ import (
   "net/http"
 )
 
+type tripSummaryStruct struct {
+  Id int `json:"id"`
+  Name int `json:"name"`
+}
+
 func GetWebtoolsMembers(w http.ResponseWriter, r *http.Request) {
   stmt := `
     SELECT
@@ -62,6 +67,85 @@ func GetWebtoolsMembers(w http.ResponseWriter, r *http.Request) {
   }
 
   respondJSON(w, http.StatusOK, map[string][]*memberStruct{"members": members})
+}
+
+func GetWebtoolsMembersTrips(w http.ResponseWriter, r *http.Request) {
+  memberId, ok := checkURLParam(w, r, "memberId")
+  if !ok {
+    return
+  }
+
+  stmt := `
+    SELECT
+      id,
+      name
+    FROM trip
+    WHERE trip.member_id = ?`
+  rows, err := db.Query(stmt, memberId)
+  if !checkError(w, err) {
+    return
+  }
+  defer rows.Close()
+
+  var trips = []*tripSummaryStruct{}
+  i := 0
+  for rows.Next() {
+    trips = append(trips, &tripSummaryStruct{})
+    err = rows.Scan(
+      &trips[i].Id,
+      &trips[i].Name)
+    if !checkError(w, err) {
+      return
+    }
+    i++
+  }
+
+  err = rows.Err()
+  if !checkError(w, err) {
+    return
+  }
+
+  respondJSON(w, http.StatusOK, map[string][]*tripSummaryStruct{"trips": trips})
+}
+
+func GetWebtoolsMembersAttendance(w http.ResponseWriter, r *http.Request) {
+  memberId, ok := checkURLParam(w, r, "memberId")
+  if !ok {
+    return
+  }
+
+  stmt := `
+    SELECT
+      trip.id,
+      trip.name
+    FROM trip_signup
+    INNER JOIN trip ON trip.id = trip_signup.trip_id
+    WHERE trip_signup.id = ? AND trip_signup.attended = true`
+  rows, err := db.Query(stmt, memberId)
+  if !checkError(w, err) {
+    return
+  }
+  defer rows.Close()
+
+  var trips = []*tripSummaryStruct{}
+  i := 0
+  for rows.Next() {
+    trips = append(trips, &tripSummaryStruct{})
+    err = rows.Scan(
+      &trips[i].Id,
+      &trips[i].Name)
+    if !checkError(w, err) {
+      return
+    }
+    i++
+  }
+
+  err = rows.Err()
+  if !checkError(w, err) {
+    return
+  }
+
+  respondJSON(w, http.StatusOK, map[string][]*tripSummaryStruct{"trips": trips})
 }
 
 func PatchWebtoolsDuesGrant(w http.ResponseWriter, r *http.Request) {
