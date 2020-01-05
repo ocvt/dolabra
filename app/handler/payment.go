@@ -99,7 +99,7 @@ func PostPaymentSucceeded(w http.ResponseWriter, r *http.Request) {
 
   // Verify event
   event, err := webhook.ConstructEvent(body,
-      r.Header.Get("Stripe-Signature"), STRIPE_WEBOOK_SECRET)
+      r.Header.Get("Stripe-Signature"), STRIPE_WEBHOOK_SECRET)
   if err != nil {
     respondError(w, http.StatusBadRequest, err.Error())
     return
