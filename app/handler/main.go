@@ -53,6 +53,7 @@ func Initialize() {
   SMTP_FROM_LAST_NAME_DEFAULT = os.Getenv("SMTP_FROM_LAST_NAME_DEFAULT")
   SMTP_FROM_EMAIL_DEFAULT = os.Getenv("SMTP_FROM_EMAIL_DEFAULT")
   STRIPE_SECRET_KEY = os.Getenv("STRIPE_SECRET_KEY")
+  STRIPE_WEBHOOK_SECRET = os.Getenv("STRIPE_WEBHOOK_SECRET")
 
   err = dbCreateSystemMember()
   if err != nil {

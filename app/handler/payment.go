@@ -13,7 +13,7 @@ import (
 )
 
 var STRIPE_SECRET_KEY string
-var STRIPE_WEBOOK_SECRET string
+var STRIPE_WEBHOOK_SECRET string
 
 func GetPayment(w http.ResponseWriter, r *http.Request) {
   _, subject, ok := checkLogin(w, r)
@@ -72,11 +72,12 @@ func GetPayment(w http.ResponseWriter, r *http.Request) {
 
   // Insert payment
   if membershipYears > 0 && !dbInsertPayment(
-      w, 0, "", memberId, "MEMBERSHIP", membershipYears, amount, myPI.ID) {
+      w, 0, "", memberId, "MEMBERSHIP", membershipYears, amount, "STRIPE",
+      myPI.ID, false) {
     return
   }
   if shirt && !dbInsertPayment(
-      w, 0, "", memberId, "SHIRT", 1, amount, myPI.ID) {
+      w, 0, "", memberId, "SHIRT", 1, amount, "STRIPE", myPI.ID, false) {
     return
   }
 
@@ -134,7 +135,10 @@ func PostPaymentSucceeded(w http.ResponseWriter, r *http.Request) {
   stmt = `
     UPDATE payment
     SET completed = true
-    WHERE store_item_id = 'MEMBERSHIP' AND stripe_payment_id = ?`
+    WHERE
+      store_item_id = 'MEMBERSHIP'
+      AND method = 'STRIPE'
+      AND payment_id = ?`
   _, err = db.Exec(stmt, myPI.ID)
   if !checkError(w, err) {
     return

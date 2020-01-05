@@ -213,7 +213,8 @@ func createTables(db *sql.DB) {
       store_item_id TEXT REFERENCES store_item (id) NOT NULL,
       store_item_amount INTEGER NOT NULL,
       amount INTEGER NOT NULL,
-      stripe_payment_id TEXT NOT NULL,
+      payment_method TEXT NOT NULL COLLAGE NOCASE,
+      payment_id TEXT NOT NULL,
       completed BOOLEAN NOT NULL
     );
   `)

@@ -260,7 +260,7 @@ func dbEnsureMemberIdExists(w http.ResponseWriter, memberId int) bool {
 
 func dbInsertPayment(w http.ResponseWriter, enteredById int, note string,
     memberId int, storeItemId string, storeItemCount int, amount int,
-    stripePaymentId string) bool {
+    paymentMethod string, paymentId string, completed bool) bool {
   stmt := `
     INSERT INTO payment
       create_datetime,
@@ -270,11 +270,12 @@ func dbInsertPayment(w http.ResponseWriter, enteredById int, note string,
       store_item_id,
       store_item_count,
       amount,
-      stripe_payment_id,
+      payment_method,
+      payment_id,
       completed)
-    VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, ?, false)`
+    VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, 'STRIPE', ?, ?)`
   _, err := db.Exec(stmt, enteredById, note, memberId, storeItemId,
-      storeItemCount, amount, stripePaymentId)
+      storeItemCount, amount, paymentId, completed)
   return checkError(w, err)
 }
 
