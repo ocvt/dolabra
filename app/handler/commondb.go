@@ -44,6 +44,40 @@ func checkURLParam(w http.ResponseWriter, r *http.Request, param string) (int, b
   return paramInt, true
 }
 
+func dbCreateSystemMember() error {
+  notifications := setAllPreferences()
+  notificationsArr, err := json.Marshal(notifications)
+  if err != nil {
+    return err
+  }
+  notificationsStr := string(notificationsArr)
+
+  stmt := `
+    INSERT OR REPLACE INTO member
+    VALUES (0, ?, ?, ?, datetime('now'), '555-555-5555', 'Prefer not to say',
+            1990, true, 'Robot', 'Require frequent oiling',
+            datetime('now', '+100 years'), ?)`
+  _, err = db.Exec(
+    stmt,
+    SMTP_FROM_EMAIL_DEFAULT,
+    SMTP_FROM_FIRST_NAME_DEFAULT,
+    SMTP_FROM_LAST_NAME_DEFAULT,
+    notificationsStr)
+
+  return err
+}
+
+func dbCreateNullTrip() error {
+  stmt := `
+    INSERT OR REPLACE INTO trip
+    VALUES (0, datetime('now'), true, false, 0, false, false, false, false, "",
+            0, "Null Trip for Announcement logs", "TRIP_OTHER",
+            datetime('now'), datetime('now'), "", "", "", "", "", 0, 0, "",
+            "", false, "")`
+  _, err := db.Exec(stmt)
+  return err
+}
+
 /* "Ensure" helpers */
 func dbEnsureMemberWantsNotification(w http.ResponseWriter, memberId int, notificationType string) bool {
   notifications, ok := dbGetMemberNotifications(w, memberId)
@@ -51,13 +85,13 @@ func dbEnsureMemberWantsNotification(w http.ResponseWriter, memberId int, notifi
     return false
   }
 
-  notificationsStr, err := json.Marshal(notifications)
+  notificationsArr, err := json.Marshal(notifications)
   if !checkError(w, err) {
     return false
   }
 
   var notificationsStrMap = map[string]bool{}
-  err = json.Unmarshal([]byte(notificationsStr), &notificationsStrMap)
+  err = json.Unmarshal(notificationsArr, &notificationsStrMap)
   if !checkError(w, err) {
     return false
   }

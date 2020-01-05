@@ -49,14 +49,22 @@ func Initialize() {
   SMTP_PASSWORD = os.Getenv("SMTP_PASSWORD")
   SMTP_HOSTNAME = os.Getenv("SMTP_HOSTNAME")
   SMTP_PORT = os.Getenv("SMTP_PORT")
-  SMTP_FROM_NAME_DEFAULT = os.Getenv("SMTP_FROM_NAME_DEFAULT")
+  SMTP_FROM_FIRST_NAME_DEFAULT = os.Getenv("SMTP_FROM_FIRST_NAME_DEFAULT")
+  SMTP_FROM_LAST_NAME_DEFAULT = os.Getenv("SMTP_FROM_LAST_NAME_DEFAULT")
   SMTP_FROM_EMAIL_DEFAULT = os.Getenv("SMTP_FROM_EMAIL_DEFAULT")
 
-  // TODO create email user if doesn't exist
-  // TODO create and cancel trip if fresh db for announcements
+  err = dbCreateSystemMember()
+  if err != nil {
+    log.Fatal("Error creating System Member: ", err)
+  }
+
+  err = dbCreateNullTrip()
+  if err != nil {
+    log.Fatal("Error creating null trip (for announcements): ", err)
+  }
 }
 
-// Allow db to beclosed from app package
+// Allow db to be closed from app package
 func DBClose() error {
   return db.Close()
 }

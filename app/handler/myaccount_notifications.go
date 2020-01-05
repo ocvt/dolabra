@@ -32,8 +32,8 @@ type notificationsStruct struct {
   TripWorkTrip bool `json:"tripWorkTrip"`
 }
 
-func setAllPreferences() notificationsStruct {
-  return notificationsStruct{
+func setAllPreferences() *notificationsStruct {
+  return &notificationsStruct{
     GeneralEvents: true,
     GeneralItemsOfInterest: true,
     GeneralItemsForSale: true,
@@ -105,10 +105,11 @@ func PatchMyAccountNotifications(w http.ResponseWriter, r *http.Request) {
   }
   notifications.TripAlert = true
 
-  notificationsStr, err := json.Marshal(notifications)
+  notificationsArr, err := json.Marshal(notifications)
   if !checkError(w, err) {
     return
   }
+  notificationsStr := string(notificationsArr)
 
   stmt := `
     UPDATE member

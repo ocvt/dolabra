@@ -38,10 +38,11 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
   }
 
   // Get new notifications
-  notificationsStr, err := json.Marshal(notificationsStruct{})
+  notificationsArr, err := json.Marshal(notificationsStruct{})
   if !checkError(w, err) {
     return
   }
+  notificationsStr := string(notificationsArr)
 
   stmt := `
     UPDATE member
@@ -264,10 +265,11 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 
   // Default to prefer all notifications
   notifications := setAllPreferences()
-  notificationsStr, err := json.Marshal(notifications)
+  notificationsArr, err := json.Marshal(notifications)
   if !checkError(w, err) {
     return
   }
+  notificationsStr := string(notificationsArr)
 
   stmt := `
     INSERT INTO member (

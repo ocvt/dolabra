@@ -12,7 +12,8 @@ var SMTP_PASSWORD string
 var SMTP_USERNAME string
 var SMTP_HOSTNAME string
 var SMTP_PORT string
-var SMTP_FROM_NAME_DEFAULT string
+var SMTP_FROM_FIRST_NAME_DEFAULT string
+var SMTP_FROM_LAST_NAME_DEFAULT string
 var SMTP_FROM_EMAIL_DEFAULT string
 
 /*
@@ -20,12 +21,13 @@ var SMTP_FROM_EMAIL_DEFAULT string
  */
 func sendEmail(w http.ResponseWriter, replyName string, replyEmail string,
     toName string, toEmail string, subject string, body string) bool {
+  fullFromName := SMTP_FROM_FIRST_NAME_DEFAULT + " " + SMTP_FROM_LAST_NAME_DEFAULT
   message := fmt.Sprintf("From: %s <%s>\n" +
                          "Reply-To: %s <%s>\n" +
                          "To: %s <%s>\n" +
                          "Subject: %s\n\n" +
                          "%s",
-                         SMTP_FROM_NAME_DEFAULT,
+                         fullFromName,
                          SMTP_FROM_EMAIL_DEFAULT,
                          replyName,
                          replyEmail,
