@@ -7,7 +7,7 @@ import (
   "time"
 
   "golang.org/x/oauth2"
-	"google.golang.org/api/option"
+  "google.golang.org/api/option"
   oidcgoogle "google.golang.org/api/oauth2/v2"
 )
 

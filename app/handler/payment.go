@@ -4,7 +4,7 @@ import (
   "encoding/json"
   "fmt"
   "io/ioutil"
-	"net/http"
+  "net/http"
 
   "github.com/go-chi/chi"
   "github.com/stripe/stripe-go"
@@ -26,49 +26,49 @@ func GetPayment(w http.ResponseWriter, r *http.Request) {
   if !ok {
     return
   }
-	paymentOption := chi.URLParam(r, "paymentOption")
+  paymentOption := chi.URLParam(r, "paymentOption")
 
-	// Permissions
-	if paymentOption != "dues" && paymentOption != "duesShirt" &&
-		 paymentOption != "freshmanSpecial" {
-		respondError(w, http.StatusBadRequest, "Invalid payment option.")
-		return
-	}
+  // Permissions
+  if paymentOption != "dues" && paymentOption != "duesShirt" &&
+     paymentOption != "freshmanSpecial" {
+    respondError(w, http.StatusBadRequest, "Invalid payment option.")
+    return
+  }
 
   // Used for us
   membershipYears := 0
   shirt := true
   // Used for stripe
-	var amount int
-	description := ""
-	if paymentOption == "dues" {
+  var amount int
+  description := ""
+  if paymentOption == "dues" {
     membershipYears = 1
     shirt = false
-		amount = 20
-		description = "Dues for 1 year"
-	} else if paymentOption == "duesShirt" {
+    amount = 20
+    description = "Dues for 1 year"
+  } else if paymentOption == "duesShirt" {
     membershipYears = 1
-		amount = 30
-		description = "Dues for 1 year + shirt"
-	} else {
+    amount = 30
+    description = "Dues for 1 year + shirt"
+  } else {
     membershipYears = 4
-		amount = 65
-		description = "Dues for 4 years + shirt"
-	}
-	amount *= 100
+    amount = 65
+    description = "Dues for 4 years + shirt"
+  }
+  amount *= 100
 
-	// Create paymentIntent and send to client
-	stripe.LogLevel = 1
-	stripe.Key = STRIPE_SECRET_KEY
-	params := &stripe.PaymentIntentParams{
-		Amount: stripe.Int64(int64(amount)),
-		Currency: stripe.String(string(stripe.CurrencyUSD)),
-		Description: &description,
-	}
-	myPI, err := paymentintent.New(params)
-	if !checkError(w, err) {
-		return
-	}
+  // Create paymentIntent and send to client
+  stripe.LogLevel = 1
+  stripe.Key = STRIPE_SECRET_KEY
+  params := &stripe.PaymentIntentParams{
+    Amount: stripe.Int64(int64(amount)),
+    Currency: stripe.String(string(stripe.CurrencyUSD)),
+    Description: &description,
+  }
+  myPI, err := paymentintent.New(params)
+  if !checkError(w, err) {
+    return
+  }
 
   // Insert payment
   if membershipYears > 0 && !dbInsertPayment(
@@ -80,43 +80,43 @@ func GetPayment(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-	response := map[string]string{
-		"stripeClientSecret": myPI.ClientSecret,
-	}
-	respondJSON(w, http.StatusOK, response)
+  response := map[string]string{
+    "stripeClientSecret": myPI.ClientSecret,
+  }
+  respondJSON(w, http.StatusOK, response)
 }
 
 // Mostly copied from
 // https://stripe.com/docs/payments/payment-intents/verifying-status#webhooks
 func PostPaymentSucceeded(w http.ResponseWriter, r *http.Request) {
   // Get POST body
-	const MaxBodyBytes = int64(65536)
-	r.Body = http.MaxBytesReader(w, r.Body, MaxBodyBytes)
-	body, err := ioutil.ReadAll(r.Body)
-	if !checkError(w, err) {
+  const MaxBodyBytes = int64(65536)
+  r.Body = http.MaxBytesReader(w, r.Body, MaxBodyBytes)
+  body, err := ioutil.ReadAll(r.Body)
+  if !checkError(w, err) {
     return
   }
 
   // Verify event
-	event, err := webhook.ConstructEvent(body,
+  event, err := webhook.ConstructEvent(body,
       r.Header.Get("Stripe-Signature"), STRIPE_WEBOOK_SECRET)
-	if err != nil {
+  if err != nil {
     respondError(w, http.StatusBadRequest, err.Error())
-		return
-	}
+    return
+  }
 
   // We only accept payment_intent.succeeded event types so no need to check
-	var myPI stripe.PaymentIntent
-	err = json.Unmarshal(event.Data.Raw, &myPI)
-	if err != nil {
+  var myPI stripe.PaymentIntent
+  err = json.Unmarshal(event.Data.Raw, &myPI)
+  if err != nil {
     respondError(w, http.StatusBadRequest, err.Error())
-		return
-	}
+    return
+  }
   fmt.Printf("myPI ID: %s", myPI.ID)
 
   // TODO Detect payment failure?
 
-	// Add years and complete payment
+  // Add years and complete payment
   memberId, membershipYears, ok := dbGetItemCount(w, "MEMBERSHIP", myPI.ID)
   if !ok {
     return
@@ -140,5 +140,5 @@ func PostPaymentSucceeded(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-	respondJSON(w, http.StatusNoContent, nil)
+  respondJSON(w, http.StatusNoContent, nil)
 }

@@ -249,7 +249,7 @@ func insertData(db *sql.DB) {
       ('GENERAL_OTHER', 'General Other', 'Miscellaneous Club Announcements'),
       ('TRIP_BACKPACKING', 'Backpacking', 'Multi day hikes.'),
       ('TRIP_BIKING', 'Biking', 'Road or mountain biking.'),
-      ('TRIP_CAMPING', 'Camping', 'Single overnight trips. 	'),
+      ('TRIP_CAMPING', 'Camping', 'Single overnight trips.'),
       ('TRIP_CLIMBING', 'Climbing', 'Rock climbing or bouldering.'),
       ('TRIP_DAYHIKE', 'Dayhike', 'In and out on the same day.'),
       ('TRIP_LASER_TAG', 'Laser Tag', 'Laser Tag with LCAT'),
