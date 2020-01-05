@@ -15,6 +15,7 @@ type tripStruct struct {
   CreateDatetime string `json:"createDatetime,omitempty"`
   Cancel bool `json:"cancel,omitempty"`
   Publish bool `json:"publish,omitempty"`
+  ReminderSent bool `json:"reminderSent,omitempty"`
   MemberName string `json:"memberName,omitempty"` // Used client side
   MemberId int `json:"memberId,omitempty"` // Used server side
   /* Required fields for creating a trip */
@@ -545,6 +546,7 @@ func PostTrips(w http.ResponseWriter, r *http.Request) {
       create_datetime,
       cancel,
       publish,
+      reminderSent,
       member_id,
       members_only,
       allow_late_signups,
@@ -567,7 +569,8 @@ func PostTrips(w http.ResponseWriter, r *http.Request) {
       instructions,
       pets_allowed,
       pets_description)
-    VALUES (datetime('now'), false, false, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    VALUES (datetime('now'), false, false, false, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   result, err := db.Exec(
     stmt,
     memberId,

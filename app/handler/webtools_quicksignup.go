@@ -5,7 +5,7 @@ import (
   "net/http"
 )
 
-type quicksignupStruct struct {
+type simpleEmailStruct struct {
   Email string `json:"email"`
 }
 
@@ -13,8 +13,8 @@ func PostQuicksignup(w http.ResponseWriter, r *http.Request) {
   // Get request body
   decoder := json.NewDecoder(r.Body)
   decoder.DisallowUnknownFields()
-  var quicksignup quicksignupStruct
-  err := decoder.Decode(&quicksignup)
+  var email simpleEmailStruct
+  err := decoder.Decode(&email)
   if err != nil {
     respondError(w, http.StatusBadRequest, err.Error())
     return
@@ -23,9 +23,10 @@ func PostQuicksignup(w http.ResponseWriter, r *http.Request) {
   stmt := `
     INSERT INTO quick_signup (
       create_datetime,
+      expire_datetime,
       email)
-    VALUES (datetime('now'), ?)`
-  _, err = db.Exec(stmt, quicksignup.Email)
+    VALUES (datetime('now'), datetime('now', '+6 months'), ?)`
+  _, err = db.Exec(stmt, email.Email)
   if !checkError(w, err) {
     return
   }

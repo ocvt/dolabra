@@ -70,8 +70,8 @@ func dbCreateSystemMember() error {
 func dbCreateNullTrip() error {
   stmt := `
     INSERT OR REPLACE INTO trip
-    VALUES (0, datetime('now'), true, false, 0, false, false, false, false, "",
-            0, "Null Trip for Announcement logs", "TRIP_OTHER",
+    VALUES (0, datetime('now'), true, false, 0, false, false, false, false,
+            false, "", 0, "Null Trip for Announcement logs", "TRIP_OTHER",
             datetime('now'), datetime('now'), "", "", "", "", "", 0, 0, "",
             "", false, "")`
   _, err := db.Exec(stmt)

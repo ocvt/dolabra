@@ -44,6 +44,7 @@ func setRouters() {
   r.Get("/news", handler.GetNews)
   r.Get("/newsArchive", handler.GetNewsArchive)
   r.Post("/quicksignup", handler.PostQuicksignup)
+  r.Post("/unsubscribe/all", handler.PostUnsubscribeAll)
 
   r.Route("/auth", func(r chi.Router) {
     r.Get("/google", handler.GoogleLogin)

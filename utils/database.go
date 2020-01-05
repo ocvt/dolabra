@@ -92,6 +92,7 @@ func createTables(db *sql.DB) {
     CREATE TABLE IF NOT EXISTS quick_signup (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
       create_datetime DATETIME NOT NULL,
+      expire_datetime DATETIME NOT NULL,
       email TEXT NOT NULL COLLATE NOCASE
     );
   `)
@@ -110,6 +111,7 @@ func createTables(db *sql.DB) {
       create_datetime DATETIME NOT NULL,
       cancel BOOLEAN NOT NULL,
       publish BOOLEAN NOT NULL,
+      reminder_sent BOOLEAN NOT NULL,
       member_id INTEGER REFERENCES member (id) NOT NULL,
       members_only BOOLEAN NOT NULL,
       allow_late_signups BOOLEAN NOT NULL,
