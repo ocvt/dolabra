@@ -166,7 +166,6 @@ func createTables(db *sql.DB) {
 
   /* Notification & Announcement related tables */
   // Note: notification_type_id is a member id for direct alerts
-  // TODO change other file structures
   execHelper(db, `
     CREATE TABLE IF NOT EXISTS email (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
@@ -203,13 +202,29 @@ func createTables(db *sql.DB) {
     );
   `)
 
-  /* Inventory related tables */
-  //TODO
-  // Contains items like shirts
-//  execHelper(db, `
-//    CREATE TABLE IF NOT EXISTS store_item (TODO
-//    );
-//  `)
+  /* Inventory & payment related tables */
+  execHelper(db, `
+    CREATE TABLE IF NOT EXISTS payment (
+      id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
+      create_datetime DATETIME NOT NULL,
+      entered_by_id INTEGER REFERENCES member (id) NOT NULL,
+      note TEXT NOT NULL COLLATE NOCASE,
+      member_id INTEGER REFERENCES member (id) NOT NULL,
+      store_item_id TEXT REFERENCES store_item (id) NOT NULL,
+      store_item_amount INTEGER NOT NULL,
+      amount INTEGER NOT NULL,
+      stripe_payment_id TEXT NOT NULL,
+      completed BOOLEAN NOT NULL
+    );
+  `)
+
+  execHelper(db, `
+    CREATE TABLE IF NOT EXISTS store_item (
+      id TEXT PRIMARY KEY NOT NULL UNIQUE,
+      name TEXT UNIQUE NOT NULL COLLATE NOCASE,
+      description TEXT NOT NULL COLLATE NOCASE
+    );
+  `)
 
   //TODO
   //  Equipment inventory
@@ -224,7 +239,7 @@ func createTables(db *sql.DB) {
 func insertData(db *sql.DB) {
   // Populate notification types
   execHelper(db, `
-    INSERT OR IGNORE INTO notification_type (id, name, description)
+    INSERT OR REPLACE INTO notification_type (id, name, description)
     VALUES
       ('GENERAL_EVENTS', 'General Events', 'Gobblerfest, parade, etc'),
       ('GENERAL_IMPORTANT', 'General Important Items', 'Important Club Announcements'),
@@ -251,9 +266,17 @@ func insertData(db *sql.DB) {
       ('TRIP_WORK_TRIP', 'Worktrip', 'Trail work or other maintenance.')
   `)
 
+  // Populate store items
+  execHelper(db, `
+    INSERT OR REPLACE INTO store_item (id, name, description)
+    VALUES
+      ('MEMBERSHIP', '1 Year of membership', ''),
+      ('SHIRT', '1 Shirt', 'Size determined at pickup')
+  `)
+
   // Populate attending codes
   execHelper(db, `
-    INSERT OR IGNORE INTO trip_attending_code (id, description)
+    INSERT OR REPLACE INTO trip_attending_code (id, description)
     VALUES
       ('ATTEND', 'User is attending'),
       ('BOOT', 'User has been manually booted'),

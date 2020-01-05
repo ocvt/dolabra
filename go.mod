@@ -9,6 +9,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/mattn/go-sqlite3 v2.0.1+incompatible
 	github.com/rs/cors v1.7.0
+	github.com/stripe/stripe-go v68.5.0+incompatible
 	go.opencensus.io v0.22.2 // indirect
 	golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413
 	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553 // indirect

@@ -79,6 +79,7 @@ func dbCreateNullTrip() error {
 }
 
 /* "Ensure" helpers */
+// TODO organize A-Z
 func dbEnsureMemberWantsNotification(w http.ResponseWriter, memberId int, notificationType string) bool {
   notifications, ok := dbGetMemberNotifications(w, memberId)
   if !ok {
@@ -138,6 +139,24 @@ func dbGetActiveMemberId(w http.ResponseWriter, subject string) (int, bool) {
     return 0, false
   }
   return memberId, true
+}
+
+func dbGetItemCount(w http.ResponseWriter, storeItemId string,
+    stripePaymentId string) (int, int, bool) {
+  stmt := `
+    SELECT
+      member_id,
+      store_item_count
+    FROM payment
+    WHERE strip_payment_id = ?`
+  var memberId int
+  var storeItemCount int
+  err := db.QueryRow(stmt, stripePaymentId).Scan(&memberId, &storeItemCount)
+  if !checkError(w, err) {
+    return 0, 0, false
+  }
+
+  return memberId, storeItemCount, true
 }
 
 func dbGetMemberEmail(w http.ResponseWriter, memberId int) (string, bool) {
@@ -237,6 +256,26 @@ func dbEnsureMemberIdExists(w http.ResponseWriter, memberId int) bool {
     return exists
   }
   return false
+}
+
+func dbInsertPayment(w http.ResponseWriter, enteredById int, note string,
+    memberId int, storeItemId string, storeItemCount int, amount int,
+    stripePaymentId string) bool {
+  stmt := `
+    INSERT INTO payment
+      create_datetime,
+      entered_by_id,
+      note,
+      member_id,
+      store_item_id,
+      store_item_count,
+      amount,
+      stripe_payment_id,
+      completed)
+    VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, ?, false)`
+  _, err := db.Exec(stmt, enteredById, note, memberId, storeItemId,
+      storeItemCount, amount, stripePaymentId)
+  return checkError(w, err)
 }
 
 
