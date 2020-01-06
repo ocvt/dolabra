@@ -1,9 +1,11 @@
 package handler
 
 import (
+  "encoding/json"
   "net/http"
 )
 
+const MANUAL_PAYMENT_ID_LENGTH = 64
 
 type paymentStruct struct {
   /* Managed Server side */
@@ -15,8 +17,10 @@ type paymentStruct struct {
   // Not present in payment of store_code db, only for client view
   EnteredByName string `json:"enteredByName,omitempty"`
   MemberName string `json:"memberName,omitempty"`
-  // Only used in payment db
+  // Only used in payment table
   MemberId int `json:"memberId,omitempty"`
+  // Only used in store_code table
+  Code string `json:"code,omitempty"`
   /* Required fields for any payment or code generation */
   Note string `json:"note"`
   StoreItemId string `json:"storeItemId"`
@@ -77,4 +81,51 @@ func GetWebtoolsPayments(w http.ResponseWriter, r *http.Request) {
   }
 
   respondJSON(w, http.StatusOK, map[string][]*paymentStruct{"payments": payments})
+}
+
+func PostWebtoolsGenerateCode(w http.ResponseWriter, r *http.Request) {
+  _, subject, ok := checkLogin(w, r)
+  if !ok {
+    return
+  }
+
+  // Get memberId
+  memberId, ok := dbGetActiveMemberId(w, subject)
+  if !ok {
+    return
+  }
+
+  // Get request body
+  decoder := json.NewDecoder(r.Body)
+  decoder.DisallowUnknownFields()
+  var payment paymentStruct
+  err := decoder.Decode(&payment)
+  if err != nil {
+    respondError(w, http.StatusBadRequest, err.Error())
+    return
+  }
+
+  code := payment.Code
+  if code == "" {
+    code = generateCode(MANUAL_PAYMENT_ID_LENGTH)
+  }
+
+  stmt := `
+    INSERT INTO store_code
+      create_datetime,
+      generated_by_id,
+      note,
+      store_item_id,
+      store_item_count,
+      amount,
+      code,
+      completed
+    VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, ?)`
+  _, err = db.Exec(stmt, memberId, payment.Note, payment.StoreItemId,
+      payment.StoreItemCount, payment.Amount, code, payment.Completed)
+  if !checkError(w, err) {
+    return
+  }
+
+  respondJSON(w, http.StatusOK, map[string]string{"code": code})
 }

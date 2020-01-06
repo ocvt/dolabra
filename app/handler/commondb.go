@@ -1,6 +1,7 @@
 package handler
 
 import (
+  "math/rand"
   "encoding/json"
   "net/http"
   "strconv"
@@ -14,9 +15,10 @@ import (
    - EXISTS helpers
 */
 
-var MAX_INT = 4294967295
+const MAX_INT = 4294967295
+const LETTER_BYTES = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-/* General helpers */
+/* General non-db helpers */
 func checkLogin(w http.ResponseWriter, r *http.Request) (string, string, bool) {
   idp := r.Context().Value("idp")
   subject := r.Context().Value("subject")
@@ -44,6 +46,17 @@ func checkURLParam(w http.ResponseWriter, r *http.Request, param string) (int, b
   return paramInt, true
 }
 
+// https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-go
+func generateCode(n int) string {
+  byteArr := make([]byte, n)
+
+  for i := range byteArr {
+    byteArr[i] = LETTER_BYTES[rand.Intn(len(LETTER_BYTES))]
+  }
+  return string(byteArr)
+}
+
+/* General db helpers */
 func dbCreateSystemMember() error {
   notifications := setAllPreferences()
   notificationsArr, err := json.Marshal(notifications)

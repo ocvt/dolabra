@@ -203,6 +203,7 @@ func createTables(db *sql.DB) {
   `)
 
   /* Inventory & payment related tables */
+  // TODO Note: a payment method+id pair can be valid for multiple items
   execHelper(db, `
     CREATE TABLE IF NOT EXISTS payment (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
@@ -219,6 +220,21 @@ func createTables(db *sql.DB) {
     );
   `)
 
+  // TODO Note: a single code can be valid for multiple items
+  execHelper(db, `
+    CREATE TABLE IF NOT EXISTS store_code (
+      id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
+      create_datetime DATETIME NOT NULL,
+      generated_by_id INTEGER REFERENCES member (id) NOT NULL,
+      note TEXT NOT NULL COLLATE NOCASE,
+      store_item_id TEXT REFERENCES store_item (id) NOT NULL,
+      store_item_count INTEGER NOT NULL,
+      amount INTEGER NOT NULL,
+      code TEXT NOT NULL
+      completed BOOLEAN NOT NULL,
+    );
+  `)
+
   execHelper(db, `
     CREATE TABLE IF NOT EXISTS store_item (
       id TEXT PRIMARY KEY NOT NULL UNIQUE,
@@ -227,14 +243,12 @@ func createTables(db *sql.DB) {
     );
   `)
 
-  //TODO
-  //  Equipment inventory
-//  execHelper(db, `
-//    CREATE TABLE IF NOT EXISTS equipment (
-//      inventory_id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
-//      TODO
-//    );
-//  `)
+  execHelper(db, `
+    CREATE TABLE IF NOT EXISTS equipment (
+      id TEXT PRIMARY KEY NOT NULL UNIQUE,
+      description TEXT UNIQUE NOT NULL COLLATE NOCASE
+    );
+  `)
 }
 
 func insertData(db *sql.DB) {

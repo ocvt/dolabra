@@ -379,6 +379,8 @@ func PostTripsSignup(w http.ResponseWriter, r *http.Request) {
         tripSignup.Driver, tripSignup.CarCapacityTotal, tripSignup.Pet) {
       return
     }
+
+    // TODO check for waitlist
   }
 
   stmt := `
