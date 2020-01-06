@@ -97,7 +97,14 @@ func setRouters() {
   r.Route("/webtools", func(r chi.Router) {
     r.Use(handler.EnsureOfficer)
     r.Delete("/news/{tripId}", handler.DeleteWebtoolsNews)
+    r.Delete("/officers/{memberId}", handler.DeleteWebtoolsOfficers)
     r.Get("/emails", handler.GetWebtoolsEmails)
+    r.Get("/officers", handler.GetWebtoolsOfficers)
+    r.Get("/payments", handler.GetWebtoolsPayments)
+    r.Patch("/officers/{memberId}/{action}", handler.PatchWebtoolsOfficers)
+    r.Post("/payments/generateCode", handler.PostWebtoolsGenerateCode)
+    r.Post("/news", handler.PostWebtoolsNews)
+    r.Post("/officers/", handler.PostWebtoolsOfficers)
     r.Route("/members", func(r chi.Router) {
       r.Get("/", handler.GetWebtoolsMembers)
       r.Get("/{memberId}/attendance", handler.GetWebtoolsMembersAttendance)
@@ -105,12 +112,6 @@ func setRouters() {
       r.Patch("/{memberId}/dues/grant", handler.PatchWebtoolsDuesGrant)
       r.Patch("/{memberId}/dues/revoke", handler.PatchWebtoolsDuesRevoke)
     })
-    r.Get("/officers", handler.GetWebtoolsOfficers)
-    r.Get("/payments", handler.GetWebtoolsPayments)
-    r.Delete("/officers/{memberId}", handler.DeleteWebtoolsOfficers)
-    r.Patch("/officers/{memberId}/{action}", handler.PatchWebtoolsOfficers)
-    r.Post("/news", handler.PostWebtoolsNews)
-    r.Post("/officers/", handler.PostWebtoolsOfficers)
   })
 }
 

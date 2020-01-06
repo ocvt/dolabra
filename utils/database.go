@@ -230,8 +230,8 @@ func createTables(db *sql.DB) {
       store_item_id TEXT REFERENCES store_item (id) NOT NULL,
       store_item_count INTEGER NOT NULL,
       amount INTEGER NOT NULL,
-      code TEXT NOT NULL
-      completed BOOLEAN NOT NULL,
+      code TEXT NOT NULL,
+      completed BOOLEAN NOT NULL
     );
   `)
 
