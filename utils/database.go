@@ -211,9 +211,9 @@ func createTables(db *sql.DB) {
       note TEXT NOT NULL COLLATE NOCASE,
       member_id INTEGER REFERENCES member (id) NOT NULL,
       store_item_id TEXT REFERENCES store_item (id) NOT NULL,
-      store_item_amount INTEGER NOT NULL,
+      store_item_count INTEGER NOT NULL,
       amount INTEGER NOT NULL,
-      payment_method TEXT NOT NULL COLLAGE NOCASE,
+      payment_method TEXT NOT NULL COLLATE NOCASE,
       payment_id TEXT NOT NULL,
       completed BOOLEAN NOT NULL
     );

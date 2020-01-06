@@ -142,16 +142,16 @@ func dbGetActiveMemberId(w http.ResponseWriter, subject string) (int, bool) {
 }
 
 func dbGetItemCount(w http.ResponseWriter, storeItemId string,
-    stripePaymentId string) (int, int, bool) {
+    paymentMethod string, paymentId string) (int, int, bool) {
   stmt := `
     SELECT
       member_id,
       store_item_count
     FROM payment
-    WHERE strip_payment_id = ?`
+    WHERE payment_method = ? AND payment_id = ?`
   var memberId int
   var storeItemCount int
-  err := db.QueryRow(stmt, stripePaymentId).Scan(&memberId, &storeItemCount)
+  err := db.QueryRow(stmt, paymentMethod, paymentId).Scan(&memberId, &storeItemCount)
   if !checkError(w, err) {
     return 0, 0, false
   }

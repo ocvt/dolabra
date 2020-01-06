@@ -118,7 +118,7 @@ func PostPaymentSucceeded(w http.ResponseWriter, r *http.Request) {
   // TODO Detect payment failure?
 
   // Add years and complete payment
-  memberId, membershipYears, ok := dbGetItemCount(w, "MEMBERSHIP", myPI.ID)
+  memberId, membershipYears, ok := dbGetItemCount(w, "MEMBERSHIP", "STRIPE", myPI.ID)
   if !ok {
     return
   }
