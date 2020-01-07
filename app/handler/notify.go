@@ -79,8 +79,8 @@ func PostTripsNotifyGroup(w http.ResponseWriter, r *http.Request) {
     respondError(w, http.StatusBadRequest, err.Error())
     return
   }
-  emailBody := jsonBody["emailBody"]
   emailSubject := jsonBody["emailSubject"]
+  emailBody := jsonBody["emailBody"]
 
   // Permissions
   if !dbEnsurePublishedTrip(w, tripId) ||
@@ -93,7 +93,7 @@ func PostTripsNotifyGroup(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  // Nofity signups
+  // Notify signups
   if groupId == "all" {
     if !stageEmail(w, "TRIP_ALERT_ALL", tripId, memberId, emailSubject,
         emailBody) {
@@ -109,6 +109,14 @@ func PostTripsNotifyGroup(w http.ResponseWriter, r *http.Request) {
         emailBody) {
       return
     }
+  }
+
+  memberIdStr := strconv.Itoa(memberId)
+  emailSubject = "Notification of OCVT notification"
+  emailBody = "You are receiving this because you sent a notification for a" +
+              " trip you are the trip leader of."
+  if !stageEmail(w, memberIdStr, tripId, memberId, emailSubject, emailBody) {
+    return
   }
 
   respondJSON(w, http.StatusNoContent, nil)

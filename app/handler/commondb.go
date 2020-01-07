@@ -137,6 +137,18 @@ func dbEnsureNotOfficer(w http.ResponseWriter, memberId int) bool {
   return true
 }
 
+func dbExtendMembership(w http.ResponseWriter, memberId int, years int) bool {
+  stmt := `
+    UPDATE member
+    SET paid_expire_datetime = datetime(paid_expire_datetime, '+? years')
+    WHERE id = ?`
+  _, err := db.Exec(stmt, years, memberId)
+  if !checkError(w, err) {
+    return false
+  }
+  return true
+}
+
 func dbGetActiveMemberId(w http.ResponseWriter, subject string) (int, bool) {
   memberId, ok := dbGetMemberId(w, subject)
   if !ok {

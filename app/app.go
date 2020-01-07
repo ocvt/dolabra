@@ -102,6 +102,8 @@ func setRouters() {
     r.Get("/officers", handler.GetWebtoolsOfficers)
     r.Get("/payments", handler.GetWebtoolsPayments)
     r.Patch("/officers/{memberId}/{action}", handler.PatchWebtoolsOfficers)
+    r.Patch("/payments/{paymentRowId}/completed", handler.PatchWebtoolsPaymentsCompleted)
+    r.Post("/payments", handler.PostWebtoolsPayments)
     r.Post("/payments/generateCode", handler.PostWebtoolsGenerateCode)
     r.Post("/news", handler.PostWebtoolsNews)
     r.Post("/officers/", handler.PostWebtoolsOfficers)

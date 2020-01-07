@@ -12,20 +12,35 @@ type paymentStruct struct {
   Id int `json:"id,omitempty"`
   CreateDatetime string `json:"createDatetime,omitempty"`
   EnteredById int `json:"enteredById,omitempty"`
+  MemberId int `json:"memberId,omitempty"`
   PaymentMethod string `json:"paymentMethod,omitempty"`
-  PaymentId string `json:"paymentId,omitempty"`
-  // Not present in payment of store_code db, only for client view
+  // Only for client view when returning data
   EnteredByName string `json:"enteredByName,omitempty"`
   MemberName string `json:"memberName,omitempty"`
-  // Only used in payment table
-  MemberId int `json:"memberId,omitempty"`
-  // Only used in store_code table
-  Code string `json:"code,omitempty"`
-  /* Required fields for any payment or code generation */
+  /* Required fields */
   Note string `json:"note"`
   StoreItemId string `json:"storeItemId"`
   StoreItemCount int `json:"storeItemCount"`
   Amount int `json:"amount"`
+  // Only used if multiple items in 1 payment
+  PaymentId string `json:"paymentId"`
+  Completed bool `json:"completed"`
+}
+
+// This is somewhat similar to paymentStruct but different enough to justify
+// a separate struct
+type storeCodeStruct struct {
+  /* Managed Server side */
+  Id int `json:"id,omitempty"`
+  CreateDatetime string `json:"createDatetime,omitempty"`
+  GeneratedById int `json:"generatedById,omitempty"`
+  /* Required fields */
+  Note string `json:"note"`
+  StoreItemId string `json:"storeItemId"`
+  StoreItemCount int `json:"storeItemCount"`
+  Amount int `json:"amount"`
+  // Only used if multiple items in 1 payment
+  Code string `json:"code"`
   Completed bool `json:"completed"`
 }
 
@@ -83,6 +98,26 @@ func GetWebtoolsPayments(w http.ResponseWriter, r *http.Request) {
   respondJSON(w, http.StatusOK, map[string][]*paymentStruct{"payments": payments})
 }
 
+func PatchWebtoolsPaymentsCompleted(w http.ResponseWriter, r *http.Request) {
+  // Get paymentRowId
+  // NOTE: uses id (primary key) field, NOT payment_id field
+  paymentRowId, ok := checkURLParam(w, r, "paymentRowId")
+  if !ok {
+    return
+  }
+
+  stmt := `
+    UPDATE payment
+    SET completed = true
+    WHERE id = ?`
+  _, err := db.Exec(stmt, paymentRowId)
+  if !checkError(w, err) {
+    return
+  }
+
+  respondJSON(w, http.StatusNoContent, nil)
+}
+
 func PostWebtoolsGenerateCode(w http.ResponseWriter, r *http.Request) {
   _, subject, ok := checkLogin(w, r)
   if !ok {
@@ -98,14 +133,14 @@ func PostWebtoolsGenerateCode(w http.ResponseWriter, r *http.Request) {
   // Get request body
   decoder := json.NewDecoder(r.Body)
   decoder.DisallowUnknownFields()
-  var payment paymentStruct
-  err := decoder.Decode(&payment)
+  var storeCode storeCodeStruct
+  err := decoder.Decode(&storeCode)
   if err != nil {
     respondError(w, http.StatusBadRequest, err.Error())
     return
   }
 
-  code := payment.Code
+  code := storeCode.Code
   if code == "" {
     code = generateCode(MANUAL_PAYMENT_ID_LENGTH)
   }
@@ -121,11 +156,74 @@ func PostWebtoolsGenerateCode(w http.ResponseWriter, r *http.Request) {
       code,
       completed
     VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, ?)`
-  _, err = db.Exec(stmt, memberId, payment.Note, payment.StoreItemId,
-      payment.StoreItemCount, payment.Amount, code, payment.Completed)
+  _, err = db.Exec(stmt, memberId, storeCode.Note, storeCode.StoreItemId,
+      storeCode.StoreItemCount, storeCode.Amount, code, storeCode.Completed)
   if !checkError(w, err) {
     return
   }
 
   respondJSON(w, http.StatusOK, map[string]string{"code": code})
+}
+
+func PostWebtoolsPayments(w http.ResponseWriter, r *http.Request) {
+  _, subject, ok := checkLogin(w, r)
+  if !ok {
+    return
+  }
+
+  // Get officerId, memberId
+  memberId, ok := dbGetActiveMemberId(w, subject)
+  if !ok {
+    return
+  }
+  paymentMemberId, ok := checkURLParam(w, r, "paymentMemberId")
+  if !ok {
+    return
+  }
+
+  // Get request body
+  decoder := json.NewDecoder(r.Body)
+  decoder.DisallowUnknownFields()
+  var payment paymentStruct
+  err := decoder.Decode(&payment)
+  if err != nil {
+    respondError(w, http.StatusBadRequest, err.Error())
+    return
+  }
+
+  paymentId := payment.PaymentId
+  if paymentId == "" {
+    paymentId = generateCode(MANUAL_PAYMENT_ID_LENGTH)
+  }
+
+  // Complete order if possible
+  completed := payment.Completed
+  if payment.StoreItemId == "MEMBERSHIP" {
+    if !dbExtendMembership(w, paymentMemberId, payment.StoreItemCount) {
+      return
+    }
+    completed = true
+  }
+
+  stmt := `
+    INSERT INTO payment
+      create_datetime,
+      created_by_id,
+      note,
+      member_id,
+      store_item_id,
+      store_item_count,
+      amount,
+      payment_method,
+      payment_id,
+      completed
+    VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, 'METHOD', ?, ?)`
+  _, err = db.Exec(stmt, memberId, payment.Note, paymentMemberId,
+      payment.StoreItemId, payment.StoreItemCount, payment.Amount,
+      paymentId, completed)
+  if !checkError(w, err) {
+    return
+  }
+
+  respondJSON(w, http.StatusOK, map[string]string{"paymentId": paymentId})
 }
