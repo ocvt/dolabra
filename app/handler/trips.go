@@ -509,8 +509,7 @@ func PatchTripsPublish(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  // TODO approve trip first
-
+  // TODO approve first
   // Notify members
   if !stageEmailNewTrip(w, tripId) {
     return

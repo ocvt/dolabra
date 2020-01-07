@@ -124,6 +124,23 @@ func Run(host string) {
     log.Fatal(server.ListenAndServe())
   }()
 
+  // Run tasks every 5 minutes
+  ticker := time.NewTicker(5*time.Minute)
+  tickerQuit := make(chan struct{})
+  go func() {
+    log.Printf("Task ticker started, running every 5 minutes")
+    for {
+      select {
+        case <-ticker.C:
+          handler.DoTasks()
+        case <-tickerQuit:
+          log.Printf("Task ticker stopped")
+          ticker.Stop()
+          return
+      }
+    }
+  }()
+
   // Wait for SIGINT
   stop := make(chan os.Signal, 1)
   signal.Notify(stop, os.Interrupt)
@@ -133,6 +150,9 @@ func Run(host string) {
   ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
   defer cancel()
 
+  // Shutdown ticker
+  close(tickerQuit)
+
   // Shutdown server
   err := server.Shutdown(ctx)
   if err != nil {
@@ -141,7 +161,7 @@ func Run(host string) {
     log.Printf("Server successfully shutdown")
   }
 
-  // Close DB
+  // Close DB TODO use transactions
   err = handler.DBClose()
   if err != nil {
     log.Printf("DB failed to close: %s", err.Error())
