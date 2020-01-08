@@ -246,7 +246,9 @@ func createTables(db *sql.DB) {
   execHelper(db, `
     CREATE TABLE IF NOT EXISTS equipment (
       id TEXT PRIMARY KEY NOT NULL UNIQUE,
-      description TEXT UNIQUE NOT NULL COLLATE NOCASE
+      create_datetime DATETIME NOT NULL,
+      description TEXT UNIQUE NOT NULL COLLATE NOCASE,
+      count INTEGER NOT NULL
     );
   `)
 }
