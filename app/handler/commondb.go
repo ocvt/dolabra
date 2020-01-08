@@ -298,9 +298,9 @@ func dbInsertPayment(w http.ResponseWriter, enteredById int, note string,
       payment_method,
       payment_id,
       completed)
-    VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, 'STRIPE', ?, ?)`
+    VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   _, err := db.Exec(stmt, enteredById, note, memberId, storeItemId,
-      storeItemCount, amount, paymentId, completed)
+      storeItemCount, amount, paymentMethod, paymentId, completed)
   return checkError(w, err)
 }
 

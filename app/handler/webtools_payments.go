@@ -34,6 +34,7 @@ type storeCodeStruct struct {
   Id int `json:"id,omitempty"`
   CreateDatetime string `json:"createDatetime,omitempty"`
   GeneratedById int `json:"generatedById,omitempty"`
+  Redeemed bool `json:"redeemed,omitempty"`
   /* Required fields */
   Note string `json:"note"`
   StoreItemId string `json:"storeItemId"`
@@ -145,6 +146,11 @@ func PostWebtoolsGenerateCode(w http.ResponseWriter, r *http.Request) {
     code = generateCode(MANUAL_PAYMENT_ID_LENGTH)
   }
 
+  completed := storeCode.Completed
+  if storeCode.StoreItemId == "MEMBERSHIP" {
+    completed = true
+  }
+
   stmt := `
     INSERT INTO store_code
       create_datetime,
@@ -154,10 +160,11 @@ func PostWebtoolsGenerateCode(w http.ResponseWriter, r *http.Request) {
       store_item_count,
       amount,
       code,
-      completed
-    VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, ?)`
+      completed,
+      redeemed
+    VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, ?, false)`
   _, err = db.Exec(stmt, memberId, storeCode.Note, storeCode.StoreItemId,
-      storeCode.StoreItemCount, storeCode.Amount, code, storeCode.Completed)
+      storeCode.StoreItemCount, storeCode.Amount, code, completed)
   if !checkError(w, err) {
     return
   }

@@ -44,7 +44,7 @@ func setRouters() {
   r.Get("/news", handler.GetNews)
   r.Get("/newsArchive", handler.GetNewsArchive)
   r.Get("/payment/{paymentOption}", handler.GetPayment)
-//  r.Post("/payment/redeem", handler.PostPaymentRedeem)
+  r.Post("/payment/redeem", handler.PostPaymentRedeem)
   r.Post("/payment/paymentSucceeded", handler.PostPaymentSucceeded)
   r.Post("/quicksignup", handler.PostQuicksignup)
   r.Post("/unsubscribe/all", handler.PostUnsubscribeAll)

@@ -15,6 +15,11 @@ import (
 var STRIPE_SECRET_KEY string
 var STRIPE_WEBHOOK_SECRET string
 
+/* Only for redeeming codes */
+type simpleStoreCodeStruct struct {
+  Code string `json:"code"`
+}
+
 func GetPayment(w http.ResponseWriter, r *http.Request) {
   _, subject, ok := checkLogin(w, r)
   if !ok {
@@ -85,6 +90,105 @@ func GetPayment(w http.ResponseWriter, r *http.Request) {
     "stripeClientSecret": myPI.ClientSecret,
   }
   respondJSON(w, http.StatusOK, response)
+}
+
+func PostPaymentRedeem(w http.ResponseWriter, r *http.Request) {
+  _, subject, ok := checkLogin(w, r)
+  if !ok {
+    return
+  }
+
+  // Get memberId, paymentOption
+  memberId, ok := dbGetActiveMemberId(w, subject)
+  if !ok {
+    return
+  }
+
+  // Get request body
+  decoder := json.NewDecoder(r.Body)
+  decoder.DisallowUnknownFields()
+  var simpleStoreCode simpleStoreCodeStruct
+  err := decoder.Decode(&simpleStoreCode)
+  if err != nil {
+    respondError(w, http.StatusBadRequest, err.Error())
+    return
+  }
+
+  stmt := `
+    SELECT *
+    FROM store_code
+    WHERE redeemed = false AND code = ?`
+  rows, err := db.Query(stmt, simpleStoreCode.Code)
+  if !checkError(w, err) {
+    return
+  }
+  defer rows.Close()
+
+  for rows.Next() {}
+    var storeCode storeCodeStruct
+    err = rows.Scan(
+      &storeCode.Id,
+      &storeCode.CreateDatetime,
+      &storeCode.GeneratedById,
+      &storeCode.Note,
+      &storeCode.StoreItemId,
+      &storeCode.StoreItemCount,
+      &storeCode.Amount,
+      &storeCode.Code,
+      &storeCode.Completed,
+      &storeCode.Redeemed)
+    if !checkError(w, err) {
+      return
+    }
+
+    // Impossible to be MEMBERSHIP AND not redeemed AND not completed
+    completed := storeCode.Completed
+    if storeCode.StoreItemId == "MEMBERSHIP" {
+      if !dbExtendMembership(w, memberId, storeCode.StoreItemCount) {
+        return
+      }
+      completed = true
+    }
+
+    // Transfer to be proper payment associated with member
+    stmt = `
+      INSERT INTO payment
+        create_datetime,
+        entered_by_id,
+        note,
+        member_id,
+        store_item_id,
+        store_item_count,
+        amount,
+        payment_method,
+        payment_id,
+        completed
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'MANUAL', ?, ?)`
+    _, err = db.Exec(stmt,
+      storeCode.CreateDatetime,
+      storeCode.GeneratedById,
+      storeCode.Note,
+      memberId,
+      storeCode.StoreItemId,
+      storeCode.StoreItemCount,
+      storeCode.Amount,
+      storeCode.Code,
+      completed)
+    if !checkError(w, err) {
+      return
+    }
+
+    // Prevent from redeeming item again
+    stmt = `
+      UPDATE store_code
+      SET redeemed = true
+      WHERE id = ?`
+    _, err = db.Exec(stmt, storeCode.Id)
+    if !checkError(w, err) {
+      return
+    }
+
+  respondJSON(w, http.StatusNoContent, nil)
 }
 
 // Mostly copied from

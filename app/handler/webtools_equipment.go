@@ -34,6 +34,9 @@ func GetWebtoolsEquipment(w http.ResponseWriter, r *http.Request) {
       &equipment[i].CreateDatetime,
       &equipment[i].Count,
       &equipment[i].Description)
+    if !checkError(w, err) {
+      return
+    }
   }
 
   err = rows.Err()
@@ -84,10 +87,10 @@ func PostWebtoolsEquipment(w http.ResponseWriter, r *http.Request) {
   }
 
   stmt := `
-    INSERT INTO equipment (
+    INSERT INTO equipment
       create_datetime,
       description,
-      count)
+      count
     VALUES (datetime('now'), ?, ?)`
   _, err = db.Exec(stmt, equipment.Description, count)
   if !checkError(w, err) {

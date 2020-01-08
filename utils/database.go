@@ -231,7 +231,8 @@ func createTables(db *sql.DB) {
       store_item_count INTEGER NOT NULL,
       amount INTEGER NOT NULL,
       code TEXT NOT NULL,
-      completed BOOLEAN NOT NULL
+      completed BOOLEAN NOT NULL,
+      redeemed BOOLEAN NOT NULL
     );
   `)
 
