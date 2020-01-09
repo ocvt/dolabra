@@ -11,6 +11,42 @@ import (
 */
 
 /* General helpers */
+func dbGetTripApprovalSummary(w http.ResponseWriter, tripId int) (string,
+    string, string, bool) {
+  stmt := `
+    SELECT
+      create_datetime,
+      name,
+      description
+    FROM trip
+    WHERE id = ?`
+  row, err := db.Query(stmt, tripId)
+  if !checkError(w, err) {
+    return "", "", "", false
+  }
+  defer row.Close()
+
+  for row.Next() {
+    var createDatetime, name, description string
+    err = row.Scan(
+      &createDatetime,
+      &name,
+      &description)
+    if !checkError(w, err) {
+      return "", "", "", false
+    }
+
+    return createDatetime, name, description, true
+  }
+
+  err = row.Err()
+  if !checkError(w, err) {
+    return "", "", "", false
+  }
+
+  return "", "", "", false
+}
+
 func dbGetTripName(w http.ResponseWriter, tripId int) (string, bool) {
   stmt := `
     SELECT name

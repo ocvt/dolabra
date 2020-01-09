@@ -61,7 +61,6 @@ func createTables(db *sql.DB) {
     );
   `)
 
-  // Keep track of users who can approve trips
   execHelper(db, `
     CREATE TABLE IF NOT EXISTS trip_approver (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
@@ -71,13 +70,15 @@ func createTables(db *sql.DB) {
     );
   `)
 
-  // Keep track of approved trips
-  //  execHelper(db, `
-//    CREATE TABLE IF NOT EXISTS trip_approval (
-//      approval_seqno INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
-//      TODO
-//    );
-//  `)
+  execHelper(db, `
+    CREATE TABLE IF NOT EXISTS guid (
+      id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
+      code TEXT COLLATE NOCASE NOT NULL,
+      member_id INTEGER REFERENCES member (id) NOT NULL,
+      trip_id INTEGER REFERENCES trip (id) NOT NULL,
+      status TEXT COLLATE NOCASE NOT NULL
+    );
+  `)
 
   execHelper(db, `
     CREATE TABLE IF NOT EXISTS auth (
@@ -136,13 +137,6 @@ func createTables(db *sql.DB) {
       pets_description TEXT NOT NULL COLLATE NOCASE
     );
   `)
-
-  //TODO
-  // Purpose: include UUID email for anonymously linking to a member & trip id approval pair
-//  execHelper(db, `
-//    CREATE TABLE IF NOT EXISTS guid (TODO
-//    );
-//  `)
 
   execHelper(db, `
     CREATE TABLE IF NOT EXISTS trip_signup (

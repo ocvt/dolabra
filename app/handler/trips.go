@@ -468,6 +468,7 @@ func PatchTripsCancel(w http.ResponseWriter, r *http.Request) {
   }
 
   // Notify signup, use signupId as notification type for direct alert
+  // TODO fix %s lookup trip name
   emailSubject := "Trip \"%s\" has been canceled"
   emailBody :=
       "This email is a notification that the trip you were signed up for, " +
@@ -509,9 +510,8 @@ func PatchTripsPublish(w http.ResponseWriter, r *http.Request) {
     return
   }
 
-  // TODO approve first
-  // Notify members
-  if !stageEmailNewTrip(w, tripId) {
+  // Approve trip
+  if !approveNewTrip(w, tripId) {
     return
   }
 

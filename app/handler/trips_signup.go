@@ -152,6 +152,7 @@ func PatchTripsSignupBoot(w http.ResponseWriter, r *http.Request) {
   }
 
   // Notify signup
+  // TODO fix %s lookup trip name
   signupIdStr := strconv.Itoa(signupId)
   emailSubject :=
       "You have been Booted from the trip \"%s\""
@@ -204,6 +205,7 @@ func PatchTripsSignupCancel(w http.ResponseWriter, r *http.Request) {
   }
 
   // Notify member
+  // TODO fix %s lookup trip name
   memberIdStr := strconv.Itoa(memberId)
   emailSubject :=
       "You have canceled your signup for trip \"%s\""
@@ -258,6 +260,7 @@ func PatchTripsSignupForceadd(w http.ResponseWriter, r *http.Request) {
   }
 
   // Notify signup
+  // TODO fix %s lookup trip name
   signupIdStr := strconv.Itoa(signupId)
   emailSubject :=
       "You have been Force Added to the trip \"%s\""
@@ -317,6 +320,7 @@ func PatchTripsSignupTripLeaderPromote(w http.ResponseWriter, r *http.Request) {
   }
 
   // Notify signup
+  // TODO fix %s lookup trip name
   signupIdStr := strconv.Itoa(signupId)
   emailSubject :=
       "You have been promoted to Trip Leader for the trip \"%s\""
