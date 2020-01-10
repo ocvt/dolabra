@@ -22,20 +22,20 @@ var SMTP_FROM_EMAIL_DEFAULT string
 func sendEmail(w http.ResponseWriter, replyName string, replyEmail string,
     toName string, toEmail string, subject string, body string) bool {
   fullFromName := SMTP_FROM_FIRST_NAME_DEFAULT + " " + SMTP_FROM_LAST_NAME_DEFAULT
-  // TODO fix this shit!!
-  message := fmt.Sprintf("From: %s <%s>\n" +
-                         "Reply-To: %s <%s>\n" +
-                         "To: %s <%s>\n" +
-                         "Subject: %s\n\n" +
-                         "%s",
-                         fullFromName,
-                         SMTP_FROM_EMAIL_DEFAULT,
-                         replyName,
-                         replyEmail,
-                         toName,
-                         toEmail,
-                         subject,
-                         body)
+  message := fmt.Sprintf(
+      "From: %s <%s>\n" +
+      "Reply-To: %s <%s>\n" +
+      "To: %s <%s>\n" +
+      "Subject: %s\n\n" +
+      "%s",
+      fullFromName,
+      SMTP_FROM_EMAIL_DEFAULT,
+      replyName,
+      replyEmail,
+      toName,
+      toEmail,
+      subject,
+      body)
 
 //  auth := smtp.PlainAuth("", SMTP_USERNAME, SMTP_PASSWORD, SMTP_HOSTNAME)
   fmt.Printf("MESSAGE: %s\n",  message)

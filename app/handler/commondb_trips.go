@@ -146,18 +146,6 @@ func dbEnsureActiveTrip(w http.ResponseWriter, tripId int) bool {
   return true
 }
 
-func dbEnsurePublishedTrip(w http.ResponseWriter, tripId int) bool {
-  exists, err := dbIsTripPublished(w, tripId)
-  if err != nil {
-    return false
-  }
-  if !exists {
-    respondError(w, http.StatusBadRequest, "Trip is not published.")
-    return false
-  }
-  return true
-}
-
 func dbEnsureIsTrip(w http.ResponseWriter, tripId int) bool {
   exists, err := dbIsTrip(w, tripId)
   if err != nil {
@@ -182,22 +170,6 @@ func dbEnsureMemberIsOnTrip(w http.ResponseWriter, tripId int, memberId int) boo
   return true
 }
 
-func dbEnsureOfficerOrTripLeader(w http.ResponseWriter, tripId int, memberId int) bool {
-  isOfficer, err := dbIsOfficer(w, memberId)
-  if err != nil {
-    return false
-  }
-  isTripLeader, err := dbIsTripLeader(w, tripId, memberId)
-  if err != nil {
-    return false
-  }
-  if !isOfficer && !isTripLeader {
-    respondError(w, http.StatusBadRequest, "Must be officer or trip leader.")
-    return false
-  }
-  return true
-}
-
 func dbEnsureNotSignupCode(w http.ResponseWriter, tripId int, memberId int, code string) bool {
   exists, err := dbCheckSignupCode(w, tripId, memberId, code)
   if err != nil {
@@ -217,6 +189,34 @@ func dbEnsureNotTripCreator(w http.ResponseWriter, tripId int, memberId int) boo
   }
   if exists {
     respondError(w, http.StatusBadRequest, "Cannot modify trip creator status.")
+    return false
+  }
+  return true
+}
+
+func dbEnsureOfficerOrTripLeader(w http.ResponseWriter, tripId int, memberId int) bool {
+  isOfficer, err := dbIsOfficer(w, memberId)
+  if err != nil {
+    return false
+  }
+  isTripLeader, err := dbIsTripLeader(w, tripId, memberId)
+  if err != nil {
+    return false
+  }
+  if !isOfficer && !isTripLeader {
+    respondError(w, http.StatusBadRequest, "Must be officer or trip leader.")
+    return false
+  }
+  return true
+}
+
+func dbEnsurePublishedTrip(w http.ResponseWriter, tripId int) bool {
+  exists, err := dbIsTripPublished(w, tripId)
+  if err != nil {
+    return false
+  }
+  if !exists {
+    respondError(w, http.StatusBadRequest, "Trip is not published.")
     return false
   }
   return true

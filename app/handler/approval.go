@@ -53,22 +53,23 @@ func approveNewTrip(w http.ResponseWriter, tripId int) bool {
       return false
     }
 
-    // TODO sprintf stuff
+    // TODO email links
     emailSubject := fmt.Sprintf(
         "[Trip Approval] ID: %d, Title: %s", tripId, title)
-    emailBody := fmt.Sprintf("The following trip needs approval:\n" +
-                             "\n" +
-                             "%s\n" +
-                             "\n" +
-                             "Scheduled for: %s\n" +
-                             "Description: %s\n" +
-                             "\n" +
-                             "To View this trip go <here>\n" +
-                             "To Administer or cancel this trip go <here>\n" +
-                             "\n" +
-                             "<Approve Trip%s>\n" +
-                             "\n" +
-                             "<Deny Trip%s>\n", tripId, title, date, description, guidCode, guidCode)
+    emailBody := fmt.Sprintf(
+      "The following trip needs approval:\n" +
+      "\n" +
+      "%s\n" +
+      "\n" +
+      "Scheduled for: %s\n" +
+      "Description: %s\n" +
+      "\n" +
+      "To View this trip go <here>\n" +
+      "To Administer or cancel this trip go <here>\n" +
+      "\n" +
+      "<Approve Trip%s>\n" +
+      "\n" +
+      "<Deny Trip%s>\n", tripId, title, date, description, guidCode, guidCode)
     if !stageEmail(w, memberIdStr, tripId, 0, emailSubject, emailBody) {
       return false
     }

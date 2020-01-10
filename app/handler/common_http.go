@@ -14,27 +14,13 @@ import (
 // Key for encrypting cookies
 var key [32]byte
 
-// Set encrypted cookie
-func setCookie(w http.ResponseWriter, name string, payload interface{}) {
-  encodedJSONPayload, err := json.Marshal(payload)
-  if err != nil {
-    log.Fatal("Failed to marshal payload", err)
-  }
-
-  // Create nonce, append to front, and encrypt
-  var nonce [24]byte
-  _, err = rand.Read(nonce[:])
-  if err != nil {
-    log.Fatal("Failed to generate nonce", err)
-  }
-  encryptedPayload := secretbox.Seal(nonce[:], encodedJSONPayload, &nonce, &key)
-  encodedB64Payload := base64.StdEncoding.EncodeToString(encryptedPayload)
-
-  // Set cookie
+// Delete Cookie
+func deleteCookie(w http.ResponseWriter, name string) {
   cookie := http.Cookie{
     Name: name,
-    Value: encodedB64Payload,
+    Value: "",
     Path: "/",
+    MaxAge: -1,
   }
   http.SetCookie(w, &cookie)
 }
@@ -70,18 +56,36 @@ func getCookie(r *http.Request, name string, payload interface{}) error {
 
   return nil
 }
+// Set encrypted cookie
+func setCookie(w http.ResponseWriter, name string, payload interface{}) {
+  encodedJSONPayload, err := json.Marshal(payload)
+  if err != nil {
+    log.Fatal("Failed to marshal payload", err)
+  }
 
-// Delete Cookie
-func deleteCookie(w http.ResponseWriter, name string) {
+  // Create nonce, append to front, and encrypt
+  var nonce [24]byte
+  _, err = rand.Read(nonce[:])
+  if err != nil {
+    log.Fatal("Failed to generate nonce", err)
+  }
+  encryptedPayload := secretbox.Seal(nonce[:], encodedJSONPayload, &nonce, &key)
+  encodedB64Payload := base64.StdEncoding.EncodeToString(encryptedPayload)
+
+  // Set cookie
   cookie := http.Cookie{
     Name: name,
-    Value: "",
+    Value: encodedB64Payload,
     Path: "/",
-    MaxAge: -1,
   }
   http.SetCookie(w, &cookie)
 }
 /************************ COOKIES ************************/
+
+// Return error message as JSON
+func respondError(w http.ResponseWriter, code int, message string) {
+  respondJSON(w, code, map[string]string{"error": message})
+}
 
 // Properly return JSON response
 func respondJSON(w http.ResponseWriter, status int, payload interface{}) {
@@ -105,9 +109,4 @@ func respondJSON(w http.ResponseWriter, status int, payload interface{}) {
   if err != nil {
     log.Fatal("Failed writing response: ", err.Error())
   }
-}
-
-// Return error message as JSON
-func respondError(w http.ResponseWriter, code int, message string) {
-  respondJSON(w, code, map[string]string{"error": message})
 }

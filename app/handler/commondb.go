@@ -19,6 +19,14 @@ const MAX_INT = 4294967295
 const LETTER_BYTES = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 /* General non-db helpers */
+func checkError(w http.ResponseWriter, err error) bool {
+  if err != nil {
+    respondError(w, http.StatusInternalServerError, err.Error())
+    return false
+  }
+  return true
+}
+
 func checkLogin(w http.ResponseWriter, r *http.Request) (string, string, bool) {
   idp := r.Context().Value("idp")
   subject := r.Context().Value("subject")
@@ -27,14 +35,6 @@ func checkLogin(w http.ResponseWriter, r *http.Request) (string, string, bool) {
     return "", "", false
   }
   return idp.(string), subject.(string), true
-}
-
-func checkError(w http.ResponseWriter, err error) bool {
-  if err != nil {
-    respondError(w, http.StatusInternalServerError, err.Error())
-    return false
-  }
-  return true
 }
 
 func checkURLParam(w http.ResponseWriter, r *http.Request, param string) (int, bool) {
@@ -92,7 +92,42 @@ func dbCreateNullTrip() error {
 }
 
 /* "Ensure" helpers */
-// TODO organize A-Z
+func dbEnsureMemberDoesNotExist(w http.ResponseWriter, subject string) bool {
+  exists, err := dbIsMemberWithSubject(w, subject)
+  if err == nil && exists {
+    respondError(w, http.StatusBadRequest, "Member is already registered.")
+  }
+
+  if err == nil {
+    return !exists
+  }
+  return false
+}
+
+func dbEnsureMemberExists(w http.ResponseWriter, subject string) bool {
+  exists, err := dbIsMemberWithSubject(w, subject)
+  if err == nil && !exists {
+      respondError(w, http.StatusNotFound, "Member is not registered.")
+  }
+
+  if err == nil {
+    return exists
+  }
+  return false
+}
+
+func dbEnsureMemberIdExists(w http.ResponseWriter, memberId int) bool {
+  exists, err := dbIsMemberWithMemberId(w, memberId)
+  if err == nil && !exists {
+      respondError(w, http.StatusNotFound, "Member is not registered.")
+  }
+
+  if err == nil {
+    return exists
+  }
+  return false
+}
+
 func dbEnsureMemberWantsNotification(w http.ResponseWriter, memberId int, notificationType string) bool {
   notifications, ok := dbGetMemberNotifications(w, memberId)
   if !ok {
@@ -113,18 +148,6 @@ func dbEnsureMemberWantsNotification(w http.ResponseWriter, memberId int, notifi
   return notificationsStrMap[notificationType]
 }
 
-func dbEnsureOfficer(w http.ResponseWriter, memberId int) bool {
-  isOfficer, err := dbIsOfficer(w, memberId)
-  if err != nil {
-    return false
-  }
-  if !isOfficer {
-    respondError(w, http.StatusBadRequest, "Must be officer.")
-    return false
-  }
-  return true
-}
-
 func dbEnsureNotOfficer(w http.ResponseWriter, memberId int) bool {
   isOfficer, err := dbIsOfficer(w, memberId)
   if err != nil {
@@ -132,6 +155,18 @@ func dbEnsureNotOfficer(w http.ResponseWriter, memberId int) bool {
   }
   if isOfficer {
     respondError(w, http.StatusBadRequest, "Must not be officer.")
+    return false
+  }
+  return true
+}
+
+func dbEnsureOfficer(w http.ResponseWriter, memberId int) bool {
+  isOfficer, err := dbIsOfficer(w, memberId)
+  if err != nil {
+    return false
+  }
+  if !isOfficer {
+    respondError(w, http.StatusBadRequest, "Must be officer.")
     return false
   }
   return true
@@ -247,42 +282,6 @@ func dbGetMemberNotifications(w http.ResponseWriter, memberId int) (notification
   return notifications, true
 }
 
-func dbEnsureMemberExists(w http.ResponseWriter, subject string) bool {
-  exists, err := dbIsMemberWithSubject(w, subject)
-  if err == nil && !exists {
-      respondError(w, http.StatusNotFound, "Member is not registered.")
-  }
-
-  if err == nil {
-    return exists
-  }
-  return false
-}
-
-func dbEnsureMemberDoesNotExist(w http.ResponseWriter, subject string) bool {
-  exists, err := dbIsMemberWithSubject(w, subject)
-  if err == nil && exists {
-    respondError(w, http.StatusBadRequest, "Member is already registered.")
-  }
-
-  if err == nil {
-    return !exists
-  }
-  return false
-}
-
-func dbEnsureMemberIdExists(w http.ResponseWriter, memberId int) bool {
-  exists, err := dbIsMemberWithMemberId(w, memberId)
-  if err == nil && !exists {
-      respondError(w, http.StatusNotFound, "Member is not registered.")
-  }
-
-  if err == nil {
-    return exists
-  }
-  return false
-}
-
 func dbInsertPayment(w http.ResponseWriter, enteredById int, note string,
     memberId int, storeItemId string, storeItemCount int, amount int,
     paymentMethod string, paymentId string, completed bool) bool {
@@ -318,12 +317,12 @@ func dbIsActiveMember(w http.ResponseWriter, memberId int) (bool, error) {
   return exists, err
 }
 
-func dbIsPaidMember(w http.ResponseWriter, memberId int) (bool, error) {
+func dbIsMemberWithMemberId(w http.ResponseWriter, memberId int) (bool, error) {
   stmt := `
     SELECT EXISTS (
       SELECT 1
-      FROM member
-      WHERE id = ? AND date(paid_expire_datetime) > datetime('now'))`
+      FROM auth
+      WHERE member_id = ?)`
   var exists bool
   err := db.QueryRow(stmt, memberId).Scan(&exists)
   checkError(w, err)
@@ -342,24 +341,24 @@ func dbIsMemberWithSubject(w http.ResponseWriter, subject string) (bool, error) 
   return exists, err
 }
 
-func dbIsMemberWithMemberId(w http.ResponseWriter, memberId int) (bool, error) {
-  stmt := `
-    SELECT EXISTS (
-      SELECT 1
-      FROM auth
-      WHERE member_id = ?)`
-  var exists bool
-  err := db.QueryRow(stmt, memberId).Scan(&exists)
-  checkError(w, err)
-  return exists, err
-}
-
 func dbIsOfficer(w http.ResponseWriter, memberId int) (bool, error) {
   stmt := `
     SELECT EXISTS (
       SELECT 1
       FROM officer
       WHERE member_id = ? AND date(expire_datetime) > datetime('now'))`
+  var exists bool
+  err := db.QueryRow(stmt, memberId).Scan(&exists)
+  checkError(w, err)
+  return exists, err
+}
+
+func dbIsPaidMember(w http.ResponseWriter, memberId int) (bool, error) {
+  stmt := `
+    SELECT EXISTS (
+      SELECT 1
+      FROM member
+      WHERE id = ? AND date(paid_expire_datetime) > datetime('now'))`
   var exists bool
   err := db.QueryRow(stmt, memberId).Scan(&exists)
   checkError(w, err)
