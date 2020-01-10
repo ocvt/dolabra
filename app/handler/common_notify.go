@@ -19,17 +19,17 @@ var SMTP_FROM_EMAIL_DEFAULT string
 /*
  * Actually send an email
  */
-func sendEmail(w http.ResponseWriter, replyName string, replyEmail string,
-    toName string, toEmail string, subject string, body string) bool {
-  fullFromName := SMTP_FROM_FIRST_NAME_DEFAULT + " " + SMTP_FROM_LAST_NAME_DEFAULT
+func sendEmail(fromName string, fromEmail string, replyName string,
+    replyEmail string,toName string, toEmail string, subject string,
+    body string) {
   message := fmt.Sprintf(
       "From: %s <%s>\n" +
       "Reply-To: %s <%s>\n" +
       "To: %s <%s>\n" +
       "Subject: %s\n\n" +
       "%s",
-      fullFromName,
-      SMTP_FROM_EMAIL_DEFAULT,
+      fromName,
+      fromEmail,
       replyName,
       replyEmail,
       toName,
@@ -42,11 +42,8 @@ func sendEmail(w http.ResponseWriter, replyName string, replyEmail string,
 //  err := smtp.SendMail(fmt.Sprintf("%s:%s", SMTP_HOSTNAME, SMTP_PORT), auth,
 //      SMTP_FROM_EMAIL_DEFAULT, []string{toEmail}, []byte(message))
 //  if err != nil {
-//    respondError(w, http.StatusInternalServerError, err.Error())
-//    return false
+//    log.Fatal(err)
 //  }
-
-  return true
 }
 
 /*
@@ -115,4 +112,8 @@ func stageEmail(w http.ResponseWriter, notificationType string, tripId int,
 /* HELPERS */
 func stageEmailNewTrip(w http.ResponseWriter, tripId int) bool {
   return true
+}
+
+func stageEmailTripReminder(tripId int) error {
+  return nil
 }

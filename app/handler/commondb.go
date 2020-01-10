@@ -1,6 +1,7 @@
 package handler
 
 import (
+  "log"
   "math/rand"
   "encoding/json"
   "net/http"
@@ -92,6 +93,20 @@ func dbCreateNullTrip() error {
 }
 
 /* "Ensure" helpers */
+func dbCheckMemberWantsNotification(memberId int, notificationType string) bool {
+  stmt := `
+    SELECT notification_preference
+    FROM member
+    WHERE id = ?`
+  var notificationsStrMap = map[string]bool{}
+  err := db.QueryRow(stmt, memberId).Scan(&notificationsStrMap)
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  return notificationsStrMap[notificationType]
+}
+
 func dbEnsureMemberDoesNotExist(w http.ResponseWriter, subject string) bool {
   exists, err := dbIsMemberWithSubject(w, subject)
   if err == nil && exists {
@@ -126,26 +141,6 @@ func dbEnsureMemberIdExists(w http.ResponseWriter, memberId int) bool {
     return exists
   }
   return false
-}
-
-func dbEnsureMemberWantsNotification(w http.ResponseWriter, memberId int, notificationType string) bool {
-  notifications, ok := dbGetMemberNotifications(w, memberId)
-  if !ok {
-    return false
-  }
-
-  notificationsArr, err := json.Marshal(notifications)
-  if !checkError(w, err) {
-    return false
-  }
-
-  var notificationsStrMap = map[string]bool{}
-  err = json.Unmarshal(notificationsArr, &notificationsStrMap)
-  if !checkError(w, err) {
-    return false
-  }
-
-  return notificationsStrMap[notificationType]
 }
 
 func dbEnsureNotOfficer(w http.ResponseWriter, memberId int) bool {
@@ -260,6 +255,21 @@ func dbGetMemberName(w http.ResponseWriter, memberId int) (string, bool) {
     return "", false
   }
   return fullName, true
+}
+
+func dbGetMemberNameEmail(memberId int) (string, string) {
+  stmt := `
+    SELECT
+      email,
+      first_name || ' ' || last_name AS full_name
+    FROM member
+    WHERE id = ?`
+  var name, email string
+  err := db.QueryRow(stmt, memberId).Scan(&email, &name)
+  if err != nil {
+    log.Fatal(err)
+  }
+  return name, email
 }
 
 func dbGetMemberNotifications(w http.ResponseWriter, memberId int) (notificationsStruct, bool) {

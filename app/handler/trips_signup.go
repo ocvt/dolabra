@@ -397,7 +397,7 @@ func PostTripsSignup(w http.ResponseWriter, r *http.Request) {
       return
     }
 
-    // TODO check for waitlist
+    // TODO check for waitlist, member_only, max people
   }
 
   stmt := `
