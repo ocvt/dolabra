@@ -73,4 +73,4 @@ defined:
 
 * Use tabs instead of spaces for db queries (?)
   * go fmt converts everything else to tabs
-  * Use db transactions
+* Use db transactions
