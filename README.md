@@ -38,7 +38,7 @@ is being sent by a specific person.
 
 ### Dev Mode
 
-The `DEV` variable enaables the `/auth/dev/{subject}` path allowing scripts to
+The `DEV` variable enables the `/auth/dev/{subject}` path allowing scripts to
 easily send in a custom `subject` (auth identifier) without going through a
 proper idp.
 
