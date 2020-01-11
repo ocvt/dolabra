@@ -1,7 +1,7 @@
 package main
 
 import (
-    "gitlab.com/ocvt/dolabra/app"
+  "gitlab.com/ocvt/dolabra/app"
 )
 
 func main() {
