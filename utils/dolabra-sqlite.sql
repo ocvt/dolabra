@@ -5,7 +5,7 @@
 --
 
 -- Table: auth
-CREATE TABLE auth (
+CREATE TABLE IF NOT EXISTS auth (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
       member_id INTEGER REFERENCES member (id) UNIQUE NOT NULL,
       type TEXT NOT NULL COLLATE NOCASE,
@@ -13,7 +13,7 @@ CREATE TABLE auth (
     );
 
 -- Table: email
-CREATE TABLE email (
+CREATE TABLE IF NOT EXISTS email (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
       create_datetime DATETIME NOT NULL,
       sent_datetime DATETIME,
@@ -27,7 +27,7 @@ CREATE TABLE email (
     );
 
 -- Table: emergency_contact
-CREATE TABLE emergency_contact (
+CREATE TABLE IF NOT EXISTS emergency_contact (
       id INTEGER UNIQUE NOT NULL PRIMARY KEY AUTOINCREMENT,
       member_id INTEGER REFERENCES member (id) NOT NULL UNIQUE,
       name TEXT NOT NULL COLLATE NOCASE,
@@ -36,7 +36,7 @@ CREATE TABLE emergency_contact (
     );
 
 -- Table: equipment
-CREATE TABLE equipment (
+CREATE TABLE IF NOT EXISTS equipment (
       id TEXT PRIMARY KEY NOT NULL UNIQUE,
       create_datetime DATETIME NOT NULL,
       description TEXT UNIQUE NOT NULL COLLATE NOCASE,
@@ -44,7 +44,7 @@ CREATE TABLE equipment (
     );
 
 -- Table: guid
-CREATE TABLE guid (
+CREATE TABLE IF NOT EXISTS guid (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
       code TEXT COLLATE NOCASE NOT NULL,
       member_id INTEGER REFERENCES member (id) NOT NULL,
@@ -53,7 +53,7 @@ CREATE TABLE guid (
     );
 
 -- Table: member
-CREATE TABLE member (
+CREATE TABLE IF NOT EXISTS member (
       id INTEGER PRIMARY KEY UNIQUE NOT NULL,
       email TEXT NOT NULL COLLATE NOCASE,
       first_name TEXT NOT NULL COLLATE NOCASE,
@@ -70,14 +70,14 @@ CREATE TABLE member (
     );
 
 -- Table: member_log
-CREATE TABLE member_log (
+CREATE TABLE IF NOT EXISTS member_log (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
       member_id INTEGER REFERENCES member (id) UNIQUE NOT NULL,
       log TEXT NOT NULL COLLATE NOCASE
     );
 
 -- Table: news
-CREATE TABLE news (
+CREATE TABLE IF NOT EXISTS news (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
       member_id INTEGER REFERENCES member (id) NOT NULL,
       create_datetime DATETIME NOT NULL,
@@ -88,14 +88,14 @@ CREATE TABLE news (
     );
 
 -- Table: notification_type
-CREATE TABLE notification_type (
+CREATE TABLE IF NOT EXISTS notification_type (
       id TEXT PRIMARY KEY NOT NULL UNIQUE,
       name TEXT UNIQUE NOT NULL COLLATE NOCASE,
       description TEXT NOT NULL COLLATE NOCASE
     );
 
 -- Table: officer
-CREATE TABLE officer (
+CREATE TABLE IF NOT EXISTS officer (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
       member_id INTEGER REFERENCES member (id) UNIQUE NOT NULL,
       create_datetime DATETIME NOT NULL,
@@ -105,7 +105,7 @@ CREATE TABLE officer (
     );
 
 -- Table: payment
-CREATE TABLE payment (
+CREATE TABLE IF NOT EXISTS payment (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
       create_datetime DATETIME NOT NULL,
       entered_by_id INTEGER REFERENCES member (id) NOT NULL,
@@ -120,7 +120,7 @@ CREATE TABLE payment (
     );
 
 -- Table: quick_signup
-CREATE TABLE quick_signup (
+CREATE TABLE IF NOT EXISTS quick_signup (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
       create_datetime DATETIME NOT NULL,
       expire_datetime DATETIME NOT NULL,
@@ -128,7 +128,7 @@ CREATE TABLE quick_signup (
     );
 
 -- Table: store_code
-CREATE TABLE store_code (
+CREATE TABLE IF NOT EXISTS store_code (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
       create_datetime DATETIME NOT NULL,
       generated_by_id INTEGER REFERENCES member (id) NOT NULL,
@@ -142,14 +142,14 @@ CREATE TABLE store_code (
     );
 
 -- Table: store_item
-CREATE TABLE store_item (
+CREATE TABLE IF NOT EXISTS store_item (
       id TEXT PRIMARY KEY NOT NULL UNIQUE,
       name TEXT UNIQUE NOT NULL COLLATE NOCASE,
       description TEXT NOT NULL COLLATE NOCASE
     );
 
 -- Table: trip
-CREATE TABLE trip (
+CREATE TABLE IF NOT EXISTS trip (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
       create_datetime DATETIME NOT NULL,
       cancel BOOLEAN NOT NULL,
@@ -180,7 +180,7 @@ CREATE TABLE trip (
     );
 
 -- Table: trip_approver
-CREATE TABLE trip_approver (
+CREATE TABLE IF NOT EXISTS trip_approver (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
       member_id INTEGER REFERENCES member (id) UNIQUE NOT NULL,
       create_datetime DATETIME NOT NULL,
@@ -188,13 +188,13 @@ CREATE TABLE trip_approver (
     );
 
 -- Table: trip_attending_code
-CREATE TABLE trip_attending_code (
+CREATE TABLE IF NOT EXISTS trip_attending_code (
       id TEXT NOT NULL COLLATE NOCASE UNIQUE PRIMARY KEY,
       description TEXT NOT NULL COLLATE NOCASE UNIQUE
     );
 
 -- Table: trip_signup
-CREATE TABLE trip_signup (
+CREATE TABLE IF NOT EXISTS trip_signup (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
       trip_id INTEGER REFERENCES trip (id) NOT NULL,
       member_id INTEGER REFERENCES member (id) NOT NULL,
