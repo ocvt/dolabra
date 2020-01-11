@@ -1,50 +1,50 @@
 package handler
 
 import (
-  "encoding/json"
-  "net/http"
+	"encoding/json"
+	"net/http"
 )
 
 // All fields are returned to client
 type memberStruct struct {
-  Id int `json:"id,omitempty"`
-  CreateDatetime string `json:"createDatetime,omitempty"`
-  /* Required fields for creating an account */
-  Email string `json:"email"`
-  FirstName string `json:"firstName"`
-  LastName string `json:"lastName"`
-  CellNumber string `json:"cellNumber"`
-  Gender string `json:"gender"`
-  Birthyear int `json:"birthyear"`
-  Active bool `json:"active"`
-  MedicalCond bool `json:"medicalCond"`
-  MedicalCondDesc string `json:"medicalCondDesc"`
-  PaidExpireDatetime string `json:"paidExpireDatetime"`
-  EmergencyContactName string `json:"emergencyContactName"`
-  EmergencyContactNumber string `json:"emergencyContactNumber"`
-  EmergencyContactRelationship string `json:"emergencyContactRelationship"`
+	Id             int    `json:"id,omitempty"`
+	CreateDatetime string `json:"createDatetime,omitempty"`
+	/* Required fields for creating an account */
+	Email                        string `json:"email"`
+	FirstName                    string `json:"firstName"`
+	LastName                     string `json:"lastName"`
+	CellNumber                   string `json:"cellNumber"`
+	Gender                       string `json:"gender"`
+	Birthyear                    int    `json:"birthyear"`
+	Active                       bool   `json:"active"`
+	MedicalCond                  bool   `json:"medicalCond"`
+	MedicalCondDesc              string `json:"medicalCondDesc"`
+	PaidExpireDatetime           string `json:"paidExpireDatetime"`
+	EmergencyContactName         string `json:"emergencyContactName"`
+	EmergencyContactNumber       string `json:"emergencyContactNumber"`
+	EmergencyContactRelationship string `json:"emergencyContactRelationship"`
 }
 
 func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
-  _, subject, ok := checkLogin(w, r)
-  if !ok {
-    return
-  }
+	_, subject, ok := checkLogin(w, r)
+	if !ok {
+		return
+	}
 
-  // Get memberId
-  memberId, ok := dbGetActiveMemberId(w, subject)
-  if !ok {
-    return
-  }
+	// Get memberId
+	memberId, ok := dbGetActiveMemberId(w, subject)
+	if !ok {
+		return
+	}
 
-  // Get new notifications
-  notificationsArr, err := json.Marshal(notificationsStruct{})
-  if !checkError(w, err) {
-    return
-  }
-  notificationsStr := string(notificationsArr)
+	// Get new notifications
+	notificationsArr, err := json.Marshal(notificationsStruct{})
+	if !checkError(w, err) {
+		return
+	}
+	notificationsStr := string(notificationsArr)
 
-  stmt := `
+	stmt := `
     UPDATE member
     SET
       email = '',
@@ -60,35 +60,35 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
       paid_expire_datetime = 0,
       notification_preference = ?
     WHERE id = ?`
-  _, err = db.Exec(stmt, notificationsStr, memberId)
-  if !checkError(w, err) {
-    return
-  }
+	_, err = db.Exec(stmt, notificationsStr, memberId)
+	if !checkError(w, err) {
+		return
+	}
 
-  stmt = `
+	stmt = `
     UPDATE emergency_contact
     SET
       name = '',
       number = '',
       relationship = ''
     WHERE member_id = ?`
-  _, err = db.Exec(stmt, memberId)
-  if !checkError(w, err) {
-    return
-  }
+	_, err = db.Exec(stmt, memberId)
+	if !checkError(w, err) {
+		return
+	}
 
-  stmt = `
+	stmt = `
     UPDATE auth
     SET
       type = '',
       subject = ''
     WHERE member_id = ?`
-  _, err = db.Exec(stmt, memberId)
-  if !checkError(w, err) {
-    return
-  }
+	_, err = db.Exec(stmt, memberId)
+	if !checkError(w, err) {
+		return
+	}
 
-  stmt = `
+	stmt = `
     UPDATE trip_signup
     SET
       trip_id = 0,
@@ -105,27 +105,27 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
       pet = false,
       attended = false
     WHERE member_id = ?`
-  _, err = db.Exec(stmt, memberId)
-  if !checkError(w, err) {
-    return
-  }
+	_, err = db.Exec(stmt, memberId)
+	if !checkError(w, err) {
+		return
+	}
 
-  respondJSON(w, http.StatusNoContent, nil)
+	respondJSON(w, http.StatusNoContent, nil)
 }
 
 func GetMyAccount(w http.ResponseWriter, r *http.Request) {
-  _, subject, ok := checkLogin(w, r)
-  if !ok {
-    return
-  }
+	_, subject, ok := checkLogin(w, r)
+	if !ok {
+		return
+	}
 
-  // Get memberId
-  memberId, ok := dbGetActiveMemberId(w, subject)
-  if !ok {
-    return
-  }
+	// Get memberId
+	memberId, ok := dbGetActiveMemberId(w, subject)
+	if !ok {
+		return
+	}
 
-  stmt := `
+	stmt := `
     SELECT
       member.id,
       member.email,
@@ -145,133 +145,133 @@ func GetMyAccount(w http.ResponseWriter, r *http.Request) {
     FROM member
     INNER JOIN emergency_contact ON emergency_contact.member_id = member.id
     WHERE member.id = ?`
-  var member memberStruct
-  err := db.QueryRow(stmt, memberId).Scan(
-    &member.Id,
-    &member.Email,
-    &member.FirstName,
-    &member.LastName,
-    &member.CreateDatetime,
-    &member.CellNumber,
-    &member.Gender,
-    &member.Birthyear,
-    &member.Active,
-    &member.MedicalCond,
-    &member.MedicalCondDesc,
-    &member.PaidExpireDatetime,
-    &member.EmergencyContactName,
-    &member.EmergencyContactNumber,
-    &member.EmergencyContactRelationship)
-  if !checkError(w, err) {
-    return
-  }
+	var member memberStruct
+	err := db.QueryRow(stmt, memberId).Scan(
+		&member.Id,
+		&member.Email,
+		&member.FirstName,
+		&member.LastName,
+		&member.CreateDatetime,
+		&member.CellNumber,
+		&member.Gender,
+		&member.Birthyear,
+		&member.Active,
+		&member.MedicalCond,
+		&member.MedicalCondDesc,
+		&member.PaidExpireDatetime,
+		&member.EmergencyContactName,
+		&member.EmergencyContactNumber,
+		&member.EmergencyContactRelationship)
+	if !checkError(w, err) {
+		return
+	}
 
-  respondJSON(w, http.StatusOK, member)
+	respondJSON(w, http.StatusOK, member)
 }
 
 func GetMyAccountName(w http.ResponseWriter, r *http.Request) {
-  _, subject, ok := checkLogin(w, r)
-  if !ok {
-    return
-  }
+	_, subject, ok := checkLogin(w, r)
+	if !ok {
+		return
+	}
 
-  // Get memberId
-  memberId, ok := dbGetActiveMemberId(w, subject)
-  if !ok {
-    return
-  }
+	// Get memberId
+	memberId, ok := dbGetActiveMemberId(w, subject)
+	if !ok {
+		return
+	}
 
-  stmt := `
+	stmt := `
     SELECT first_name
     FROM member
     WHERE id = ?`
-  var firstName string
-  err := db.QueryRow(stmt, memberId).Scan(&firstName)
-  if !checkError(w, err) {
-    return
-  }
+	var firstName string
+	err := db.QueryRow(stmt, memberId).Scan(&firstName)
+	if !checkError(w, err) {
+		return
+	}
 
-  respondJSON(w, http.StatusOK, map[string]string{"firstName": firstName})
+	respondJSON(w, http.StatusOK, map[string]string{"firstName": firstName})
 }
 
 func PatchMyAccountDeactivate(w http.ResponseWriter, r *http.Request) {
-  _, subject, ok := checkLogin(w, r)
-  if !ok {
-    return
-  }
+	_, subject, ok := checkLogin(w, r)
+	if !ok {
+		return
+	}
 
-  // Get memberId
-  memberId, ok := dbGetActiveMemberId(w, subject)
-  if !ok {
-    return
-  }
+	// Get memberId
+	memberId, ok := dbGetActiveMemberId(w, subject)
+	if !ok {
+		return
+	}
 
-  stmt := `
+	stmt := `
     UPDATE member
     SET active = false
     WHERE id = ?`
-  _, err := db.Exec(stmt, memberId)
-  if !checkError(w, err) {
-    return
-  }
+	_, err := db.Exec(stmt, memberId)
+	if !checkError(w, err) {
+		return
+	}
 
-  respondJSON(w, http.StatusNoContent, nil)
+	respondJSON(w, http.StatusNoContent, nil)
 }
 
 func PatchMyAccountReactivate(w http.ResponseWriter, r *http.Request) {
-  _, subject, ok := checkLogin(w, r)
-  if !ok {
-    return
-  }
+	_, subject, ok := checkLogin(w, r)
+	if !ok {
+		return
+	}
 
-  // Get memberId
-  memberId, ok := dbGetMemberId(w, subject)
-  if !ok {
-    return
-  }
+	// Get memberId
+	memberId, ok := dbGetMemberId(w, subject)
+	if !ok {
+		return
+	}
 
-  stmt := `
+	stmt := `
     UPDATE member
     SET active = 1
     WHERE id = ?`
-  _, err := db.Exec(stmt, memberId)
-  if !checkError(w, err) {
-    return
-  }
+	_, err := db.Exec(stmt, memberId)
+	if !checkError(w, err) {
+		return
+	}
 
-  respondJSON(w, http.StatusNoContent, nil)
+	respondJSON(w, http.StatusNoContent, nil)
 }
 
 func PostMyAccount(w http.ResponseWriter, r *http.Request) {
-  idp, subject, ok := checkLogin(w, r)
-  if !ok {
-    return
-  }
+	idp, subject, ok := checkLogin(w, r)
+	if !ok {
+		return
+	}
 
-  // Get request body
-  decoder := json.NewDecoder(r.Body)
-  decoder.DisallowUnknownFields()
-  var member memberStruct
-  err := decoder.Decode(&member)
-  if err != nil {
-    respondError(w, http.StatusBadRequest, err.Error())
-    return
-  }
+	// Get request body
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	var member memberStruct
+	err := decoder.Decode(&member)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 
-  // Ensure user doesn't already exist
-  if !dbEnsureMemberDoesNotExist(w, subject) {
-    return
-  }
+	// Ensure user doesn't already exist
+	if !dbEnsureMemberDoesNotExist(w, subject) {
+		return
+	}
 
-  // Default to prefer all notifications
-  notifications := setAllPreferences()
-  notificationsArr, err := json.Marshal(notifications)
-  if !checkError(w, err) {
-    return
-  }
-  notificationsStr := string(notificationsArr)
+	// Default to prefer all notifications
+	notifications := setAllPreferences()
+	notificationsArr, err := json.Marshal(notifications)
+	if !checkError(w, err) {
+		return
+	}
+	notificationsStr := string(notificationsArr)
 
-  stmt := `
+	stmt := `
     INSERT INTO member (
       email,
       first_name,
@@ -286,67 +286,67 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
       paid_expire_datetime,
       notification_preference)
     VALUES (?, ?, ?, datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?)`
-  result, err := db.Exec(
-    stmt,
-    member.Email,
-    member.FirstName,
-    member.LastName,
-    member.CellNumber,
-    member.Gender,
-    member.Birthyear,
-    member.Active,
-    member.MedicalCond,
-    member.MedicalCondDesc,
-    member.PaidExpireDatetime,
-    notificationsStr)
-  if !checkError(w, err) {
-    return
-  }
+	result, err := db.Exec(
+		stmt,
+		member.Email,
+		member.FirstName,
+		member.LastName,
+		member.CellNumber,
+		member.Gender,
+		member.Birthyear,
+		member.Active,
+		member.MedicalCond,
+		member.MedicalCondDesc,
+		member.PaidExpireDatetime,
+		notificationsStr)
+	if !checkError(w, err) {
+		return
+	}
 
-  // Get new member id
-  memberId, err := result.LastInsertId()
-  if !checkError(w, err) {
-      return
-  }
+	// Get new member id
+	memberId, err := result.LastInsertId()
+	if !checkError(w, err) {
+		return
+	}
 
-  // Insert new emergency contact
-  stmt = `
+	// Insert new emergency contact
+	stmt = `
     INSERT INTO emergency_contact (
       member_id,
       name,
       number,
       relationship)
     VALUES (?, ?, ?, ?)`
-  _, err = db.Exec(
-    stmt,
-    memberId,
-    member.EmergencyContactName,
-    member.EmergencyContactNumber,
-    member.EmergencyContactRelationship)
-  if !checkError(w, err) {
-    return
-  }
+	_, err = db.Exec(
+		stmt,
+		memberId,
+		member.EmergencyContactName,
+		member.EmergencyContactNumber,
+		member.EmergencyContactRelationship)
+	if !checkError(w, err) {
+		return
+	}
 
-  // Insert new auth
-  stmt = `
+	// Insert new auth
+	stmt = `
     INSERT INTO auth (
       member_id,
       type,
       subject)
     VALUES (?, ?, ?)`
-  _, err = db.Exec(stmt, memberId, idp, subject)
-  if !checkError(w, err) {
-    return
-  }
+	_, err = db.Exec(stmt, memberId, idp, subject)
+	if !checkError(w, err) {
+		return
+	}
 
-  // Remove from quicksignup table
-  stmt = `
+	// Remove from quicksignup table
+	stmt = `
     DELETE FROM quick_signup
     WHERE email = ?`
-  _, err = db.Exec(stmt, member.Email)
-  if !checkError(w, err) {
-    return
-  }
+	_, err = db.Exec(stmt, member.Email)
+	if !checkError(w, err) {
+		return
+	}
 
-  respondJSON(w, http.StatusCreated, member)
+	respondJSON(w, http.StatusCreated, member)
 }

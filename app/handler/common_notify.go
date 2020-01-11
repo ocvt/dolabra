@@ -1,11 +1,11 @@
 package handler
 
 import (
-  "fmt"
-  "net/http"
-//  "net/smtp"
-  "strconv"
-  "strings"
+	"fmt"
+	"net/http"
+	//  "net/smtp"
+	"strconv"
+	"strings"
 )
 
 var SMTP_PASSWORD string
@@ -20,30 +20,30 @@ var SMTP_FROM_EMAIL_DEFAULT string
  * Actually send an email
  */
 func sendEmail(fromName string, fromEmail string, replyName string,
-    replyEmail string,toName string, toEmail string, subject string,
-    body string) {
-  message := fmt.Sprintf(
-      "From: %s <%s>\n" +
-      "Reply-To: %s <%s>\n" +
-      "To: %s <%s>\n" +
-      "Subject: %s\n\n" +
-      "%s",
-      fromName,
-      fromEmail,
-      replyName,
-      replyEmail,
-      toName,
-      toEmail,
-      subject,
-      body)
+	replyEmail string, toName string, toEmail string, subject string,
+	body string) {
+	message := fmt.Sprintf(
+		"From: %s <%s>\n"+
+			"Reply-To: %s <%s>\n"+
+			"To: %s <%s>\n"+
+			"Subject: %s\n\n"+
+			"%s",
+		fromName,
+		fromEmail,
+		replyName,
+		replyEmail,
+		toName,
+		toEmail,
+		subject,
+		body)
 
-//  auth := smtp.PlainAuth("", SMTP_USERNAME, SMTP_PASSWORD, SMTP_HOSTNAME)
-  fmt.Printf("MESSAGE: %s\n",  message)
-//  err := smtp.SendMail(fmt.Sprintf("%s:%s", SMTP_HOSTNAME, SMTP_PORT), auth,
-//      SMTP_FROM_EMAIL_DEFAULT, []string{toEmail}, []byte(message))
-//  if err != nil {
-//    log.Fatal(err)
-//  }
+	//  auth := smtp.PlainAuth("", SMTP_USERNAME, SMTP_PASSWORD, SMTP_HOSTNAME)
+	fmt.Printf("MESSAGE: %s\n", message)
+	//  err := smtp.SendMail(fmt.Sprintf("%s:%s", SMTP_HOSTNAME, SMTP_PORT), auth,
+	//      SMTP_FROM_EMAIL_DEFAULT, []string{toEmail}, []byte(message))
+	//  if err != nil {
+	//    log.Fatal(err)
+	//  }
 }
 
 /*
@@ -53,13 +53,12 @@ func sendEmail(fromName string, fromEmail string, replyName string,
  * - Should be called from separate thread checking for emails every 5 minutes
  */
 func processAndSendEmail(w http.ResponseWriter, emailId int) bool {
-  // Lookup + process all email FIELDS TODO
-  // Send emails
-  // If type is starts with TRIP_ALERT, send separate email to fromId TODO
-  //emailBody = fmt.Sprintf("You are receiving this message because you sent it:\n\n%s", emailBody)
-  return true
+	// Lookup + process all email FIELDS TODO
+	// Send emails
+	// If type is starts with TRIP_ALERT, send separate email to fromId TODO
+	//emailBody = fmt.Sprintf("You are receiving this message because you sent it:\n\n%s", emailBody)
+	return true
 }
-
 
 /*
  * Insert entry into email table to eventually send
@@ -68,22 +67,22 @@ func processAndSendEmail(w http.ResponseWriter, emailId int) bool {
  *   otherwise it is purely for logging the relevant trip
  */
 func stageEmail(w http.ResponseWriter, notificationType string, tripId int,
-    replyToId int, subject string, body string) bool {
+	replyToId int, subject string, body string) bool {
 
-  // fromId should always member id of default Websystem account
-  fromId := 0
-  subject = "[OCVT] " + subject
+	// fromId should always member id of default Websystem account
+	fromId := 0
+	subject = "[OCVT] " + subject
 
-  isTripAlert := strings.HasPrefix(notificationType, "TRIP_ALERT_")
-  _, err := strconv.Atoi(notificationType)
-  if !isTripAlert && err != nil {
-    body = body +
-           "=========================================\n" +
-           "You received this message because you\n" +
-           "are on the OCVT email list. <Unsubscribe>"
-  }
+	isTripAlert := strings.HasPrefix(notificationType, "TRIP_ALERT_")
+	_, err := strconv.Atoi(notificationType)
+	if !isTripAlert && err != nil {
+		body = body +
+			"=========================================\n" +
+			"You received this message because you\n" +
+			"are on the OCVT email list. <Unsubscribe>"
+	}
 
-  stmt := `
+	stmt := `
     INSERT INTO email (
       create_datetime,
       sent,
@@ -94,26 +93,26 @@ func stageEmail(w http.ResponseWriter, notificationType string, tripId int,
       subject,
       body)
     VALUES (datetime('now'), false, ?, ?, ?, ?, ?, ?)`
-  _, err = db.Exec(
-    stmt,
-    notificationType,
-    tripId,
-    fromId,
-    replyToId,
-    subject,
-    body)
-  if !checkError(w, err) {
-    return false
-  }
+	_, err = db.Exec(
+		stmt,
+		notificationType,
+		tripId,
+		fromId,
+		replyToId,
+		subject,
+		body)
+	if !checkError(w, err) {
+		return false
+	}
 
-  return true
+	return true
 }
 
 /* HELPERS */
 func stageEmailNewTrip(w http.ResponseWriter, tripId int) bool {
-  return true
+	return true
 }
 
 func stageEmailTripReminder(tripId int) error {
-  return nil
+	return nil
 }

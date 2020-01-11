@@ -68,3 +68,8 @@ defined:
 
 ## Running it
 
+
+## TODO
+
+* Use tabs instead of spaces for db queries (?)
+ * go fmt converts everything else to tabs

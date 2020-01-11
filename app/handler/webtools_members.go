@@ -1,16 +1,16 @@
 package handler
 
 import (
-  "net/http"
+	"net/http"
 )
 
 type tripSummaryStruct struct {
-  Id int `json:"id"`
-  Name int `json:"name"`
+	Id   int `json:"id"`
+	Name int `json:"name"`
 }
 
 func GetWebtoolsMembers(w http.ResponseWriter, r *http.Request) {
-  stmt := `
+	stmt := `
     SELECT
       member.id,
       member.email,
@@ -29,157 +29,157 @@ func GetWebtoolsMembers(w http.ResponseWriter, r *http.Request) {
       emergency_contact.relationship
     FROM member
     INNER JOIN emergency_contact ON emergency_contact.member_id = member.id`
-  rows, err := db.Query(stmt)
-  if !checkError(w, err) {
-    return
-  }
-  defer rows.Close()
+	rows, err := db.Query(stmt)
+	if !checkError(w, err) {
+		return
+	}
+	defer rows.Close()
 
-  var members = []*memberStruct{}
-  i := 0
-  for rows.Next() {
-    members = append(members, &memberStruct{})
-    err = rows.Scan(
-      &members[i].Id,
-      &members[i].Email,
-      &members[i].FirstName,
-      &members[i].LastName,
-      &members[i].CreateDatetime,
-      &members[i].CellNumber,
-      &members[i].Gender,
-      &members[i].Birthyear,
-      &members[i].Active,
-      &members[i].MedicalCond,
-      &members[i].MedicalCondDesc,
-      &members[i].PaidExpireDatetime,
-      &members[i].EmergencyContactName,
-      &members[i].EmergencyContactNumber,
-      &members[i].EmergencyContactRelationship)
-    if !checkError(w, err) {
-      return
-    }
-    i++
-  }
+	var members = []*memberStruct{}
+	i := 0
+	for rows.Next() {
+		members = append(members, &memberStruct{})
+		err = rows.Scan(
+			&members[i].Id,
+			&members[i].Email,
+			&members[i].FirstName,
+			&members[i].LastName,
+			&members[i].CreateDatetime,
+			&members[i].CellNumber,
+			&members[i].Gender,
+			&members[i].Birthyear,
+			&members[i].Active,
+			&members[i].MedicalCond,
+			&members[i].MedicalCondDesc,
+			&members[i].PaidExpireDatetime,
+			&members[i].EmergencyContactName,
+			&members[i].EmergencyContactNumber,
+			&members[i].EmergencyContactRelationship)
+		if !checkError(w, err) {
+			return
+		}
+		i++
+	}
 
-  err = rows.Err()
-  if !checkError(w, err) {
-    return
-  }
+	err = rows.Err()
+	if !checkError(w, err) {
+		return
+	}
 
-  respondJSON(w, http.StatusOK, map[string][]*memberStruct{"members": members})
+	respondJSON(w, http.StatusOK, map[string][]*memberStruct{"members": members})
 }
 
 func GetWebtoolsMembersTrips(w http.ResponseWriter, r *http.Request) {
-  memberId, ok := checkURLParam(w, r, "memberId")
-  if !ok {
-    return
-  }
+	memberId, ok := checkURLParam(w, r, "memberId")
+	if !ok {
+		return
+	}
 
-  stmt := `
+	stmt := `
     SELECT
       id,
       name
     FROM trip
     WHERE trip.member_id = ?`
-  rows, err := db.Query(stmt, memberId)
-  if !checkError(w, err) {
-    return
-  }
-  defer rows.Close()
+	rows, err := db.Query(stmt, memberId)
+	if !checkError(w, err) {
+		return
+	}
+	defer rows.Close()
 
-  var trips = []*tripSummaryStruct{}
-  i := 0
-  for rows.Next() {
-    trips = append(trips, &tripSummaryStruct{})
-    err = rows.Scan(
-      &trips[i].Id,
-      &trips[i].Name)
-    if !checkError(w, err) {
-      return
-    }
-    i++
-  }
+	var trips = []*tripSummaryStruct{}
+	i := 0
+	for rows.Next() {
+		trips = append(trips, &tripSummaryStruct{})
+		err = rows.Scan(
+			&trips[i].Id,
+			&trips[i].Name)
+		if !checkError(w, err) {
+			return
+		}
+		i++
+	}
 
-  err = rows.Err()
-  if !checkError(w, err) {
-    return
-  }
+	err = rows.Err()
+	if !checkError(w, err) {
+		return
+	}
 
-  respondJSON(w, http.StatusOK, map[string][]*tripSummaryStruct{"trips": trips})
+	respondJSON(w, http.StatusOK, map[string][]*tripSummaryStruct{"trips": trips})
 }
 
 func GetWebtoolsMembersAttendance(w http.ResponseWriter, r *http.Request) {
-  memberId, ok := checkURLParam(w, r, "memberId")
-  if !ok {
-    return
-  }
+	memberId, ok := checkURLParam(w, r, "memberId")
+	if !ok {
+		return
+	}
 
-  stmt := `
+	stmt := `
     SELECT
       trip.id,
       trip.name
     FROM trip_signup
     INNER JOIN trip ON trip.id = trip_signup.trip_id
     WHERE trip_signup.id = ? AND trip_signup.attended = true`
-  rows, err := db.Query(stmt, memberId)
-  if !checkError(w, err) {
-    return
-  }
-  defer rows.Close()
+	rows, err := db.Query(stmt, memberId)
+	if !checkError(w, err) {
+		return
+	}
+	defer rows.Close()
 
-  var trips = []*tripSummaryStruct{}
-  i := 0
-  for rows.Next() {
-    trips = append(trips, &tripSummaryStruct{})
-    err = rows.Scan(
-      &trips[i].Id,
-      &trips[i].Name)
-    if !checkError(w, err) {
-      return
-    }
-    i++
-  }
+	var trips = []*tripSummaryStruct{}
+	i := 0
+	for rows.Next() {
+		trips = append(trips, &tripSummaryStruct{})
+		err = rows.Scan(
+			&trips[i].Id,
+			&trips[i].Name)
+		if !checkError(w, err) {
+			return
+		}
+		i++
+	}
 
-  err = rows.Err()
-  if !checkError(w, err) {
-    return
-  }
+	err = rows.Err()
+	if !checkError(w, err) {
+		return
+	}
 
-  respondJSON(w, http.StatusOK, map[string][]*tripSummaryStruct{"trips": trips})
+	respondJSON(w, http.StatusOK, map[string][]*tripSummaryStruct{"trips": trips})
 }
 
 func PatchWebtoolsDuesGrant(w http.ResponseWriter, r *http.Request) {
-  memberId, ok := checkURLParam(w, r, "memberId")
-  if !ok {
-    return
-  }
+	memberId, ok := checkURLParam(w, r, "memberId")
+	if !ok {
+		return
+	}
 
-  stmt := `
+	stmt := `
     UPDATE member
     SET paid_expire_datetime = datetime(paid_expire_datetime, '+1 year')
     WHERE id = ?`
-  _, err := db.Exec(stmt, memberId)
-  if !checkError(w, err) {
-    return
-  }
+	_, err := db.Exec(stmt, memberId)
+	if !checkError(w, err) {
+		return
+	}
 
-  respondJSON(w, http.StatusNoContent, nil)
+	respondJSON(w, http.StatusNoContent, nil)
 }
 
 func PatchWebtoolsDuesRevoke(w http.ResponseWriter, r *http.Request) {
-  memberId, ok := checkURLParam(w, r, "memberId")
-  if !ok {
-    return
-  }
+	memberId, ok := checkURLParam(w, r, "memberId")
+	if !ok {
+		return
+	}
 
-  stmt := `
+	stmt := `
     UPDATE member
     SET paid_expire_datetime = datetime('now')
     WHERE id = ?`
-  _, err := db.Exec(stmt, memberId)
-  if !checkError(w, err) {
-    return
-  }
+	_, err := db.Exec(stmt, memberId)
+	if !checkError(w, err) {
+		return
+	}
 
-  respondJSON(w, http.StatusNoContent, nil)
+	respondJSON(w, http.StatusNoContent, nil)
 }

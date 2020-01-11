@@ -1,31 +1,31 @@
 package handler
 
 import (
-  "encoding/json"
-  "net/http"
+	"encoding/json"
+	"net/http"
 
-  "github.com/go-chi/chi"
+	"github.com/go-chi/chi"
 )
 
 type officerStruct struct {
-  /* Managed server side */
-  // from member table
-  CellNumber string `json:"cellNumber,omitempty"`
-  Email string `json:"email,omitempty"`
-  FirstName string `json:"firstName,omitempty"`
-  LastName string `json:"lastName,omitempty"`
-  /* Required fields for creating a trip */
-  MemberId int `json:"memberId"`
-  ExpireDatetime string `json:"expireDatetime"`
-  Position string `json:"position"`
-  Security int `json:"security"`
+	/* Managed server side */
+	// from member table
+	CellNumber string `json:"cellNumber,omitempty"`
+	Email      string `json:"email,omitempty"`
+	FirstName  string `json:"firstName,omitempty"`
+	LastName   string `json:"lastName,omitempty"`
+	/* Required fields for creating a trip */
+	MemberId       int    `json:"memberId"`
+	ExpireDatetime string `json:"expireDatetime"`
+	Position       string `json:"position"`
+	Security       int    `json:"security"`
 }
 
 func GetWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
-  // Permissions
-  // TODO Don't allow officers with less privileges to modify officers with more privileges
+	// Permissions
+	// TODO Don't allow officers with less privileges to modify officers with more privileges
 
-  stmt := `
+	stmt := `
     SELECT
       member.id,
       member.email,
@@ -37,153 +37,153 @@ func GetWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
       officer.security
     FROM member
     INNER JOIN officer ON officer.member_id = member.id`
-  rows, err := db.Query(stmt)
-  if !checkError(w, err) {
-    return
-  }
-  defer rows.Close()
+	rows, err := db.Query(stmt)
+	if !checkError(w, err) {
+		return
+	}
+	defer rows.Close()
 
-  var officers = []*officerStruct{}
-  i := 0
-  for rows.Next() {
-    officers = append(officers, &officerStruct{})
-    err = rows.Scan(
-      &officers[i].MemberId,
-      &officers[i].Email,
-      &officers[i].FirstName,
-      &officers[i].LastName,
-      &officers[i].CellNumber,
-      &officers[i].ExpireDatetime,
-      &officers[i].Position,
-      &officers[i].Security)
-    if !checkError(w, err) {
-      return
-    }
-    i++
-  }
+	var officers = []*officerStruct{}
+	i := 0
+	for rows.Next() {
+		officers = append(officers, &officerStruct{})
+		err = rows.Scan(
+			&officers[i].MemberId,
+			&officers[i].Email,
+			&officers[i].FirstName,
+			&officers[i].LastName,
+			&officers[i].CellNumber,
+			&officers[i].ExpireDatetime,
+			&officers[i].Position,
+			&officers[i].Security)
+		if !checkError(w, err) {
+			return
+		}
+		i++
+	}
 
-  err = rows.Err()
-  if !checkError(w, err) {
-    return
-  }
+	err = rows.Err()
+	if !checkError(w, err) {
+		return
+	}
 
-  respondJSON(w, http.StatusOK, map[string][]*officerStruct{"officers": officers})
+	respondJSON(w, http.StatusOK, map[string][]*officerStruct{"officers": officers})
 }
 
 func DeleteWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
-  _, subject, ok := checkLogin(w, r)
-  if !ok {
-    return
-  }
+	_, subject, ok := checkLogin(w, r)
+	if !ok {
+		return
+	}
 
-  // Get memberId, officerId
-  memberId, ok := dbGetActiveMemberId(w, subject)
-  if !ok {
-    return
-  }
-  officerId, ok := checkURLParam(w, r, "memberId")
-  if !ok {
-    return
-  }
+	// Get memberId, officerId
+	memberId, ok := dbGetActiveMemberId(w, subject)
+	if !ok {
+		return
+	}
+	officerId, ok := checkURLParam(w, r, "memberId")
+	if !ok {
+		return
+	}
 
-  // Permissions
-  // TODO Don't allow officers with less privileges to modify officers with more privileges
-  if memberId == officerId {
-    respondError(w, http.StatusBadRequest, "Cannot remove yourself from officers.")
-    return
-  }
+	// Permissions
+	// TODO Don't allow officers with less privileges to modify officers with more privileges
+	if memberId == officerId {
+		respondError(w, http.StatusBadRequest, "Cannot remove yourself from officers.")
+		return
+	}
 
-  stmt := `
+	stmt := `
    DELETE FROM officer
    WHERE member_id = ?`
-  _, err := db.Exec(stmt, officerId)
-  if !checkError(w, err) {
-    return
-  }
+	_, err := db.Exec(stmt, officerId)
+	if !checkError(w, err) {
+		return
+	}
 
-  respondJSON(w, http.StatusNoContent, nil)
+	respondJSON(w, http.StatusNoContent, nil)
 }
 
 func PatchWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
-  // Get officerId
-  officerId, ok := checkURLParam(w, r, "memberId")
-  if !ok {
-    return
-  }
-  action := chi.URLParam(r, "action")
+	// Get officerId
+	officerId, ok := checkURLParam(w, r, "memberId")
+	if !ok {
+		return
+	}
+	action := chi.URLParam(r, "action")
 
-  // Get request body
-  decoder := json.NewDecoder(r.Body)
-  decoder.DisallowUnknownFields()
-  var jsonData = map[string]string{}
-  err := decoder.Decode(&jsonData)
-  if err != nil {
-    respondError(w, http.StatusBadRequest, err.Error())
-    return
-  }
-  data, ok := jsonData["data"]
-  if !ok {
-    respondError(w, http.StatusBadRequest, "POST body does not contain \"data\" field.")
-    return
-  }
+	// Get request body
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	var jsonData = map[string]string{}
+	err := decoder.Decode(&jsonData)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	data, ok := jsonData["data"]
+	if !ok {
+		respondError(w, http.StatusBadRequest, "POST body does not contain \"data\" field.")
+		return
+	}
 
-  // Permissions
-  // TODO Don't allow officers with less privileges to modify officers with more privileges
-  if !dbEnsureOfficer(w, officerId) {
-    return
-  }
-  if action != "position" && action != "expireDatetime" && action != "security" {
-    respondError(w, http.StatusNotFound, "Invalid path")
-    return
-  }
+	// Permissions
+	// TODO Don't allow officers with less privileges to modify officers with more privileges
+	if !dbEnsureOfficer(w, officerId) {
+		return
+	}
+	if action != "position" && action != "expireDatetime" && action != "security" {
+		respondError(w, http.StatusNotFound, "Invalid path")
+		return
+	}
 
-  stmt := `
+	stmt := `
     UPDATE officer
-    SET ? = ?
+    SET ` + action + ` = ?
     WHERE member_id = ?`
-  _, err = db.Exec(stmt, action, data, officerId)
-  if !checkError(w, err) {
-    return
-  }
+	_, err = db.Exec(stmt, action, data, officerId) // sqlvet: ignore
+	if !checkError(w, err) {
+		return
+	}
 
-  respondJSON(w, http.StatusNoContent, nil)
+	respondJSON(w, http.StatusNoContent, nil)
 }
 
 func PostWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
-  // Get request body
-  decoder := json.NewDecoder(r.Body)
-  decoder.DisallowUnknownFields()
-  var officer officerStruct
-  err := decoder.Decode(&officer)
-  if err != nil {
-    respondError(w, http.StatusBadRequest, err.Error())
-    return
-  }
+	// Get request body
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	var officer officerStruct
+	err := decoder.Decode(&officer)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 
-  // Permissions
-  // TODO Don't allow officers with less privileges to modify officers with more privileges
-  if !dbEnsureMemberIdExists(w, officer.MemberId) ||
-     !dbEnsureNotOfficer(w, officer.MemberId) {
-    return
-  }
+	// Permissions
+	// TODO Don't allow officers with less privileges to modify officers with more privileges
+	if !dbEnsureMemberIdExists(w, officer.MemberId) ||
+		!dbEnsureNotOfficer(w, officer.MemberId) {
+		return
+	}
 
-  stmt := `
+	stmt := `
     INSERT INTO officer (
       member_id,
       create_datetime,
       expire_datetime,
       position,
       security)
-    VALUES (?, datetime('now'), ? ? ?)`
-  _, err = db.Exec(
-    stmt,
-    officer.MemberId,
-    officer.ExpireDatetime,
-    officer.Position,
-    officer.Security)
-  if !checkError(w, err) {
-    return
-  }
+    VALUES (?, datetime('now'), ?, ?, ?)`
+	_, err = db.Exec(
+		stmt,
+		officer.MemberId,
+		officer.ExpireDatetime,
+		officer.Position,
+		officer.Security)
+	if !checkError(w, err) {
+		return
+	}
 
-  respondJSON(w, http.StatusNoContent, nil)
+	respondJSON(w, http.StatusNoContent, nil)
 }

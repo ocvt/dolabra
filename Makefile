@@ -1,9 +1,13 @@
 all: build
 
-build: test
+build: format test
 	go build -o dolabra -v
 
+format:
+	go fmt
+
 test: deps
+	go vet
 	sqlvet .
 
 deps:

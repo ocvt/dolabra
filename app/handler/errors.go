@@ -1,10 +1,9 @@
 package handler
 
-
 type errInvalidPayload struct {
-  s string
+	s string
 }
 
 func (e *errInvalidPayload) Error() string {
-  return e.s
+	return e.s
 }
