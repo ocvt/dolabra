@@ -16,11 +16,11 @@ Photos are stored on gdrive and require 2 accounts minimum
   * You will be given the option to download system account credentials during
     creation, which are used below
 
-The photos structure fairly flexible. We only neeed to know the folder
+The photos structure is fairly flexible. We only neeed to know the folder
 containing trips and the folder containing homephotos
 
 We recommend creating a "main" folder for all photos, then creating 2 folders
-inside name `TRIPS` and `HOMEPHOTOS`. Folder are auto-created inside these
+inside named `TRIPS` and `HOMEPHOTOS`. Folders are auto-created inside these
 folders when photos are uploaded.
 
 ### SMTP
@@ -44,7 +44,7 @@ proper idp.
 
 ### Environmental variables
 
-Create `dolabra.env` (see `dolabra.env.sample`) with the following variables
+Create `dolabra.env` (copy `dolabra.env.sample`) with the following variables
 defined:
 * `GOOGLE_CLIENT_SECRET`: Client Secret for Google Sign-in
 * `GOOGLE_CLIENT_ID`: Client Id for Google Sign-in
@@ -63,7 +63,7 @@ defined:
 * `STRIPE_PUBLIC_KEY`: Public key for Stripe payments
 * `STRIPE_SECRET_KEY`: Secret key for Stripe payments
 * `STRIPE_WEBHOOK_SECRET`: Webhook secret for Stripe payments
-* `DEV`: Optionally set  `1` to enable developer moded
+* `DEV`: Optionally set to `1` to enable developer moded
 
 
 ## Running it
@@ -72,4 +72,5 @@ defined:
 ## TODO
 
 * Use tabs instead of spaces for db queries (?)
- * go fmt converts everything else to tabs
+  * go fmt converts everything else to tabs
+  * Use db transactions
