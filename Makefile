@@ -1,12 +1,17 @@
 all: build
 
-build: format test
-	go build -o dolabra -v
+integration-test: build
+	./launch.sh
+	# TODO run python tests
+	# TODO clean up
+
+build: format static-check
+	docker build -t ocvt/dolabra:latest .
 
 format:
 	go fmt
 
-test: deps
+static-check: deps
 	go vet
 	sqlvet .
 

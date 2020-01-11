@@ -1,4 +1,3 @@
-dolabra
 **.env
-launch.sh
 data/
+utils/*.json
