@@ -9,5 +9,5 @@ docker run \
   --env-file dolabra.env \
   --volume $PWD/data:/go/src/app/data:rw \
   --volume $PWD/utils:/go/src/app/utils:ro \
-  --publish 3000:3000 \
+  --publish 127.0.0.1:3000:3000 \
   ocvt/dolabra:latest

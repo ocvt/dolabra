@@ -20,7 +20,7 @@ func approveNewTrip(w http.ResponseWriter, tripId int) bool {
 	stmt := `
     SELECT member_id
     FROM trip_approver
-    WHERE datetime('now') < datetime(expireDatetime)`
+    WHERE datetime('now') < datetime(expire_datetime)`
 	rows, err := db.Query(stmt)
 	if !checkError(w, err) {
 		return false

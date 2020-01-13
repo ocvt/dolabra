@@ -187,7 +187,6 @@ func PatchTripsSignupCancel(w http.ResponseWriter, r *http.Request) {
 
 	// Permissions
 	if !dbEnsurePublishedTrip(w, tripId) ||
-		!dbEnsureOfficerOrTripLeader(w, tripId, memberId) ||
 		!dbEnsureMemberIsOnTrip(w, tripId, memberId) ||
 		!dbEnsureNotTripCreator(w, tripId, memberId) ||
 		!dbEnsureNotSignupCode(w, tripId, memberId, "CANCEL") ||
@@ -382,6 +381,11 @@ func PostTripsSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+  // Permissions
+  if !dbEnsureMemberIsNotOnTrip(w, tripId, memberId) {
+    return
+  }
+
 	// Permissions if not creator
 	attendingCode := "FORCE"
 	attended := true
@@ -435,5 +439,5 @@ func PostTripsSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJSON(w, http.StatusCreated, map[string]int{"tripId": tripId})
+	respondJSON(w, http.StatusNoContent, nil)
 }

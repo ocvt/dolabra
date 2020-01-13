@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS quick_signup (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
       create_datetime DATETIME NOT NULL,
       expire_datetime DATETIME NOT NULL,
-      email TEXT NOT NULL COLLATE NOCASE
+      email TEXT NOT NULL COLLATE NOCASE UNIQUE
     );
 
 -- Table: store_code

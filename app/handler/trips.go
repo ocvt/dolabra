@@ -104,6 +104,7 @@ func GetTrips(w http.ResponseWriter, r *http.Request) {
 			&trips[i].CreateDatetime,
 			&trips[i].Cancel,
 			&trips[i].Publish,
+			&trips[i].ReminderSent,
 			&trips[i].MemberId,
 			&trips[i].MembersOnly,
 			&trips[i].AllowLateSignups,
@@ -289,6 +290,7 @@ func GetTripsArchive(w http.ResponseWriter, r *http.Request) {
 			&trips[i].CreateDatetime,
 			&trips[i].Cancel,
 			&trips[i].Publish,
+			&trips[i].ReminderSent,
 			&trips[i].MemberId,
 			&trips[i].MembersOnly,
 			&trips[i].AllowLateSignups,
@@ -442,7 +444,8 @@ func PatchTripsCancel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Permissions
-	if !dbEnsureOfficerOrTripLeader(w, tripId, memberId) {
+	if !dbEnsureOfficerOrTripLeader(w, tripId, memberId) ||
+     !dbEnsureTripNotCanceled(w, tripId) {
 		return
 	}
 
@@ -548,7 +551,7 @@ func PostTrips(w http.ResponseWriter, r *http.Request) {
       create_datetime,
       cancel,
       publish,
-      reminderSent,
+      reminder_sent,
       member_id,
       members_only,
       allow_late_signups,

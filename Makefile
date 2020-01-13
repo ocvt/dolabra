@@ -1,15 +1,17 @@
-all: build
+all: build integration-test
 
-integration-test: build
+full-test: clean integration-test clean
+
+integration-test:
 	./launch.sh
-	# TODO run python tests
-	# TODO clean up
+	sleep 1
+	python3 tests/main.py
 
 build: format static-check
 	docker build -t ocvt/dolabra:latest .
 
 format:
-	go fmt
+	go fmt .
 
 static-check: deps
 	go vet
@@ -17,3 +19,8 @@ static-check: deps
 
 deps:
 	go get github.com/houqp/sqlvet
+
+clean:
+	rm -f dolabra
+	(docker stop dolabra && docker rm dolabra) || true
+	rm -f data/dolabra-sqlite.sqlite3

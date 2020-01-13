@@ -36,7 +36,7 @@ func GetPayment(w http.ResponseWriter, r *http.Request) {
 	// Permissions
 	if paymentOption != "dues" && paymentOption != "duesShirt" &&
 		paymentOption != "freshmanSpecial" {
-		respondError(w, http.StatusBadRequest, "Invalid payment option.")
+		respondError(w, http.StatusNotFound, "Payment option does not exist.")
 		return
 	}
 
@@ -125,34 +125,33 @@ func PostPaymentRedeem(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	for rows.Next() {
-	}
-	var storeCode storeCodeStruct
-	err = rows.Scan(
-		&storeCode.Id,
-		&storeCode.CreateDatetime,
-		&storeCode.GeneratedById,
-		&storeCode.Note,
-		&storeCode.StoreItemId,
-		&storeCode.StoreItemCount,
-		&storeCode.Amount,
-		&storeCode.Code,
-		&storeCode.Completed,
-		&storeCode.Redeemed)
-	if !checkError(w, err) {
-		return
-	}
+    var storeCode storeCodeStruct
+    err = rows.Scan(
+      &storeCode.Id,
+      &storeCode.CreateDatetime,
+      &storeCode.GeneratedById,
+      &storeCode.Note,
+      &storeCode.StoreItemId,
+      &storeCode.StoreItemCount,
+      &storeCode.Amount,
+      &storeCode.Code,
+      &storeCode.Completed,
+      &storeCode.Redeemed)
+    if !checkError(w, err) {
+      return
+    }
 
-	// Impossible to be MEMBERSHIP AND not redeemed AND not completed
-	completed := storeCode.Completed
-	if storeCode.StoreItemId == "MEMBERSHIP" {
-		if !dbExtendMembership(w, memberId, storeCode.StoreItemCount) {
-			return
-		}
-		completed = true
-	}
+	  // Impossible to be MEMBERSHIP AND not redeemed AND not completed
+	  completed := storeCode.Completed
+	  if storeCode.StoreItemId == "MEMBERSHIP" {
+			if !dbExtendMembership(w, memberId, storeCode.StoreItemCount) {
+				return
+			}
+			completed = true
+	  }
 
-	// Transfer to be proper payment associated with member
-	stmt = `
+	  // Transfer to be proper payment associated with member
+	  stmt = `
       INSERT INTO payment (
         create_datetime,
         entered_by_id,
@@ -165,26 +164,32 @@ func PostPaymentRedeem(w http.ResponseWriter, r *http.Request) {
         payment_id,
         completed)
       VALUES (?, ?, ?, ?, ?, ?, ?, 'MANUAL', ?, ?)`
-	_, err = db.Exec(stmt,
-		storeCode.CreateDatetime,
-		storeCode.GeneratedById,
-		storeCode.Note,
-		memberId,
-		storeCode.StoreItemId,
-		storeCode.StoreItemCount,
-		storeCode.Amount,
-		storeCode.Code,
-		completed)
-	if !checkError(w, err) {
-		return
-	}
+	  _, err = db.Exec(stmt,
+			storeCode.CreateDatetime,
+			storeCode.GeneratedById,
+			storeCode.Note,
+			memberId,
+			storeCode.StoreItemId,
+			storeCode.StoreItemCount,
+			storeCode.Amount,
+			storeCode.Code,
+			completed)
+	  if !checkError(w, err) {
+			return
+	  }
 
-	// Prevent from redeeming item again
-	stmt = `
+	  // Prevent from redeeming item again
+	  stmt = `
       UPDATE store_code
       SET redeemed = true
       WHERE id = ?`
-	_, err = db.Exec(stmt, storeCode.Id)
+	  _, err = db.Exec(stmt, storeCode.Id)
+	  if !checkError(w, err) {
+			return
+	  }
+	}
+
+	err = rows.Err()
 	if !checkError(w, err) {
 		return
 	}

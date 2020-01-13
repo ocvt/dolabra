@@ -84,6 +84,9 @@ production.
 
 ## TODO
 
+* Make tasks work (db locking issue and no error check after rows.Next())
+* Only return published trips (even if they're canceled) from /trips/archive
 * Use tabs instead of spaces for db queries (?)
   * go fmt converts everything else to tabs
+* Make indentation for long db scans consistent
 * Use db transactions

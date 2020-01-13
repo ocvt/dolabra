@@ -121,14 +121,9 @@ func dbEnsureActiveTrip(w http.ResponseWriter, tripId int) bool {
 		return false
 	}
 
-	isCanceled, err := dbIsTripCanceled(w, tripId)
-	if err != nil {
-		return false
-	}
-	if isCanceled {
-		respondError(w, http.StatusBadRequest, "Trip is canceled.")
-		return false
-	}
+  if !dbEnsureTripNotCanceled(w, tripId) {
+    return false
+  }
 
 	inPast, err := dbIsTripInPast(w, tripId)
 	if err != nil {
@@ -144,6 +139,18 @@ func dbEnsureActiveTrip(w http.ResponseWriter, tripId int) bool {
 	}
 
 	return true
+}
+
+func dbEnsureTripNotCanceled(w http.ResponseWriter, tripId int) bool {
+	isCanceled, err := dbIsTripCanceled(w, tripId)
+	if err != nil {
+		return false
+	}
+	if isCanceled {
+		respondError(w, http.StatusBadRequest, "Trip is canceled.")
+		return false
+	}
+  return true
 }
 
 func dbEnsureIsTrip(w http.ResponseWriter, tripId int) bool {
@@ -170,13 +177,25 @@ func dbEnsureMemberIsOnTrip(w http.ResponseWriter, tripId int, memberId int) boo
 	return true
 }
 
+func dbEnsureMemberIsNotOnTrip(w http.ResponseWriter, tripId int, memberId int) bool {
+	exists, err := dbIsMemberOnTrip(w, tripId, memberId)
+	if err != nil {
+		return false
+	}
+	if exists {
+		respondError(w, http.StatusBadRequest, "Member is on trip (or has canceled or been booted).")
+		return false
+	}
+	return true
+}
+
 func dbEnsureNotSignupCode(w http.ResponseWriter, tripId int, memberId int, code string) bool {
 	exists, err := dbCheckSignupCode(w, tripId, memberId, code)
 	if err != nil {
 		return false
 	}
 	if exists {
-		respondError(w, http.StatusBadRequest, "Member status is "+code)
+		respondError(w, http.StatusBadRequest, "Signup status is " + code + ".")
 		return false
 	}
 	return true
@@ -236,15 +255,6 @@ func dbEnsureTripLeader(w http.ResponseWriter, tripId int, memberId int) bool {
 
 func dbEnsureValidSignup(w http.ResponseWriter, tripId int, memberId int,
 	carpool bool, driver bool, carCapacityTotal int, pet bool) bool {
-	onTrip, err := dbIsMemberOnTrip(w, tripId, memberId)
-	if err != nil {
-		return false
-	}
-	if onTrip {
-		respondError(w, http.StatusBadRequest, "Member is already on trip.")
-		return false
-	}
-
 	tooLateSignup, err := dbIsTooLateSignup(w, tripId)
 	if err != nil {
 		return false

@@ -84,10 +84,10 @@ func dbCreateSystemMember() error {
 func dbCreateNullTrip() error {
 	stmt := `
     INSERT OR REPLACE INTO trip
-    VALUES (0, datetime('now'), true, false, 0, false, false, false, false,
-            false, "", 0, "Null Trip for Announcement logs", "TRIP_OTHER",
-            datetime('now'), datetime('now'), "", "", "", "", "", 0, 0, "",
-            "", false, "")`
+    VALUES (0, '1990-01-01 00:00:00', true, false, 0, false, false, false,
+            false, false, '', 0, 'Null Trip for Announcement logs',
+            'TRIP_OTHER', '1990-01-02 00:00:00', '1990-01-03 00:00:00', '', '',
+            '', '', '', 0, 0, '', '', false, '')`
 	_, err := db.Exec(stmt) // sqlvet: ignore
 	return err
 }
