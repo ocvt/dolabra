@@ -84,6 +84,7 @@ production.
 
 ## TODO
 
+* Return 403 instead of 400 where necessary
 * Make tasks work (db locking issue and no error check after rows.Next())
 * Only return published trips (even if they're canceled) from /trips/archive
 * Use tabs instead of spaces for db queries (?)

@@ -207,7 +207,7 @@ func dbEnsureNotTripCreator(w http.ResponseWriter, tripId int, memberId int) boo
 		return false
 	}
 	if exists {
-		respondError(w, http.StatusBadRequest, "Cannot modify trip creator status.")
+		respondError(w, http.StatusForbidden, "Cannot modify trip creator status.")
 		return false
 	}
 	return true
@@ -223,7 +223,7 @@ func dbEnsureOfficerOrTripLeader(w http.ResponseWriter, tripId int, memberId int
 		return false
 	}
 	if !isOfficer && !isTripLeader {
-		respondError(w, http.StatusBadRequest, "Must be officer or trip leader.")
+		respondError(w, http.StatusForbidden, "Must be officer or trip leader.")
 		return false
 	}
 	return true
@@ -247,7 +247,7 @@ func dbEnsureTripLeader(w http.ResponseWriter, tripId int, memberId int) bool {
 		return false
 	}
 	if !exists {
-		respondError(w, http.StatusBadRequest, "Not a trip leader.")
+		respondError(w, http.StatusForbidden, "Not a trip leader.")
 		return false
 	}
 	return true

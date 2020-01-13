@@ -54,7 +54,7 @@ def TestTripsAdmin(s):
   assert r.status_code == 401
 
   r = s.get(url)
-  assert r.status_code == 400
+  assert r.status_code == 403
   assert json.loads(r.text) == member_not_officer_tripleader_json
 
 # TODO test with photos
@@ -71,6 +71,7 @@ def TestTripsModify(s):
     '/cancel': member_not_officer_tripleader_json,
     '/publish': member_not_tripleader_json
   }
+
   for path in paths:
     url = ENDPOINT + '/10000' + path
     
@@ -79,7 +80,7 @@ def TestTripsModify(s):
     assert json.loads(r.text) == member_not_authenticated_json
 
     r = s.patch(url)
-    assert r.status_code == 400
+    assert r.status_code == 403
     assert json.loads(r.text) == paths[path]
 
 def TestTripsCreate(s):
@@ -110,7 +111,7 @@ def TestTripsPublish(s1, s2):
   assert len(json.loads(r.text)['trips']) == 0
 
   r = s1.patch(url_publish)
-  assert r.status_code == 400
+  assert r.status_code == 403
   assert json.loads(r.text) == member_not_tripleader_json
  
   r = s1.post(url_signup, json=trip_signup_json)
@@ -171,7 +172,7 @@ def TestTripsSignupCancel(s1, s2):
   assert json.loads(r.text) == member_not_authenticated_json
 
   r = s1.patch(url)
-  assert r.status_code == 400
+  assert r.status_code == 403
   assert json.loads(r.text) == member_is_trip_creator_json
 
   r = s2.patch(url)
@@ -196,7 +197,7 @@ def TestTripsCancel(s1, s2, s3):
   assert json.loads(r.text) == member_not_authenticated_json
 
   r = s2.patch(url)
-  assert r.status_code == 400
+  assert r.status_code == 403
   assert json.loads(r.text) == member_not_officer_tripleader_json
 
   r = req.get(ENDPOINT)
@@ -215,11 +216,11 @@ def TestTripsCancel(s1, s2, s3):
   assert json.loads(r.text) == trip_canceled_json
 
   r = s2.patch(url)
-  assert r.status_code == 400
+  assert r.status_code == 403
   assert json.loads(r.text) == member_not_officer_tripleader_json
 
   r = s3.patch(url)
-  assert r.status_code == 400
+  assert r.status_code == 403
   assert json.loads(r.text) == member_not_officer_tripleader_json
 
 # TODO TEST absent/boot/forceadd/tripleader
