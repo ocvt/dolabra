@@ -445,7 +445,7 @@ func PatchTripsCancel(w http.ResponseWriter, r *http.Request) {
 
 	// Permissions
 	if !dbEnsureOfficerOrTripLeader(w, tripId, memberId) ||
-     !dbEnsureTripNotCanceled(w, tripId) {
+		!dbEnsureTripNotCanceled(w, tripId) {
 		return
 	}
 

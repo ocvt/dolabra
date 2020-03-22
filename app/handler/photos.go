@@ -150,9 +150,9 @@ func GetAllTripsPhotos(w http.ResponseWriter, r *http.Request) {
 		imageList = append(imageList, imageListTmp...)
 	}
 
-  if imageList == nil {
-    imageList = []map[string]string{}
-  }
+	if imageList == nil {
+		imageList = []map[string]string{}
+	}
 
 	respondJSON(w, http.StatusOK, map[string][]map[string]string{"images": imageList})
 }
@@ -163,9 +163,9 @@ func GetHomePhotos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-  if imageList == nil {
-    imageList = []map[string]string{}
-  }
+	if imageList == nil {
+		imageList = []map[string]string{}
+	}
 
 	respondJSON(w, http.StatusOK, map[string][]map[string]string{"images": imageList})
 }
@@ -187,9 +187,9 @@ func GetTripsPhotos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-  if imageList == nil {
-    imageList = []map[string]string{}
-  }
+	if imageList == nil {
+		imageList = []map[string]string{}
+	}
 
 	respondJSON(w, http.StatusOK, map[string][]map[string]string{"images": imageList})
 }

@@ -121,30 +121,30 @@ func dbEnsureMemberDoesNotExist(w http.ResponseWriter, subject string) bool {
 
 func dbEnsureMemberExists(w http.ResponseWriter, subject string) bool {
 	exists, err := dbIsMemberWithSubject(w, subject)
-  if err != nil {
-    return false
-  }
+	if err != nil {
+		return false
+	}
 
 	if !exists {
 		respondError(w, http.StatusNotFound, "Member is not registered.")
-    return false
+		return false
 	}
 
-  return true
+	return true
 }
 
 func dbEnsureMemberIdExists(w http.ResponseWriter, memberId int) bool {
 	exists, err := dbIsMemberWithMemberId(w, memberId)
-  if err != nil {
-    return false
-  }
+	if err != nil {
+		return false
+	}
 
 	if !exists {
 		respondError(w, http.StatusNotFound, "Member is not registered.")
-    return false
+		return false
 	}
 
-  return true
+	return true
 }
 
 func dbEnsureNotOfficer(w http.ResponseWriter, memberId int) bool {
@@ -313,15 +313,15 @@ func dbInsertPayment(w http.ResponseWriter, enteredById int, note string,
       completed)
     VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	_, err := db.Exec(stmt,
-    enteredById,
-    note,
-    memberId,
-    storeItemId,
+		enteredById,
+		note,
+		memberId,
+		storeItemId,
 		storeItemCount,
-    amount,
-    paymentMethod,
-    paymentId,
-    completed)
+		amount,
+		paymentMethod,
+		paymentId,
+		completed)
 	return checkError(w, err)
 }
 

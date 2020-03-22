@@ -67,6 +67,8 @@ github.com/hashicorp/hcl v1.0.0/go.mod h1:E5yfLk+7swimpb2L/Alb/PJmXilQ/rhwaUYs4T
 github.com/houqp/gtest v1.0.0/go.mod h1:oxg4BHzN6nRAQZWTc5qO90uK9voXKmb5kg4/XE6lhKw=
 github.com/houqp/sqlvet v1.0.2 h1:+gIaKyjVwGxVhkTorygx6Gt2X7u5KLYF/jUCTctpK5o=
 github.com/houqp/sqlvet v1.0.2/go.mod h1:mtUVuJHKvJdaQubwTw7p5kWuFmEXqoRSHEWbj3SZVLw=
+github.com/houqp/sqlvet v1.1.0 h1:nop0MgFkktZW3IH2FbN5HccoIcuIzjk2LsVobTtnzro=
+github.com/houqp/sqlvet v1.1.0/go.mod h1:mtUVuJHKvJdaQubwTw7p5kWuFmEXqoRSHEWbj3SZVLw=
 github.com/inconshreveable/mousetrap v1.0.0 h1:Z8tu5sraLXCXIcARxBp/8cbvlwVa7Z1NHg9XEKhtSvM=
 github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANytuPF1OarO4DADm73n8=
 github.com/jmoiron/sqlx v1.2.0 h1:41Ip0zITnmWNR/vHV+S4m+VoUivnWY5E4OJfLZjCJMA=

@@ -50,5 +50,5 @@ func GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	setCookie(w, "token", token)
 
 	config := utils.GetConfig()
-	http.Redirect(w, r, config.ClientUrl + "/login", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, config.ClientUrl+"/login", http.StatusTemporaryRedirect)
 }

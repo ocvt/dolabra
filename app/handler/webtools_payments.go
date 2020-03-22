@@ -164,13 +164,13 @@ func PostWebtoolsGenerateCode(w http.ResponseWriter, r *http.Request) {
       redeemed)
     VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, ?, false)`
 	_, err = db.Exec(stmt,
-    memberId,
-    storeCode.Note,
-    storeCode.StoreItemId,
+		memberId,
+		storeCode.Note,
+		storeCode.StoreItemId,
 		storeCode.StoreItemCount,
-    storeCode.Amount,
-    code,
-    completed)
+		storeCode.Amount,
+		code,
+		completed)
 	if !checkError(w, err) {
 		return
 	}
@@ -232,14 +232,14 @@ func PostWebtoolsPayments(w http.ResponseWriter, r *http.Request) {
       completed)
     VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, 'METHOD', ?, ?)`
 	_, err = db.Exec(stmt,
-    memberId,
-    payment.Note,
-    paymentMemberId,
+		memberId,
+		payment.Note,
+		paymentMemberId,
 		payment.StoreItemId,
-    payment.StoreItemCount,
-    payment.Amount,
+		payment.StoreItemCount,
+		payment.Amount,
 		paymentId,
-    completed)
+		completed)
 	if !checkError(w, err) {
 		return
 	}

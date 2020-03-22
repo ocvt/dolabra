@@ -11,7 +11,7 @@ build: format static-check
 	docker build -t ocvt/dolabra:latest .
 
 format:
-	go fmt .
+	gofmt -w .
 
 static-check: deps
 	go vet

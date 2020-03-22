@@ -26,7 +26,7 @@ func PostQuicksignup(w http.ResponseWriter, r *http.Request) {
       expire_datetime,
       email)
     VALUES (datetime('now'), datetime('now', '+6 months'), ?)`
-  _, err = db.Exec(stmt, email.Email) // sqlvet: ignore
+	_, err = db.Exec(stmt, email.Email) // sqlvet: ignore
 	if !checkError(w, err) {
 		return
 	}

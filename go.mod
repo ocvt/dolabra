@@ -7,7 +7,7 @@ require (
 	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/golang/groupcache v0.0.0-20191027212112-611e8accdfc9 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
-	github.com/houqp/sqlvet v1.0.2 // indirect
+	github.com/houqp/sqlvet v1.1.0 // indirect
 	github.com/mattn/go-sqlite3 v2.0.1+incompatible
 	github.com/rs/cors v1.7.0
 	github.com/stripe/stripe-go v68.5.0+incompatible

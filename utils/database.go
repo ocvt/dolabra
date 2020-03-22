@@ -1,40 +1,40 @@
 package utils
 
 import (
-  "database/sql"
-  "io/ioutil"
-  "log"
-  "strings"
+	"database/sql"
+	"io/ioutil"
+	"log"
+	"strings"
 )
 
 func execHelper(db *sql.DB, sql string) {
-  _, err := db.Exec(sql)
-  if err != nil {
-    log.Fatal(err)
-  }
+	_, err := db.Exec(sql)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 /* Create table based on sql file */
 // TODO member_log table
 func createTables(db *sql.DB) {
-  file, err := ioutil.ReadFile("utils/dolabra-sqlite.sql")
-  if err != nil {
-    log.Fatal(err)
-  }
+	file, err := ioutil.ReadFile("utils/dolabra-sqlite.sql")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-  requests := strings.Split(string(file), ";")
+	requests := strings.Split(string(file), ";")
 
-  for _, request := range requests {
-    _, err = db.Exec(request)
-    if err != nil {
-      log.Fatal(err)
-    }
-  }
+	for _, request := range requests {
+		_, err = db.Exec(request)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 }
 
 func insertData(db *sql.DB) {
-  // Populate notification types
-  execHelper(db, `
+	// Populate notification types
+	execHelper(db, `
     INSERT OR REPLACE INTO notification_type (id, name, description)
     VALUES
       ('GENERAL_EVENTS', 'General Events', 'Gobblerfest, parade, etc'),
@@ -62,16 +62,16 @@ func insertData(db *sql.DB) {
       ('TRIP_WORK_TRIP', 'Worktrip', 'Trail work or other maintenance.')
   `)
 
-  // Populate store items
-  execHelper(db, `
+	// Populate store items
+	execHelper(db, `
     INSERT OR REPLACE INTO store_item (id, name, description)
     VALUES
       ('MEMBERSHIP', '1 Year of membership', ''),
       ('SHIRT', '1 Shirt', 'Size determined at pickup')
   `)
 
-  // Populate attending codes
-  execHelper(db, `
+	// Populate attending codes
+	execHelper(db, `
     INSERT OR REPLACE INTO trip_attending_code (id, description)
     VALUES
       ('ATTEND', 'User is attending'),
@@ -83,6 +83,6 @@ func insertData(db *sql.DB) {
 }
 
 func DBMigrate(db *sql.DB) {
-  createTables(db);
-  insertData(db);
+	createTables(db)
+	insertData(db)
 }

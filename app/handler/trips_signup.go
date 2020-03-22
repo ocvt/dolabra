@@ -381,10 +381,10 @@ func PostTripsSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-  // Permissions
-  if !dbEnsureMemberIsNotOnTrip(w, tripId, memberId) {
-    return
-  }
+	// Permissions
+	if !dbEnsureMemberIsNotOnTrip(w, tripId, memberId) {
+		return
+	}
 
 	// Permissions if not creator
 	attendingCode := "FORCE"

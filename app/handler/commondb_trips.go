@@ -121,9 +121,9 @@ func dbEnsureActiveTrip(w http.ResponseWriter, tripId int) bool {
 		return false
 	}
 
-  if !dbEnsureTripNotCanceled(w, tripId) {
-    return false
-  }
+	if !dbEnsureTripNotCanceled(w, tripId) {
+		return false
+	}
 
 	inPast, err := dbIsTripInPast(w, tripId)
 	if err != nil {
@@ -150,7 +150,7 @@ func dbEnsureTripNotCanceled(w http.ResponseWriter, tripId int) bool {
 		respondError(w, http.StatusBadRequest, "Trip is canceled.")
 		return false
 	}
-  return true
+	return true
 }
 
 func dbEnsureIsTrip(w http.ResponseWriter, tripId int) bool {
@@ -195,7 +195,7 @@ func dbEnsureNotSignupCode(w http.ResponseWriter, tripId int, memberId int, code
 		return false
 	}
 	if exists {
-		respondError(w, http.StatusBadRequest, "Signup status is " + code + ".")
+		respondError(w, http.StatusBadRequest, "Signup status is "+code+".")
 		return false
 	}
 	return true

@@ -125,33 +125,33 @@ func PostPaymentRedeem(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	for rows.Next() {
-    var storeCode storeCodeStruct
-    err = rows.Scan(
-      &storeCode.Id,
-      &storeCode.CreateDatetime,
-      &storeCode.GeneratedById,
-      &storeCode.Note,
-      &storeCode.StoreItemId,
-      &storeCode.StoreItemCount,
-      &storeCode.Amount,
-      &storeCode.Code,
-      &storeCode.Completed,
-      &storeCode.Redeemed)
-    if !checkError(w, err) {
-      return
-    }
+		var storeCode storeCodeStruct
+		err = rows.Scan(
+			&storeCode.Id,
+			&storeCode.CreateDatetime,
+			&storeCode.GeneratedById,
+			&storeCode.Note,
+			&storeCode.StoreItemId,
+			&storeCode.StoreItemCount,
+			&storeCode.Amount,
+			&storeCode.Code,
+			&storeCode.Completed,
+			&storeCode.Redeemed)
+		if !checkError(w, err) {
+			return
+		}
 
-	  // Impossible to be MEMBERSHIP AND not redeemed AND not completed
-	  completed := storeCode.Completed
-	  if storeCode.StoreItemId == "MEMBERSHIP" {
+		// Impossible to be MEMBERSHIP AND not redeemed AND not completed
+		completed := storeCode.Completed
+		if storeCode.StoreItemId == "MEMBERSHIP" {
 			if !dbExtendMembership(w, memberId, storeCode.StoreItemCount) {
 				return
 			}
 			completed = true
-	  }
+		}
 
-	  // Transfer to be proper payment associated with member
-	  stmt = `
+		// Transfer to be proper payment associated with member
+		stmt = `
       INSERT INTO payment (
         create_datetime,
         entered_by_id,
@@ -164,7 +164,7 @@ func PostPaymentRedeem(w http.ResponseWriter, r *http.Request) {
         payment_id,
         completed)
       VALUES (?, ?, ?, ?, ?, ?, ?, 'MANUAL', ?, ?)`
-	  _, err = db.Exec(stmt,
+		_, err = db.Exec(stmt,
 			storeCode.CreateDatetime,
 			storeCode.GeneratedById,
 			storeCode.Note,
@@ -174,19 +174,19 @@ func PostPaymentRedeem(w http.ResponseWriter, r *http.Request) {
 			storeCode.Amount,
 			storeCode.Code,
 			completed)
-	  if !checkError(w, err) {
+		if !checkError(w, err) {
 			return
-	  }
+		}
 
-	  // Prevent from redeeming item again
-	  stmt = `
+		// Prevent from redeeming item again
+		stmt = `
       UPDATE store_code
       SET redeemed = true
       WHERE id = ?`
-	  _, err = db.Exec(stmt, storeCode.Id)
-	  if !checkError(w, err) {
+		_, err = db.Exec(stmt, storeCode.Id)
+		if !checkError(w, err) {
 			return
-	  }
+		}
 	}
 
 	err = rows.Err()
