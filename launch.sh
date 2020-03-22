@@ -9,5 +9,6 @@ docker run \
   --env-file dolabra.env \
   --volume $PWD/data:/go/src/app/data:rw \
   --volume $PWD/utils:/go/src/app/utils:ro \
-  --publish 127.0.0.1:3000:3000 \
+  --publish 3000:3000 \
+  --add-host=host.docker.internal:$(ip -4 addr show docker0 | grep -Po 'inet \K[\d.]+') \
   ocvt/dolabra:latest

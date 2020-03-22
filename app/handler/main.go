@@ -18,10 +18,6 @@ var db *sql.DB
 func Initialize() {
 	log.SetFlags(log.Lshortfile)
 
-	if len(os.Getenv("DEV")) > 0 {
-		googleOAuthConfig.RedirectURL = "http://localhost:3000/auth/google/callback"
-	}
-
 	// Setup db
 	config := utils.GetConfig()
 	dbURI := fmt.Sprintf("./data/%s.sqlite3", config.DBName)

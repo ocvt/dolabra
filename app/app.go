@@ -32,7 +32,13 @@ func Initialize() {
 func setRouters() {
   // TODO configure CORS
   // Set middleware
-  r.Use(cors.Default().Handler)
+  r.Use(cors.New(cors.Options{
+    AllowedOrigins: []string{"http://host.docker.internal"},
+    AllowCredentials: true,
+    Debug: true,
+  }).Handler)
+  //r.Use(c.Handler)
+  //r.Use(cors.Default().Handler)
   r.Use(middleware.RequestID)
   r.Use(middleware.RealIP)
   r.Use(middleware.Logger)

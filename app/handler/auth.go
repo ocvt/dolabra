@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 
@@ -18,7 +17,7 @@ import (
 var googleOAuthConfig = &oauth2.Config{
 	ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 	ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-	RedirectURL:  "https://ocvt.club/auth/google/callback",
+	RedirectURL:  utils.GetConfig().ApiUrl + "/auth/google/callback",
 	Scopes:       []string{oidcgoogle.UserinfoProfileScope},
 	Endpoint:     google.Endpoint,
 }
@@ -34,7 +33,6 @@ func DevLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func GoogleLogin(w http.ResponseWriter, r *http.Request) {
-	fmt.Printf("URL: %s\n", r.URL.Scheme)
 	promptParam := oauth2.SetAuthURLParam("prompt", "consent select_account")
 	url := googleOAuthConfig.AuthCodeURL("state", promptParam)
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
@@ -52,5 +50,5 @@ func GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	setCookie(w, "token", token)
 
 	config := utils.GetConfig()
-	http.Redirect(w, r, config.ClientUrl+"/login", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, config.ClientUrl + "/login", http.StatusTemporaryRedirect)
 }
