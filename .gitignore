@@ -1,4 +1,5 @@
 **.env
+dolabra
 data/
 tests/__pycache__
 utils/*.json

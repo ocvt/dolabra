@@ -28,13 +28,12 @@ func DevLogin(w http.ResponseWriter, r *http.Request) {
 	setCookie(w, "idp", map[string]string{"idp": "DEV"})
 	setCookie(w, "token", map[string]string{"token": subject})
 
-	config := utils.GetConfig()
-	http.Redirect(w, r, config.ClientUrl+"/login", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, r.URL.Query().Get("state"), http.StatusTemporaryRedirect)
 }
 
 func GoogleLogin(w http.ResponseWriter, r *http.Request) {
 	promptParam := oauth2.SetAuthURLParam("prompt", "consent select_account")
-	url := googleOAuthConfig.AuthCodeURL("state", promptParam)
+	url := googleOAuthConfig.AuthCodeURL(r.URL.Query().Get("state"), promptParam)
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
@@ -49,6 +48,5 @@ func GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	setCookie(w, "idp", map[string]string{"idp": "GOOGLE"})
 	setCookie(w, "token", token)
 
-	config := utils.GetConfig()
-	http.Redirect(w, r, config.ClientUrl+"/login", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, r.URL.Query().Get("state"), http.StatusTemporaryRedirect)
 }
