@@ -28,8 +28,8 @@ def TestMyAccount(s):
   r = s.get(url)
   assert r.status_code == 200
   data = json.loads(r.text)
-  del data['id'], data['createDatetime']
-  assert data == member_json
+  del data['id'], data['createDatetime'], data['paidExpireDatetime']
+  assert data == member_new_json
 
 def TestMyAccountName(s):
   url = HOST + '/myaccount/name'

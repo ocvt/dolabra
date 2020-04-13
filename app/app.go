@@ -33,8 +33,9 @@ func setRouters() {
 	// TODO configure CORS
 	// Set middleware
 	r.Use(cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://host.docker.internal"},
 		AllowCredentials: true,
+		AllowedMethods:   []string{"GET", "PATCH", "POST"},
+		AllowedOrigins:   []string{"http://cabinet.seaturtle.pw:4000"},
 		Debug:            true,
 	}).Handler)
 	//r.Use(c.Handler)

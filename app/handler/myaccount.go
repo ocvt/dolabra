@@ -7,8 +7,10 @@ import (
 
 // All fields are returned to client
 type memberStruct struct {
-	Id             int    `json:"id,omitempty"`
-	CreateDatetime string `json:"createDatetime,omitempty"`
+	Id                 int    `json:"id,omitempty"`
+	CreateDatetime     string `json:"createDatetime,omitempty"`
+	Active             bool   `json:"active,omitempty"`
+	PaidExpireDatetime string `json:"paidExpireDatetime,omitempty"`
 	/* Required fields for creating an account */
 	Email                        string `json:"email"`
 	FirstName                    string `json:"firstName"`
@@ -16,10 +18,15 @@ type memberStruct struct {
 	CellNumber                   string `json:"cellNumber"`
 	Gender                       string `json:"gender"`
 	Birthyear                    int    `json:"birthyear"`
-	Active                       bool   `json:"active"`
 	MedicalCond                  bool   `json:"medicalCond"`
 	MedicalCondDesc              string `json:"medicalCondDesc"`
-	PaidExpireDatetime           string `json:"paidExpireDatetime"`
+	EmergencyContactName         string `json:"emergencyContactName"`
+	EmergencyContactNumber       string `json:"emergencyContactNumber"`
+	EmergencyContactRelationship string `json:"emergencyContactRelationship"`
+}
+
+// Separate struct for updating emergency info independently
+type emergencyStruct struct {
 	EmergencyContactName         string `json:"emergencyContactName"`
 	EmergencyContactNumber       string `json:"emergencyContactNumber"`
 	EmergencyContactRelationship string `json:"emergencyContactRelationship"`
@@ -194,6 +201,47 @@ func GetMyAccountName(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string]string{"firstName": firstName})
 }
 
+func PatchMyAccountEmergency(w http.ResponseWriter, r *http.Request) {
+	_, subject, ok := checkLogin(w, r)
+	if !ok {
+		return
+	}
+
+	// Get memberId
+	memberId, ok := dbGetActiveMemberId(w, subject)
+	if !ok {
+		return
+	}
+
+	// Get request body
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	var emergency emergencyStruct
+	err := decoder.Decode(&emergency)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	stmt := `
+    UPDATE emergency_contact
+    SET
+      name = ?,
+      number = ?,
+      relationship = ?
+    WHERE member_id = ?`
+	_, err = db.Exec(stmt,
+		emergency.EmergencyContactName,
+		emergency.EmergencyContactNumber,
+		emergency.EmergencyContactRelationship,
+		memberId)
+	if !checkError(w, err) {
+		return
+	}
+
+	respondJSON(w, http.StatusNoContent, nil)
+}
+
 func PatchMyAccountDeactivate(w http.ResponseWriter, r *http.Request) {
 	_, subject, ok := checkLogin(w, r)
 	if !ok {
@@ -285,7 +333,7 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
       medical_cond_desc,
       paid_expire_datetime,
       notification_preference)
-    VALUES (?, ?, ?, datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?)`
+    VALUES (?, ?, ?, datetime('now'), ?, ?, ?, 1, ?, ?, datetime('now'), ?)`
 	result, err := db.Exec(
 		stmt,
 		member.Email,
@@ -294,10 +342,8 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 		member.CellNumber,
 		member.Gender,
 		member.Birthyear,
-		member.Active,
 		member.MedicalCond,
 		member.MedicalCondDesc,
-		member.PaidExpireDatetime,
 		notificationsStr)
 	if !checkError(w, err) {
 		return
@@ -316,13 +362,10 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
       name,
       number,
       relationship)
-    VALUES (?, ?, ?, ?)`
+    VALUES (?, '', '', '')`
 	_, err = db.Exec(
 		stmt,
-		memberId,
-		member.EmergencyContactName,
-		member.EmergencyContactNumber,
-		member.EmergencyContactRelationship)
+		memberId)
 	if !checkError(w, err) {
 		return
 	}

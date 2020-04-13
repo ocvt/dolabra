@@ -4,6 +4,21 @@ member_is_trip_creator_json = {
   'error':'Cannot modify trip creator status.'
 }
 
+member_new_json = {
+  'email': 'test@example.com',
+  'firstName': 'No',
+  'lastName': 'Thanks',
+  'cellNumber': '5551234567',
+  'gender': 'Apache Attack Helicopter',
+  'birthyear': 1990,
+  'active': True,
+  'medicalCond': True,
+  'medicalCondDesc': 'very allergic to tomatoes',
+  'emergencyContactName': '',
+  'emergencyContactNumber': '',
+  'emergencyContactRelationship': ''
+}
+
 member_json = {
   'email': 'test@example.com',
   'firstName': 'No',
@@ -14,7 +29,6 @@ member_json = {
   'active': True,
   'medicalCond': True,
   'medicalCondDesc': 'very allergic to tomatoes',
-  'paidExpireDatetime': '2050-12-25T15:52:01Z',
   'emergencyContactName': 'Elon Musk',
   'emergencyContactNumber': '9993729484',
   'emergencyContactRelationship': 'father'
