@@ -18,11 +18,13 @@ var key [32]byte
 
 // Delete Cookie
 func deleteCookie(w http.ResponseWriter, name string) {
+	cookieDomain := utils.GetConfig().CookieDomain
 	cookie := http.Cookie{
-		Name:   name,
-		Value:  "",
-		Path:   "/",
+		Domain: cookieDomain,
 		MaxAge: -1,
+		Name:   name,
+		Path:   "/",
+		Value:  "",
 	}
 	http.SetCookie(w, &cookie)
 }
@@ -80,8 +82,8 @@ func setCookie(w http.ResponseWriter, name string, payload interface{}) {
 	cookie := http.Cookie{
 		Domain: cookieDomain,
 		Name:   name,
-		Value:  encodedB64Payload,
 		Path:   "/",
+		Value:  encodedB64Payload,
 	}
 	http.SetCookie(w, &cookie)
 }

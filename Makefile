@@ -4,11 +4,13 @@ all: build integration-test
 
 full-test: clean integration-test
 
-integration-test:
-	./launch.sh
+integration-test: start
 	sleep 1
 	python3 tests/main.py
-	@$(MAKE) -f $(THIS_FILE)
+	@$(MAKE) -f $(THIS_FILE) clean
+
+start:
+	./launch.sh
 
 build: format static-check
 	docker build -t ocvt/dolabra:latest .

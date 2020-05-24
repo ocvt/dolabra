@@ -64,12 +64,15 @@ func setRouters() {
 		}
 	})
 
+	r.Get("/logout", handler.GetLogout)
 	r.Route("/myaccount", func(r chi.Router) {
 		r.Delete("/", handler.DeleteMyAccountDelete)
 		r.Get("/", handler.GetMyAccount)
 		r.Get("/name", handler.GetMyAccountName)
 		r.Get("/notifications", handler.GetMyAccountNotifications)
+		r.Patch("/", handler.PatchMyAccount)
 		r.Patch("/deactivate", handler.PatchMyAccountDeactivate)
+		r.Patch("/emergency", handler.PatchMyAccountEmergency)
 		r.Patch("/notifications", handler.PatchMyAccountNotifications)
 		r.Patch("/reactivate", handler.PatchMyAccountReactivate)
 		r.Post("/", handler.PostMyAccount)
@@ -138,21 +141,21 @@ func Run(host string) {
 	}()
 
 	// Run tasks every 5 minutes
-	ticker := time.NewTicker(5 * time.Minute)
-	tickerQuit := make(chan struct{})
-	go func() {
-		log.Printf("Task ticker started, running every 5 minutes")
-		for {
-			select {
-			case <-ticker.C:
-				handler.DoTasks()
-			case <-tickerQuit:
-				log.Printf("Task ticker stopped")
-				ticker.Stop()
-				return
-			}
-		}
-	}()
+	//	ticker := time.NewTicker(5 * time.Minute)
+	//	tickerQuit := make(chan struct{})
+	//	go func() {
+	//		log.Printf("Task ticker started, running every 5 minutes")
+	//		for {
+	//			select {
+	//			case <-ticker.C:
+	//				handler.DoTasks()
+	//			case <-tickerQuit:
+	//				log.Printf("Task ticker stopped")
+	//				ticker.Stop()
+	//				return
+	//			}
+	//		}
+	//	}()
 
 	// Wait for SIGINT
 	stop := make(chan os.Signal, 1)
@@ -164,7 +167,7 @@ func Run(host string) {
 	defer cancel()
 
 	// Shutdown ticker
-	close(tickerQuit)
+	//	close(tickerQuit)
 
 	// Shutdown server
 	err := server.Shutdown(ctx)

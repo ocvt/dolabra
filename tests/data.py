@@ -13,26 +13,16 @@ member_new_json = {
   'birthyear': 1990,
   'active': True,
   'medicalCond': True,
-  'medicalCondDesc': 'very allergic to tomatoes',
-  'emergencyContactName': '',
-  'emergencyContactNumber': '',
-  'emergencyContactRelationship': ''
+  'medicalCondDesc': 'very allergic to tomatoes'
 }
 
-member_json = {
-  'email': 'test@example.com',
-  'firstName': 'No',
-  'lastName': 'Thanks',
-  'cellNumber': '5551234567',
-  'gender': 'Apache Attack Helicopter',
-  'birthyear': 1990,
-  'active': True,
-  'medicalCond': True,
-  'medicalCondDesc': 'very allergic to tomatoes',
+member_new_emergency_json = {
   'emergencyContactName': 'Elon Musk',
   'emergencyContactNumber': '9993729484',
   'emergencyContactRelationship': 'father'
 }
+
+member_json = {**member_new_json, **member_new_emergency_json}
 
 member_not_authenticated_json = {
   'error': 'Member is not authenticated'

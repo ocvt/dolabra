@@ -20,8 +20,21 @@ def TestMyAccountNotRegistered(s):
 
 def TestMyAccountRegister(s):
   url = HOST + '/myaccount'
-  r = s.post(url, json=member_json)
+  r = s.post(url, json=member_new_json)
   assert r.status_code == 201
+
+def TestMyAccountPersonal(s):
+  url = HOST + '/myaccount'
+  r = s.get(url)
+  assert r.status_code == 200
+  data = json.loads(r.text)
+  del data['id'], data['createDatetime'], data['paidExpireDatetime']
+  assert data == member_new_json
+
+def TestMyAccountUpdateEmergency(s):
+  url = HOST + '/myaccount/emergency'
+  r = s.patch(url, json=member_new_emergency_json)
+  assert r.status_code == 204
 
 def TestMyAccount(s):
   url = HOST + '/myaccount'
@@ -29,7 +42,7 @@ def TestMyAccount(s):
   assert r.status_code == 200
   data = json.loads(r.text)
   del data['id'], data['createDatetime'], data['paidExpireDatetime']
-  assert data == member_new_json
+  assert data == member_json
 
 def TestMyAccountName(s):
   url = HOST + '/myaccount/name'

@@ -12,17 +12,18 @@ type memberStruct struct {
 	Active             bool   `json:"active,omitempty"`
 	PaidExpireDatetime string `json:"paidExpireDatetime,omitempty"`
 	/* Required fields for creating an account */
-	Email                        string `json:"email"`
-	FirstName                    string `json:"firstName"`
-	LastName                     string `json:"lastName"`
-	CellNumber                   string `json:"cellNumber"`
-	Gender                       string `json:"gender"`
-	Birthyear                    int    `json:"birthyear"`
-	MedicalCond                  bool   `json:"medicalCond"`
-	MedicalCondDesc              string `json:"medicalCondDesc"`
-	EmergencyContactName         string `json:"emergencyContactName"`
-	EmergencyContactNumber       string `json:"emergencyContactNumber"`
-	EmergencyContactRelationship string `json:"emergencyContactRelationship"`
+	Email           string `json:"email"`
+	FirstName       string `json:"firstName"`
+	LastName        string `json:"lastName"`
+	CellNumber      string `json:"cellNumber"`
+	Gender          string `json:"gender"`
+	Birthyear       int    `json:"birthyear"`
+	MedicalCond     bool   `json:"medicalCond"`
+	MedicalCondDesc string `json:"medicalCondDesc"`
+	/* Allow independent updates of member & emergency info */
+	EmergencyContactName         string `json:"emergencyContactName,omitempty"`
+	EmergencyContactNumber       string `json:"emergencyContactNumber,omitempty"`
+	EmergencyContactRelationship string `json:"emergencyContactRelationship,omitempty"`
 }
 
 // Separate struct for updating emergency info independently
@@ -120,6 +121,12 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusNoContent, nil)
 }
 
+func GetLogout(w http.ResponseWriter, r *http.Request) {
+	deleteAuthCookies(w)
+
+	http.Redirect(w, r, r.URL.Query().Get("state"), http.StatusTemporaryRedirect)
+}
+
 func GetMyAccount(w http.ResponseWriter, r *http.Request) {
 	_, subject, ok := checkLogin(w, r)
 	if !ok {
@@ -199,6 +206,58 @@ func GetMyAccountName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJSON(w, http.StatusOK, map[string]string{"firstName": firstName})
+}
+
+func PatchMyAccount(w http.ResponseWriter, r *http.Request) {
+	_, subject, ok := checkLogin(w, r)
+	if !ok {
+		return
+	}
+
+	// Get memberId
+	memberId, ok := dbGetActiveMemberId(w, subject)
+	if !ok {
+		return
+	}
+
+	// Get request body
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	var member memberStruct
+	err := decoder.Decode(&member)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	stmt := `
+    UPDATE member
+    SET
+			email = ?,
+      first_name = ?,
+      last_name = ?,
+      cell_number = ?,
+      gender = ?,
+      birth_year = ?,
+      medical_cond = ?,
+      medical_cond_desc = ?
+		WHERE id = ?`
+	_, err = db.Exec(
+		stmt,
+		member.Email,
+		member.FirstName,
+		member.LastName,
+		member.CellNumber,
+		member.Gender,
+		member.Birthyear,
+		member.MedicalCond,
+		member.MedicalCondDesc,
+		memberId)
+	if !checkError(w, err) {
+		return
+	}
+
+	respondJSON(w, http.StatusNoContent, nil)
 }
 
 func PatchMyAccountEmergency(w http.ResponseWriter, r *http.Request) {
@@ -355,7 +414,7 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Insert new emergency contact
+	// Insert placeholder values for emergency contact
 	stmt = `
     INSERT INTO emergency_contact (
       member_id,
