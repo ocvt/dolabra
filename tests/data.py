@@ -1,4 +1,4 @@
-HOST = 'http://localhost:3000'
+HOST = 'http://api.cabinet.seaturtle.pw:3000'
 
 member_is_trip_creator_json = {
   'error':'Cannot modify trip creator status.'

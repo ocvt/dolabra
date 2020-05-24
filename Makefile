@@ -1,11 +1,14 @@
+THIS_FILE := $(lastword $(MAKEFILE_LIST))
+
 all: build integration-test
 
-full-test: clean integration-test clean
+full-test: clean integration-test
 
 integration-test:
 	./launch.sh
 	sleep 1
 	python3 tests/main.py
+	@$(MAKE) -f $(THIS_FILE)
 
 build: format static-check
 	docker build -t ocvt/dolabra:latest .

@@ -12,6 +12,7 @@ require (
 	github.com/rs/cors v1.7.0
 	github.com/stripe/stripe-go v68.5.0+incompatible
 	go.opencensus.io v0.22.2 // indirect
+	golang.org/dl v0.0.0-20200518054959-2d68e8288cc0 // indirect
 	golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413
 	golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553 // indirect
 	golang.org/x/oauth2 v0.0.0-20191202225959-858c2ad4c8b6

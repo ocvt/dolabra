@@ -8,6 +8,8 @@ import (
 	"net/http"
 
 	"golang.org/x/crypto/nacl/secretbox"
+
+	"gitlab.com/ocvt/dolabra/utils"
 )
 
 /************************ COOKIES ************************/
@@ -74,10 +76,12 @@ func setCookie(w http.ResponseWriter, name string, payload interface{}) {
 	encodedB64Payload := base64.StdEncoding.EncodeToString(encryptedPayload)
 
 	// Set cookie
+	cookieDomain := utils.GetConfig().CookieDomain
 	cookie := http.Cookie{
-		Name:  name,
-		Value: encodedB64Payload,
-		Path:  "/",
+		Domain: cookieDomain,
+		Name:   name,
+		Value:  encodedB64Payload,
+		Path:   "/",
 	}
 	http.SetCookie(w, &cookie)
 }
