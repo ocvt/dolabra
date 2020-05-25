@@ -194,7 +194,7 @@ func dbGetActiveMemberId(w http.ResponseWriter, subject string) (int, bool) {
 		return 0, false
 	}
 	if !isActive {
-		respondError(w, http.StatusBadRequest, "Member is not active.")
+		respondError(w, http.StatusForbidden, "Member is not active.")
 		return 0, false
 	}
 	return memberId, true

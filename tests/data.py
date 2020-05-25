@@ -193,7 +193,7 @@ trips_types_json = {
     'name': 'Skiing / Snowboarding'
   },
   'TRIP_SNOW_OTHER': {
-    'description': 'Sledding / snowshoeing etc',
+    'description': 'Sledding snowshoeing etc',
     'id': 'TRIP_SNOW_OTHER',
     'name': 'Snow / Other'
   },
