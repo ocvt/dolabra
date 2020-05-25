@@ -7,16 +7,17 @@ from data import *
 # Test methods relating to trips
 
 ENDPOINT = HOST + '/trips'
+NOAUTH = HOST + '/noauth/trips'
 
 def TestGetTripsNone():
-  url = ENDPOINT
+  url = NOAUTH
 
   r = req.get(url)
   assert r.status_code == 200
   assert len(json.loads(r.text)['trips']) == 0
 
   for path in ['/archive', '/archive/1', '/archive/1/2']:
-    url = ENDPOINT + path
+    url = NOAUTH + path
     r = req.get(url)
     assert r.status_code == 200
     assert len(json.loads(r.text)['trips']) == 1
@@ -33,14 +34,14 @@ def TestMyTrips(s):
   assert len(json.loads(r.text)['trips']) == 0
 
 def TestTripsPhotos():
-  url = ENDPOINT + '/photos'
+  url =  NOAUTH + '/photos'
   
   r = req.get(url)
   assert r.status_code == 200
   assert 'images' in json.loads(r.text)
 
 def TestTripsTypes():
-  url = ENDPOINT + '/types'
+  url = NOAUTH + '/types'
   
   r = req.get(url)
   assert r.status_code == 200
@@ -102,11 +103,11 @@ def TestTripsCreate(s):
   assert json.loads(r.text)['tripId'] == 2
 
 def TestTripsPublish(s1, s2):
-  url = ENDPOINT
+  url_noauth = NOAUTH
   url_publish = ENDPOINT + '/1/publish'
   url_signup = ENDPOINT + '/1/signup'
   
-  r = req.get(url)
+  r = req.get(url_noauth)
   assert r.status_code == 200
   assert len(json.loads(r.text)['trips']) == 0
 
@@ -123,6 +124,10 @@ def TestTripsPublish(s1, s2):
 
   r = s1.patch(url_publish)
   assert r.status_code == 204
+
+  r = req.get(url_noauth)
+  assert r.status_code == 200
+  assert len(json.loads(r.text)['trips']) == 1
   
 def TestTripsPostSignup(s1, s2, s3):
   url = ENDPOINT + '/1/signup'
@@ -189,8 +194,8 @@ def TestTripsSignupCancel(s1, s2):
 # TODO Test admin
 
 def TestTripsCancel(s1, s2, s3):
-  url_trips = ENDPOINT
   url = ENDPOINT + '/1/cancel'
+  url_noauth = NOAUTH
 
   r = req.patch(url)
   assert r.status_code == 401
@@ -200,14 +205,14 @@ def TestTripsCancel(s1, s2, s3):
   assert r.status_code == 403
   assert json.loads(r.text) == member_not_officer_tripleader_json
 
-  r = req.get(ENDPOINT)
+  r = req.get(url_noauth)
   assert r.status_code == 200
   assert len(json.loads(r.text)['trips']) == 1
 
   r = s1.patch(url)
   assert r.status_code == 204
 
-  r = req.get(ENDPOINT)
+  r = req.get(url_noauth)
   assert r.status_code == 200
   assert len(json.loads(r.text)['trips']) == 0
   

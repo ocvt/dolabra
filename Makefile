@@ -3,11 +3,11 @@ THIS_FILE := $(lastword $(MAKEFILE_LIST))
 all: build integration-test
 
 full-test: clean integration-test
+	@$(MAKE) -f $(THIS_FILE) clean
 
 integration-test: start
 	sleep 1
 	python3 tests/main.py
-	@$(MAKE) -f $(THIS_FILE) clean
 
 start:
 	./launch.sh

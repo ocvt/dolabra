@@ -44,28 +44,39 @@ func setRouters() {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	// Process JWT is present
-	r.Use(handler.ProcessClientAuth)
 
 	r.Get("/homephotos", handler.GetHomePhotos)
 	r.Get("/news", handler.GetNews)
 	r.Get("/newsArchive", handler.GetNewsArchive)
-	r.Get("/payment/{paymentOption}", handler.GetPayment)
-	r.Post("/payment/redeem", handler.PostPaymentRedeem)
-	r.Post("/payment/paymentSucceeded", handler.PostPaymentSucceeded)
 	r.Post("/quicksignup", handler.PostQuicksignup)
 	r.Post("/unsubscribe/all", handler.PostUnsubscribeAll)
+	r.Route("/noauth", func(r chi.Router) {
+		r.Get("/trips", handler.GetTrips)
+		r.Get("/trips/archive", handler.GetTripsArchive)
+		r.Get("/trips/archive/*", handler.GetTripsArchive)
+		r.Get("/trips/photos", handler.GetAllTripsPhotos)
+		r.Get("/trips/types", handler.GetTripsTypes)
+	})
+
+	r.Route("/payment", func(r chi.Router) {
+		r.Use(handler.ProcessClientAuth)
+		r.Get("/{paymentOption}", handler.GetPayment)
+		r.Post("/redeem", handler.PostPaymentRedeem)
+		r.Post("/paymentSucceeded", handler.PostPaymentSucceeded)
+	})
 
 	r.Route("/auth", func(r chi.Router) {
+		r.Use(handler.ProcessClientAuth)
 		r.Get("/google", handler.GoogleLogin)
 		r.Get("/google/callback", handler.GoogleCallback)
+		r.Get("/logout", handler.GetLogout)
 		if len(os.Getenv("DEV")) > 0 {
 			r.Get("/dev/{subject}", handler.DevLogin)
 		}
 	})
 
-	r.Get("/logout", handler.GetLogout)
 	r.Route("/myaccount", func(r chi.Router) {
+		r.Use(handler.ProcessClientAuth)
 		r.Delete("/", handler.DeleteMyAccountDelete)
 		r.Get("/", handler.GetMyAccount)
 		r.Get("/name", handler.GetMyAccountName)
@@ -79,12 +90,8 @@ func setRouters() {
 	})
 
 	r.Route("/trips", func(r chi.Router) {
-		r.Get("/", handler.GetTrips)
-		r.Get("/archive", handler.GetTripsArchive)
-		r.Get("/archive/*", handler.GetTripsArchive)
+		r.Use(handler.ProcessClientAuth)
 		r.Get("/mytrips", handler.GetTripsMyTrips)
-		r.Get("/photos", handler.GetAllTripsPhotos)
-		r.Get("/types", handler.GetTripsTypes)
 		r.Get("/{tripId}/admin", handler.GetTripsAdmin)
 		r.Get("/{tripId}/photos", handler.GetTripsPhotos)
 		r.Patch("/{tripId}/cancel", handler.PatchTripsCancel)
@@ -106,6 +113,7 @@ func setRouters() {
 	})
 
 	r.Route("/webtools", func(r chi.Router) {
+		r.Use(handler.ProcessClientAuth)
 		r.Use(handler.EnsureOfficer)
 		r.Delete("/news/{tripId}", handler.DeleteWebtoolsNews)
 		r.Delete("/officers/{memberId}", handler.DeleteWebtoolsOfficers)

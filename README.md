@@ -92,3 +92,4 @@ production.
 * Make indentation for long db scans consistent
 * Use db transactions
 * Use proper 1/0 instead of true/false for sqlite
+* Add NotFound & MethodNotAllowed handlers
