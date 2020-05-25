@@ -34,7 +34,7 @@ func setRouters() {
 	// Set middleware
 	r.Use(cors.New(cors.Options{
 		AllowCredentials: true,
-		AllowedMethods:   []string{"GET", "PATCH", "POST"},
+		AllowedMethods:   []string{"DELETE", "GET", "PATCH", "POST"},
 		AllowedOrigins:   []string{"http://cabinet.seaturtle.pw:4000"},
 		Debug:            true,
 	}).Handler)
