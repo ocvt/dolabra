@@ -414,8 +414,9 @@ func GetTripsTypes(w http.ResponseWriter, r *http.Request) {
 		}
 
 		notificationTypes[id] = map[string]string{
-			"typeName":        name,
-			"typeDescription": description,
+			"id":          id,
+			"name":        name,
+			"description": description,
 		}
 	}
 

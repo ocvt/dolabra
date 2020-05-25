@@ -45,30 +45,26 @@ member_on_trip_json = {
 }
 
 notifications_json = {
-  'generalEvents': True,
-  'generalItemsOfInterest': True,
-  'generalItemsForSale': True,
-  'generalMeetings': True,
-  'generalNews': True,
-  'generalOther': True,
-  'tripAlerts': True,
-  'tripBackpacking': True,
-  'tripBiking': True,
-  'tripCamping': True,
-  'tripClimbing': True,
-  'tripDayhike': True,
-  'tripLaserTag': True,
-  'tripOfficialMeeting': True,
-  'tripOther': True,
-  'tripRaftingCanoeingKayaking': True,
-  'tripRoadTrip': True,
-  'tripSkiingSnowboarding': True,
-  'tripSnowOther': True,
-  'tripSocial': True,
-  'tripSpecialEvent': True,
-  'tripTeamSportsMisc': True,
-  'tripWaterOther': True,
-  'tripWorkTrip': True
+  'GENERAL_ANNOUNCEMENTS': True,
+  'GENERAL_MEETINGS': True,
+  'TRIP_ALERTS': True,
+  'TRIP_BACKPACKING': True,
+  'TRIP_BIKING': True,
+  'TRIP_CAMPING': True,
+  'TRIP_CLIMBING': True,
+  'TRIP_DAYHIKE': True,
+  'TRIP_LASER_TAG': True,
+  'TRIP_OFFICIAL_MEETING': True,
+  'TRIP_OTHER': True,
+  'TRIP_RAFTING_CANOEING_KAYAKING': True,
+  'TRIP_ROAD_TRIP': True,
+  'TRIP_SKIING_SNOWBOARDING': True,
+  'TRIP_SNOW_OTHER': True,
+  'TRIP_SOCIAL': True,
+  'TRIP_SPECIAL_EVENT': True,
+  'TRIP_TEAM_SPORTS_MISC': True,
+  'TRIP_WATER_OTHER': True,
+  'TRIP_WORK_TRIP': True
 }
 
 payment_redeem_json = {
@@ -76,7 +72,7 @@ payment_redeem_json = {
 }
 
 signup_status_cancel_json = {
-  "error":"Signup status is CANCEL."
+  'error':'Signup status is CANCEL.'
 }
 
 simple_email_json = {
@@ -126,96 +122,104 @@ trip_signup_json = {
 }
 
 trips_types_json = {
-  'GENERAL_EVENTS': {
-    'typeDescription': 'Gobblerfest, parade, etc',
-    'typeName': 'General Events'
-  },
-  'GENERAL_IMPORTANT': {
-    'typeDescription': 'Important Club Announcements',
-    'typeName': 'General Important Items'
-  },
-  'GENERAL_ITEMS_FOR_SALE': {
-    'typeDescription': 'Items for sale through the club',
-    'typeName': 'General Items for Sale'
+  'GENERAL_ANNOUNCEMENTS': {
+    'description': 'Important Club Announcements',
+    'id': 'GENERAL_ANNOUNCEMENTS',
+    'name': 'Club Updates / News / Events'
   },
   'GENERAL_MEETINGS': {
-    'typeDescription': 'Announcements about Club Meetings',
-    'typeName': 'General Meeting'
+    'description': 'Announcements about Club Meetings',
+    'id': 'GENERAL_MEETINGS',
+    'name': 'Official Meetings'
   },
-  'GENERAL_NEWS': {
-    'typeDescription': 'News from the Club',
-    'typeName': 'General News'
-  },
-  'GENERAL_OTHER': {
-    'typeDescription': 'Miscellaneous Club Announcements',
-    'typeName': 'General Other'
+  'TRIP_ALERTS': {
+    'description': 'Important alerts about your status on trips',
+    'id': 'TRIP_ALERTS',
+    'name': 'Trip Status Alerts'
   },
   'TRIP_BACKPACKING': {
-    'typeDescription': 'Multi day hikes.',
-    'typeName': 'Backpacking'
+    'description': 'Multi day hikes.',
+    'id': 'TRIP_BACKPACKING',
+    'name': 'Backpacking'
   },
   'TRIP_BIKING': {
-    'typeDescription': 'Road or mountain biking.',
-    'typeName': 'Biking'
+    'description': 'Road or mountain biking.',
+    'id': 'TRIP_BIKING',
+    'name': 'Biking'
   },
   'TRIP_CAMPING': {
-    'typeDescription': 'Single overnight trips.',
-    'typeName': 'Camping'
+    'description': 'Single overnight trips.',
+    'id': 'TRIP_CAMPING',
+    'name': 'Camping'
   },
   'TRIP_CLIMBING': {
-    'typeDescription': 'Rock climbing or bouldering.',
-    'typeName': 'Climbing'
+    'description': 'Rock climbing or bouldering.',
+    'id': 'TRIP_CLIMBING',
+    'name': 'Climbing'
   },
   'TRIP_DAYHIKE': {
-    'typeDescription': 'In and out on the same day.',
-    'typeName': 'Dayhike'
+    'description': 'In and out on the same day.',
+    'id': 'TRIP_DAYHIKE',
+    'name': 'Dayhike'
   },
   'TRIP_LASER_TAG': {
-    'typeDescription': 'Laser Tag with LCAT',
-    'typeName': 'Laser Tag'
+    'description': 'Laser Tag with LCAT',
+    'id': 'TRIP_LASER_TAG',
+    'name': 'Laser Tag'
   },
   'TRIP_OFFICIAL_MEETING': {
-    'typeDescription': 'An official OCVT meeting',
-    'typeName': 'Official Meeting'
+    'description': 'An official OCVT meeting',
+    'id': 'TRIP_OFFICIAL_MEETING',
+    'name': 'Official Meeting'
   },
   'TRIP_OTHER': {
-    'typeDescription': 'Anything else not covered. ',
-    'typeName': 'Other'
+    'description': 'Anything else not covered. ',
+    'id': 'TRIP_OTHER',
+    'name': 'Other'
   },
   'TRIP_RAFTING_CANOEING_KAYAKING': {
-    'typeDescription': 'Rafting / Canoeing / Kayaking',
-    'typeName': 'Rafting / Canoeing / Kayaking'
+    'description': 'Rafting / Canoeing / Kayaking',
+    'id': 'TRIP_RAFTING_CANOEING_KAYAKING',
+    'name': 'Rafting / Canoeing / Kayaking'
   },
   'TRIP_ROAD_TRIP': {
-    'typeDescription': 'Just getting out and about, Ex a trip to Busch Gardens or DC etc',
-    'typeName': 'Road Trip'
+    'description': 'Just getting out and about, Ex a trip to Busch Gardens or DC etc',
+    'id': 'TRIP_ROAD_TRIP',
+    'name': 'Road Trip'
   },
   'TRIP_SKIING_SNOWBOARDING': {
-    'typeDescription': 'Skiing / Snowboarding',
-    'typeName': 'Skiing / Snowboarding'
+    'description': 'Skiing / Snowboarding',
+    'id': 'TRIP_SKIING_SNOWBOARDING',
+    'name': 'Skiing / Snowboarding'
   },
   'TRIP_SNOW_OTHER': {
-    'typeDescription': 'Sledding snowshoeing etc',
-    'typeName': 'Snow / Other'
+    'description': 'Sledding / snowshoeing etc',
+    'id': 'TRIP_SNOW_OTHER',
+    'name': 'Snow / Other'
   },
   'TRIP_SOCIAL': {
-    'typeDescription': 'Strictly social, potluck, movie nights, games or other casual gatherings',
-    'typeName': 'Social'
+    'description': 'Strictly social, potluck, movie nights, games or other casual gatherings',
+    'id': 'TRIP_SOCIAL',
+    'name': 'Social'
   },
   'TRIP_SPECIAL_EVENT': {
-    'typeDescription': 'A special event.',
-    'typeName': 'Special Event'
+    'description': 'A special event.',
+    'id': 'TRIP_SPECIAL_EVENT',
+    'name': 'Special Event'
   },
   'TRIP_TEAM_SPORTS_MISC': {
-    'typeDescription': 'Football, basketball ultimate Frisbee etc.',
-    'typeName': 'Team Sports / Misc.'
+    'description': 'Football, basketball ultimate Frisbee etc.',
+    'id': 'TRIP_TEAM_SPORTS_MISC',
+    'name': 'Team Sports / Misc.'
   },
   'TRIP_WATER_OTHER': {
-    'typeDescription': 'Swimming, tubing anything else in the water.',
-    'typeName': 'Water / Other'
+    'description': 'Swimming, tubing anything else in the water.',
+    'id': 'TRIP_WATER_OTHER',
+    'name': 'Water / Other'
   },
   'TRIP_WORK_TRIP': {
-    'typeDescription': 'Trail work or other maintenance.',
-    'typeName': 'Worktrip'
+    'description': 'Trail work or other maintenance.',
+    'id': 'TRIP_WORK_TRIP',
+    'name': 'Worktrip'
   }
 }

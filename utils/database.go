@@ -37,12 +37,9 @@ func insertData(db *sql.DB) {
 	execHelper(db, `
     INSERT OR REPLACE INTO notification_type (id, name, description)
     VALUES
-      ('GENERAL_EVENTS', 'General Events', 'Gobblerfest, parade, etc'),
-      ('GENERAL_IMPORTANT', 'General Important Items', 'Important Club Announcements'),
-      ('GENERAL_ITEMS_FOR_SALE', 'General Items for Sale', 'Items for sale through the club'),
-      ('GENERAL_MEETINGS', 'General Meeting', 'Announcements about Club Meetings'),
-      ('GENERAL_NEWS', 'General News', 'News from the Club'),
-      ('GENERAL_OTHER', 'General Other', 'Miscellaneous Club Announcements'),
+      ('GENERAL_ANNOUNCEMENTS', 'Club Updates / News / Events', 'Important Club Announcements'),
+      ('GENERAL_MEETINGS', 'Official Meetings', 'Announcements about Club Meetings'),
+      ('TRIP_ALERTS', 'Trip Status Alerts', 'Important alerts about your status on trips'),
       ('TRIP_BACKPACKING', 'Backpacking', 'Multi day hikes.'),
       ('TRIP_BIKING', 'Biking', 'Road or mountain biking.'),
       ('TRIP_CAMPING', 'Camping', 'Single overnight trips.'),

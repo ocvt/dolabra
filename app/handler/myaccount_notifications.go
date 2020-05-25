@@ -6,41 +6,33 @@ import (
 )
 
 type notificationsStruct struct {
-	GeneralEvents               bool `json:"generalEvents"`
-	GeneralItemsOfInterest      bool `json:"generalItemsOfInterest"`
-	GeneralItemsForSale         bool `json:"generalItemsForSale"`
-	GeneralMeetings             bool `json:"generalMeetings"`
-	GeneralNews                 bool `json:"generalNews"`
-	GeneralOther                bool `json:"generalOther"`
-	TripAlert                   bool `json:"tripAlerts"`
-	TripBackpacking             bool `json:"tripBackpacking"`
-	TripBiking                  bool `json:"tripBiking"`
-	TripCamping                 bool `json:"tripCamping"`
-	TripClimbing                bool `json:"tripClimbing"`
-	TripDayhike                 bool `json:"tripDayhike"`
-	TripLaserTag                bool `json:"tripLaserTag"`
-	TripOfficialMeeting         bool `json:"tripOfficialMeeting"`
-	TripOther                   bool `json:"tripOther"`
-	TripRaftingCanoeingKayaking bool `json:"tripRaftingCanoeingKayaking"`
-	TripRoadTrip                bool `json:"tripRoadTrip"`
-	TripSkiingSnowboarding      bool `json:"tripSkiingSnowboarding"`
-	TripSnowOther               bool `json:"tripSnowOther"`
-	TripSocial                  bool `json:"tripSocial"`
-	TripSpecialEvent            bool `json:"tripSpecialEvent"`
-	TripTeamSportsMisc          bool `json:"tripTeamSportsMisc"`
-	TripWaterOther              bool `json:"tripWaterOther"`
-	TripWorkTrip                bool `json:"tripWorkTrip"`
+	GeneralAnnouncements        bool `json:"GENERAL_ANNOUNCEMENTS"`
+	GeneralMeetings             bool `json:"GENERAL_MEETINGS"`
+	TripAlerts                  bool `json:"TRIP_ALERTS"`
+	TripBackpacking             bool `json:"TRIP_BACKPACKING"`
+	TripBiking                  bool `json:"TRIP_BIKING"`
+	TripCamping                 bool `json:"TRIP_CAMPING"`
+	TripClimbing                bool `json:"TRIP_CLIMBING"`
+	TripDayhike                 bool `json:"TRIP_DAYHIKE"`
+	TripLaserTag                bool `json:"TRIP_LASER_TAG"`
+	TripOfficialMeeting         bool `json:"TRIP_OFFICIAL_MEETING"`
+	TripOther                   bool `json:"TRIP_OTHER"`
+	TripRaftingCanoeingKayaking bool `json:"TRIP_RAFTING_CANOEING_KAYAKING"`
+	TripRoadTrip                bool `json:"TRIP_ROAD_TRIP"`
+	TripSkiingSnowboarding      bool `json:"TRIP_SKIING_SNOWBOARDING"`
+	TripSnowOther               bool `json:"TRIP_SNOW_OTHER"`
+	TripSocial                  bool `json:"TRIP_SOCIAL"`
+	TripSpecialEvent            bool `json:"TRIP_SPECIAL_EVENT"`
+	TripTeamSportsMisc          bool `json:"TRIP_TEAM_SPORTS_MISC"`
+	TripWaterOther              bool `json:"TRIP_WATER_OTHER"`
+	TripWorkTrip                bool `json:"TRIP_WORK_TRIP"`
 }
 
 func setAllPreferences() *notificationsStruct {
 	return &notificationsStruct{
-		GeneralEvents:               true,
-		GeneralItemsOfInterest:      true,
-		GeneralItemsForSale:         true,
+		GeneralAnnouncements:        true,
 		GeneralMeetings:             true,
-		GeneralNews:                 true,
-		GeneralOther:                true,
-		TripAlert:                   true,
+		TripAlerts:                  true,
 		TripBackpacking:             true,
 		TripBiking:                  true,
 		TripCamping:                 true,
@@ -103,7 +95,7 @@ func PatchMyAccountNotifications(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	notifications.TripAlert = true
+	notifications.TripAlerts = true
 
 	notificationsArr, err := json.Marshal(notifications)
 	if !checkError(w, err) {
