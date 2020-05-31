@@ -71,13 +71,13 @@ func GetWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
-	_, subject, ok := checkLogin(w, r)
+	sub, ok := checkLogin(w, r)
 	if !ok {
 		return
 	}
 
 	// Get memberId, officerId
-	memberId, ok := dbGetActiveMemberId(w, subject)
+	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return
 	}

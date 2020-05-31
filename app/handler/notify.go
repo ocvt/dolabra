@@ -9,13 +9,13 @@ import (
 )
 
 func PostTripsNotifySignup(w http.ResponseWriter, r *http.Request) {
-	_, subject, ok := checkLogin(w, r)
+	sub, ok := checkLogin(w, r)
 	if !ok {
 		return
 	}
 
 	// Get memberId, tripId, signupId
-	memberId, ok := dbGetActiveMemberId(w, subject)
+	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return
 	}
@@ -55,13 +55,13 @@ func PostTripsNotifySignup(w http.ResponseWriter, r *http.Request) {
 }
 
 func PostTripsNotifyGroup(w http.ResponseWriter, r *http.Request) {
-	_, subject, ok := checkLogin(w, r)
+	sub, ok := checkLogin(w, r)
 	if !ok {
 		return
 	}
 
 	// Get memberId, tripId, groupId
-	memberId, ok := dbGetActiveMemberId(w, subject)
+	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return
 	}

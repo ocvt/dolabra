@@ -125,13 +125,13 @@ func GetNewsArchive(w http.ResponseWriter, r *http.Request) {
 }
 
 func PostWebtoolsNews(w http.ResponseWriter, r *http.Request) {
-	_, subject, ok := checkLogin(w, r)
+	sub, ok := checkLogin(w, r)
 	if !ok {
 		return
 	}
 
 	// Get memberId
-	memberId, ok := dbGetActiveMemberId(w, subject)
+	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return
 	}

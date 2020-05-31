@@ -6,8 +6,8 @@ from data import *
 
 # Test methods relating to auth and accounts
 
-def TestAuth(s, subject):
-  url = HOST + '/auth/dev/' + subject
+def TestAuth(s, sub):
+  url = HOST + '/auth/dev/' + sub
   r = s.get(url, allow_redirects=False)
   assert r.status_code == 307
 

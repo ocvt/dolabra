@@ -1,6 +1,6 @@
 FROM golang:1.13-buster
 
-LABEL maintainer="Paul Walko <paul@seaturtle.pw"
+LABEL maintainer="Paul Walko <paul@seaturtle.pw>"
 
 WORKDIR /go/src/app
 COPY . .

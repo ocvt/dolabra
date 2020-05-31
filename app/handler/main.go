@@ -33,7 +33,8 @@ func Initialize() {
 	utils.DBMigrate(db)
 
 	// Generate cookie encryption key
-	_, err = rand.Read(key[:])
+	key = make([]byte, 512)
+	_, err = rand.Read(key)
 	if err != nil {
 		log.Fatal(err)
 	}

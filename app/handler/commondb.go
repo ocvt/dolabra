@@ -28,14 +28,13 @@ func checkError(w http.ResponseWriter, err error) bool {
 	return true
 }
 
-func checkLogin(w http.ResponseWriter, r *http.Request) (string, string, bool) {
-	idp := r.Context().Value("idp")
-	subject := r.Context().Value("subject")
-	if idp == nil || subject == nil {
-		respondError(w, http.StatusUnauthorized, "Member is not authenticated")
-		return "", "", false
+func checkLogin(w http.ResponseWriter, r *http.Request) (string, bool) {
+	sub := r.Context().Value("sub")
+	if sub == nil {
+		respondError(w, http.StatusInternalServerError, "Error getting sub from context")
+		return "", false
 	}
-	return idp.(string), subject.(string), true
+	return sub.(string), true
 }
 
 func checkURLParam(w http.ResponseWriter, r *http.Request, param string) (int, bool) {
@@ -107,8 +106,8 @@ func dbCheckMemberWantsNotification(memberId int, notificationType string) bool 
 	return notificationsStrMap[notificationType]
 }
 
-func dbEnsureMemberDoesNotExist(w http.ResponseWriter, subject string) bool {
-	exists, err := dbIsMemberWithSubject(w, subject)
+func dbEnsureMemberDoesNotExist(w http.ResponseWriter, sub string) bool {
+	exists, err := dbIsMemberWithSub(w, sub)
 	if err == nil && exists {
 		respondError(w, http.StatusBadRequest, "Member is already registered.")
 	}
@@ -119,8 +118,8 @@ func dbEnsureMemberDoesNotExist(w http.ResponseWriter, subject string) bool {
 	return false
 }
 
-func dbEnsureMemberExists(w http.ResponseWriter, subject string) bool {
-	exists, err := dbIsMemberWithSubject(w, subject)
+func dbEnsureMemberExists(w http.ResponseWriter, sub string) bool {
+	exists, err := dbIsMemberWithSub(w, sub)
 	if err != nil {
 		return false
 	}
@@ -183,8 +182,8 @@ func dbExtendMembership(w http.ResponseWriter, memberId int, years int) bool {
 	return true
 }
 
-func dbGetActiveMemberId(w http.ResponseWriter, subject string) (int, bool) {
-	memberId, ok := dbGetMemberId(w, subject)
+func dbGetActiveMemberId(w http.ResponseWriter, sub string) (int, bool) {
+	memberId, ok := dbGetMemberId(w, sub)
 	if !ok {
 		return 0, false
 	}
@@ -231,21 +230,34 @@ func dbGetMemberEmail(w http.ResponseWriter, memberId int) (string, bool) {
 	return email, true
 }
 
-func dbGetMemberId(w http.ResponseWriter, subject string) (int, bool) {
-	if !dbEnsureMemberExists(w, subject) {
+func dbGetMemberId(w http.ResponseWriter, sub string) (int, bool) {
+	if !dbEnsureMemberExists(w, sub) {
 		return 0, false
 	}
 
 	stmt := `
     SELECT member_id
     FROM auth
-    WHERE subject = ?`
+    WHERE sub = ?`
 	var memberId int
-	err := db.QueryRow(stmt, subject).Scan(&memberId)
+	err := db.QueryRow(stmt, sub).Scan(&memberId)
 	if !checkError(w, err) {
 		return 0, false
 	}
 	return memberId, true
+}
+
+func dbGetMemberSubWithIdp(w http.ResponseWriter, idp string, idpSub string) (string, bool) {
+	stmt := `
+    SELECT sub
+    FROM auth
+    WHERE idp = ? AND idp_sub = ?`
+	var sub string
+	err := db.QueryRow(stmt, idp, idpSub).Scan(&sub)
+	if !checkError(w, err) {
+		return "", false
+	}
+	return sub, true
 }
 
 func dbGetMemberName(w http.ResponseWriter, memberId int) (string, bool) {
@@ -338,26 +350,38 @@ func dbIsActiveMember(w http.ResponseWriter, memberId int) (bool, error) {
 	return exists, err
 }
 
+func dbIsMemberWithIdp(w http.ResponseWriter, idp string, idpSub string) (bool, error) {
+	stmt := `
+    SELECT EXISTS (
+      SELECT 1
+      FROM auth
+      WHERE idp = ? AND idp_sub = ?)`
+	var exists bool
+	err := db.QueryRow(stmt, idp, idpSub).Scan(&exists)
+	checkError(w, err)
+	return exists, err
+}
+
 func dbIsMemberWithMemberId(w http.ResponseWriter, memberId int) (bool, error) {
 	stmt := `
     SELECT EXISTS (
       SELECT 1
       FROM auth
-      WHERE member_id = ?)`
+      WHERE member_id > 0 AND member_id = ?)`
 	var exists bool
 	err := db.QueryRow(stmt, memberId).Scan(&exists)
 	checkError(w, err)
 	return exists, err
 }
 
-func dbIsMemberWithSubject(w http.ResponseWriter, subject string) (bool, error) {
+func dbIsMemberWithSub(w http.ResponseWriter, sub string) (bool, error) {
 	stmt := `
     SELECT EXISTS (
       SELECT 1
       FROM auth
-      WHERE subject = ?)`
+      WHERE member_id > 0 AND sub = ?)`
 	var exists bool
-	err := db.QueryRow(stmt, subject).Scan(&exists)
+	err := db.QueryRow(stmt, sub).Scan(&exists)
 	checkError(w, err)
 	return exists, err
 }

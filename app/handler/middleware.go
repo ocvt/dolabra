@@ -2,13 +2,10 @@ package handler
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"net/http"
-	"time"
 
-	"golang.org/x/oauth2"
-	oidcgoogle "google.golang.org/api/oauth2/v2"
-	"google.golang.org/api/option"
+	"github.com/dgrijalva/jwt-go"
 )
 
 func deleteAuthCookies(w http.ResponseWriter) {
@@ -18,13 +15,13 @@ func deleteAuthCookies(w http.ResponseWriter) {
 
 func EnsureOfficer(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, subject, ok := checkLogin(w, r)
+		sub, ok := checkLogin(w, r)
 		if !ok {
 			return
 		}
 
 		// Get memberId
-		memberId, ok := dbGetActiveMemberId(w, subject)
+		memberId, ok := dbGetActiveMemberId(w, sub)
 		if !ok {
 			return
 		}
@@ -40,70 +37,62 @@ func EnsureOfficer(next http.Handler) http.Handler {
 // Get token from cookie and put user id in context
 func ProcessClientAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+		sub, err := func(w http.ResponseWriter, r *http.Request) (string, error) {
+			// Get JWT
+			tokenStr, err := getCookie(r, "DOLABRA_SESSION")
+			// Error indicates cookie does not exist
+			if err != nil {
+				return "", nil
+			}
 
-		var idp map[string]string
-		err := getCookie(r, "idp", &idp)
+			// Parse JWT
+			token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+				}
+				return key, nil
+			})
+			// Issue parsing JWT
+			// Assume will only happen if user intentionally alters JWT
+			if err != nil {
+				fmt.Printf("ONE\n")
+				deleteAuthCookies(w)
+				return "", nil
+			}
+
+			claims, ok := token.Claims.(jwt.MapClaims)
+			// Issue looking up claims or invalid signature
+			// Assume will only happen if user intentionally alters JWT
+			if !ok || !token.Valid {
+				fmt.Printf("TWO\n")
+				deleteAuthCookies(w)
+				return "", nil
+			}
+
+			// Expired
+			err = claims.Valid()
+			if err != nil {
+				fmt.Printf("THREE\n")
+				deleteAuthCookies(w)
+				return "", err
+			}
+
+			return claims["sub"].(string), nil
+		}(w, r)
+		fmt.Printf("SUB: " + sub + "\n")
+
+		// Assume error is due to expired token
 		if err != nil {
-			deleteAuthCookies(w)
+			respondError(w, http.StatusUnauthorized, err.Error())
+			return
 		}
 
-		if idp["idp"] == "DEV" {
-			var token map[string]string
-			err := getCookie(r, "token", &token)
-			if err != nil {
-				deleteAuthCookies(w)
-			} else {
-				ctx = context.WithValue(ctx, "idp", "DEV")
-				ctx = context.WithValue(ctx, "subject", token["token"])
-			}
-		} else if idp["idp"] == "GOOGLE" {
-			// Get token and refresh if expired
-			// https://github.com/golang/oauth2/issues/84#issuecomment-520099526
-			var token oauth2.Token
-			err := getCookie(r, "token", &token)
-			if err != nil {
-				deleteAuthCookies(w)
-			} else {
-				// Refresh token if expired
-				if token.Expiry.Before(time.Now()) {
-					tokenSource := googleOAuthConfig.TokenSource(context.Background(), &token)
-
-					newToken, err := tokenSource.Token()
-					if err != nil {
-						log.Printf("Error getting token from Google: ", err.Error())
-					}
-
-					// Update token if it was refreshed
-					if newToken.AccessToken != token.AccessToken {
-						setCookie(w, "token", *newToken)
-						token = *newToken
-					}
-				}
-
-				// Get user id
-				service, err := oidcgoogle.NewService(
-					context.Background(),
-					option.WithTokenSource(
-						googleOAuthConfig.TokenSource(context.Background(), &token)))
-				if err != nil {
-					deleteAuthCookies(w)
-					respondError(w, http.StatusInternalServerError, err.Error())
-				}
-
-				// Get userinfo response
-				response, err := service.Userinfo.Get().Do()
-				if err != nil {
-					deleteAuthCookies(w)
-					respondError(w, http.StatusInternalServerError, err.Error())
-				}
-
-				// Store user id for later access
-				ctx = context.WithValue(ctx, "idp", "GOOGLE")
-				ctx = context.WithValue(ctx, "subject", response.Id)
-			}
+		if sub == "" {
+			respondError(w, http.StatusUnauthorized, "Member is not authenticated")
+			return
 		}
 
+		ctx := context.WithValue(r.Context(), "sub", sub)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

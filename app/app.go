@@ -55,6 +55,7 @@ func setRouters() {
 		r.Get("/trips/archive", handler.GetTripsArchive)
 		r.Get("/trips/archive/*", handler.GetTripsArchive)
 		r.Get("/trips/photos", handler.GetAllTripsPhotos)
+		r.Get("/trips/{tripId}/photos", handler.GetTripsPhotos)
 		r.Get("/trips/types", handler.GetTripsTypes)
 	})
 
@@ -66,12 +67,11 @@ func setRouters() {
 	})
 
 	r.Route("/auth", func(r chi.Router) {
-		r.Use(handler.ProcessClientAuth)
 		r.Get("/google", handler.GoogleLogin)
 		r.Get("/google/callback", handler.GoogleCallback)
 		r.Get("/logout", handler.GetLogout)
 		if len(os.Getenv("DEV")) > 0 {
-			r.Get("/dev/{subject}", handler.DevLogin)
+			r.Get("/dev/{sub}", handler.DevLogin)
 		}
 	})
 
@@ -93,7 +93,6 @@ func setRouters() {
 		r.Use(handler.ProcessClientAuth)
 		r.Get("/mytrips", handler.GetTripsMyTrips)
 		r.Get("/{tripId}/admin", handler.GetTripsAdmin)
-		r.Get("/{tripId}/photos", handler.GetTripsPhotos)
 		r.Patch("/{tripId}/cancel", handler.PatchTripsCancel)
 		r.Patch("/{tripId}/publish", handler.PatchTripsPublish)
 		r.Post("/{tripId}/notify/signup/{signupId}", handler.PostTripsNotifySignup)

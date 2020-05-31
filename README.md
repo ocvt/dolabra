@@ -38,8 +38,8 @@ is being sent by a specific person.
 
 ### Dev Mode
 
-The `DEV` variable enables the `/auth/dev/{subject}` path allowing scripts to
-easily send in a custom `subject` (auth identifier) without going through a
+The `DEV` variable enables the `/auth/dev/{sub}` path allowing scripts to
+easily send in a custom `sub` (auth identifier) without going through a
 proper idp.
 
 ### Environmental variables

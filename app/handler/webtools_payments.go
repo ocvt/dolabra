@@ -120,13 +120,13 @@ func PatchWebtoolsPaymentsCompleted(w http.ResponseWriter, r *http.Request) {
 }
 
 func PostWebtoolsGenerateCode(w http.ResponseWriter, r *http.Request) {
-	_, subject, ok := checkLogin(w, r)
+	sub, ok := checkLogin(w, r)
 	if !ok {
 		return
 	}
 
 	// Get memberId
-	memberId, ok := dbGetActiveMemberId(w, subject)
+	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return
 	}
@@ -179,13 +179,13 @@ func PostWebtoolsGenerateCode(w http.ResponseWriter, r *http.Request) {
 }
 
 func PostWebtoolsPayments(w http.ResponseWriter, r *http.Request) {
-	_, subject, ok := checkLogin(w, r)
+	sub, ok := checkLogin(w, r)
 	if !ok {
 		return
 	}
 
 	// Get officerId, memberId
-	memberId, ok := dbGetActiveMemberId(w, subject)
+	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return
 	}

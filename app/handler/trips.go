@@ -142,13 +142,13 @@ func GetTrips(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTripsAdmin(w http.ResponseWriter, r *http.Request) {
-	_, subject, ok := checkLogin(w, r)
+	sub, ok := checkLogin(w, r)
 	if !ok {
 		return
 	}
 
 	// Get member id and trip id
-	memberId, ok := dbGetActiveMemberId(w, subject)
+	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return
 	}
@@ -328,13 +328,13 @@ func GetTripsArchive(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTripsMyTrips(w http.ResponseWriter, r *http.Request) {
-	_, subject, ok := checkLogin(w, r)
+	sub, ok := checkLogin(w, r)
 	if !ok {
 		return
 	}
 
 	// Get member id and trip id
-	memberId, ok := dbGetActiveMemberId(w, subject)
+	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return
 	}
@@ -429,13 +429,13 @@ func GetTripsTypes(w http.ResponseWriter, r *http.Request) {
 }
 
 func PatchTripsCancel(w http.ResponseWriter, r *http.Request) {
-	_, subject, ok := checkLogin(w, r)
+	sub, ok := checkLogin(w, r)
 	if !ok {
 		return
 	}
 
 	// Get member id, trip id
-	memberId, ok := dbGetActiveMemberId(w, subject)
+	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return
 	}
@@ -488,13 +488,13 @@ func PatchTripsCancel(w http.ResponseWriter, r *http.Request) {
 }
 
 func PatchTripsPublish(w http.ResponseWriter, r *http.Request) {
-	_, subject, ok := checkLogin(w, r)
+	sub, ok := checkLogin(w, r)
 	if !ok {
 		return
 	}
 
 	// Get member id, trip id
-	memberId, ok := dbGetActiveMemberId(w, subject)
+	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return
 	}
@@ -526,13 +526,13 @@ func PatchTripsPublish(w http.ResponseWriter, r *http.Request) {
 }
 
 func PostTrips(w http.ResponseWriter, r *http.Request) {
-	_, subject, ok := checkLogin(w, r)
+	sub, ok := checkLogin(w, r)
 	if !ok {
 		return
 	}
 
 	// Get member id
-	memberId, ok := dbGetActiveMemberId(w, subject)
+	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return
 	}

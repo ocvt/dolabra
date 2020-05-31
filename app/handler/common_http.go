@@ -1,20 +1,34 @@
 package handler
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
-	"golang.org/x/crypto/nacl/secretbox"
+	"github.com/dgrijalva/jwt-go"
 
 	"gitlab.com/ocvt/dolabra/utils"
 )
 
 /************************ COOKIES ************************/
-// Key for encrypting cookies
-var key [32]byte
+// Key for signing JWTs
+var key []byte
+
+// Create JWT with given sub
+func createJWT(w http.ResponseWriter, sub string) (string, error) {
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+		ExpiresAt: time.Now().UTC().Add(time.Hour * 3).Unix(),
+		Subject:   sub,
+	})
+
+	tokenStr, err := token.SignedString(key)
+	if err != nil {
+		return "", err
+	}
+
+	return tokenStr, nil
+}
 
 // Delete Cookie
 func deleteCookie(w http.ResponseWriter, name string) {
@@ -30,60 +44,21 @@ func deleteCookie(w http.ResponseWriter, name string) {
 }
 
 // Get cookie and decrypt
-func getCookie(r *http.Request, name string, payload interface{}) error {
-	payloadCookie, err := r.Cookie(name)
+func getCookie(r *http.Request, name string) (string, error) {
+	cookie, err := r.Cookie(name)
 	if err != nil {
-		return err
+		return "", err
 	}
-
-	encodedB64Payload := payloadCookie.Value
-	encryptedPayload, err := base64.StdEncoding.DecodeString(encodedB64Payload)
-	if err != nil {
-		return err
-	}
-	if len(encryptedPayload) < 24 {
-		return &errInvalidPayload{"Payload is invalid length"}
-	}
-
-	// Get nonce and decrypt
-	var nonce [24]byte
-	copy(nonce[:], encryptedPayload[:24])
-	encodedJSONPayload, ok := secretbox.Open(nil, encryptedPayload[24:], &nonce, &key)
-	if !ok {
-		return &errInvalidPayload{"Payload failed to decrypt"}
-	}
-
-	err = json.Unmarshal(encodedJSONPayload, payload)
-	if err != nil {
-		log.Fatal("Failed to unmarshal decrypted payload", err)
-	}
-
-	return nil
+	return cookie.Value, nil
 }
 
-// Set encrypted cookie
-func setCookie(w http.ResponseWriter, name string, payload interface{}) {
-	encodedJSONPayload, err := json.Marshal(payload)
-	if err != nil {
-		log.Fatal("Failed to marshal payload", err)
-	}
-
-	// Create nonce, append to front, and encrypt
-	var nonce [24]byte
-	_, err = rand.Read(nonce[:])
-	if err != nil {
-		log.Fatal("Failed to generate nonce", err)
-	}
-	encryptedPayload := secretbox.Seal(nonce[:], encodedJSONPayload, &nonce, &key)
-	encodedB64Payload := base64.StdEncoding.EncodeToString(encryptedPayload)
-
-	// Set cookie
+func setCookie(w http.ResponseWriter, name string, payload string) {
 	cookieDomain := utils.GetConfig().CookieDomain
 	cookie := http.Cookie{
 		Domain: cookieDomain,
 		Name:   name,
 		Path:   "/",
-		Value:  encodedB64Payload,
+		Value:  payload,
 	}
 	http.SetCookie(w, &cookie)
 }

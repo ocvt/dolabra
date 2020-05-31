@@ -34,13 +34,13 @@ type emergencyStruct struct {
 }
 
 func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
-	_, subject, ok := checkLogin(w, r)
+	sub, ok := checkLogin(w, r)
 	if !ok {
 		return
 	}
 
 	// Get memberId
-	memberId, ok := dbGetActiveMemberId(w, subject)
+	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return
 	}
@@ -88,8 +88,9 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
 	stmt = `
     UPDATE auth
     SET
-      type = '',
-      subject = ''
+			sub = '',
+			idp = '',
+			idp_sub = ''
     WHERE member_id = ?`
 	_, err = db.Exec(stmt, memberId)
 	if !checkError(w, err) {
@@ -128,13 +129,13 @@ func GetLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetMyAccount(w http.ResponseWriter, r *http.Request) {
-	_, subject, ok := checkLogin(w, r)
+	sub, ok := checkLogin(w, r)
 	if !ok {
 		return
 	}
 
 	// Get memberId
-	memberId, ok := dbGetActiveMemberId(w, subject)
+	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return
 	}
@@ -184,13 +185,13 @@ func GetMyAccount(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetMyAccountName(w http.ResponseWriter, r *http.Request) {
-	_, subject, ok := checkLogin(w, r)
+	sub, ok := checkLogin(w, r)
 	if !ok {
 		return
 	}
 
 	// Get memberId
-	memberId, ok := dbGetActiveMemberId(w, subject)
+	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return
 	}
@@ -209,13 +210,13 @@ func GetMyAccountName(w http.ResponseWriter, r *http.Request) {
 }
 
 func PatchMyAccount(w http.ResponseWriter, r *http.Request) {
-	_, subject, ok := checkLogin(w, r)
+	sub, ok := checkLogin(w, r)
 	if !ok {
 		return
 	}
 
 	// Get memberId
-	memberId, ok := dbGetActiveMemberId(w, subject)
+	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return
 	}
@@ -261,13 +262,13 @@ func PatchMyAccount(w http.ResponseWriter, r *http.Request) {
 }
 
 func PatchMyAccountEmergency(w http.ResponseWriter, r *http.Request) {
-	_, subject, ok := checkLogin(w, r)
+	sub, ok := checkLogin(w, r)
 	if !ok {
 		return
 	}
 
 	// Get memberId
-	memberId, ok := dbGetActiveMemberId(w, subject)
+	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return
 	}
@@ -302,13 +303,13 @@ func PatchMyAccountEmergency(w http.ResponseWriter, r *http.Request) {
 }
 
 func PatchMyAccountDeactivate(w http.ResponseWriter, r *http.Request) {
-	_, subject, ok := checkLogin(w, r)
+	sub, ok := checkLogin(w, r)
 	if !ok {
 		return
 	}
 
 	// Get memberId
-	memberId, ok := dbGetActiveMemberId(w, subject)
+	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return
 	}
@@ -326,13 +327,13 @@ func PatchMyAccountDeactivate(w http.ResponseWriter, r *http.Request) {
 }
 
 func PatchMyAccountReactivate(w http.ResponseWriter, r *http.Request) {
-	_, subject, ok := checkLogin(w, r)
+	sub, ok := checkLogin(w, r)
 	if !ok {
 		return
 	}
 
 	// Get memberId
-	memberId, ok := dbGetMemberId(w, subject)
+	memberId, ok := dbGetMemberId(w, sub)
 	if !ok {
 		return
 	}
@@ -350,7 +351,7 @@ func PatchMyAccountReactivate(w http.ResponseWriter, r *http.Request) {
 }
 
 func PostMyAccount(w http.ResponseWriter, r *http.Request) {
-	idp, subject, ok := checkLogin(w, r)
+	sub, ok := checkLogin(w, r)
 	if !ok {
 		return
 	}
@@ -366,7 +367,7 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Ensure user doesn't already exist
-	if !dbEnsureMemberDoesNotExist(w, subject) {
+	if !dbEnsureMemberDoesNotExist(w, sub) {
 		return
 	}
 
@@ -431,12 +432,10 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 
 	// Insert new auth
 	stmt = `
-    INSERT INTO auth (
-      member_id,
-      type,
-      subject)
-    VALUES (?, ?, ?)`
-	_, err = db.Exec(stmt, memberId, idp, subject)
+		UPDATE auth
+			SET member_id = ?
+    WHERE sub = ?`
+	_, err = db.Exec(stmt, memberId, sub)
 	if !checkError(w, err) {
 		return
 	}

@@ -9,11 +9,11 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	oidcgoogle "google.golang.org/api/oauth2/v2"
+	"google.golang.org/api/option"
 
 	"gitlab.com/ocvt/dolabra/utils"
 )
 
-// Google OAuth config
 var googleOAuthConfig = &oauth2.Config{
 	ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 	ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
@@ -22,11 +22,63 @@ var googleOAuthConfig = &oauth2.Config{
 	Endpoint:     google.Endpoint,
 }
 
-func DevLogin(w http.ResponseWriter, r *http.Request) {
-	subject := chi.URLParam(r, "subject")
+const SUB_LENGTH = 16
 
-	setCookie(w, "idp", map[string]string{"idp": "DEV"})
-	setCookie(w, "token", map[string]string{"token": subject})
+/* HELPERS */
+func processIdp(w http.ResponseWriter, idp string, idpSub string) bool {
+	exists, err := dbIsMemberWithIdp(w, idp, idpSub)
+	if err != nil {
+		return false
+	}
+
+	var sub string
+	var ok bool
+	if exists {
+		sub, ok = dbGetMemberSubWithIdp(w, idp, idpSub)
+		if !ok {
+			return false
+		}
+	} else {
+		exists := true
+		for exists {
+			sub = generateCode(SUB_LENGTH)
+			exists, err = dbIsMemberWithSub(w, sub)
+			if err != nil {
+				return false
+			}
+		}
+
+		stmt := `
+      INSERT INTO auth(
+        member_id,
+        sub,
+        idp,
+        idp_sub)
+		  VALUES (0, ?, ?, ?)`
+		_, err = db.Exec(stmt, sub, idp, idpSub)
+		if !checkError(w, err) {
+			return false
+		}
+	}
+
+	token, err := createJWT(w, sub)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return false
+	}
+
+	setCookie(w, "DOLABRA_SESSION", token)
+	return true
+}
+
+/* MAIN FUNCTIONS */
+func DevLogin(w http.ResponseWriter, r *http.Request) {
+	idpSub := chi.URLParam(r, "sub")
+
+	ok := processIdp(w, "DEV", idpSub)
+	if !ok {
+		return
+	}
 
 	http.Redirect(w, r, r.URL.Query().Get("state"), http.StatusTemporaryRedirect)
 }
@@ -38,15 +90,33 @@ func GoogleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func GoogleCallback(w http.ResponseWriter, r *http.Request) {
-	// Get token and put in cookie
-	token, err := googleOAuthConfig.Exchange(context.Background(), r.FormValue("code"))
+	// Get access token
+	accessToken, err := googleOAuthConfig.Exchange(context.Background(), r.FormValue("code"))
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	setCookie(w, "idp", map[string]string{"idp": "GOOGLE"})
-	setCookie(w, "token", token)
+	// Create oauth2 service from access token
+	service, err := oidcgoogle.NewService(context.Background(), option.WithTokenSource(googleOAuthConfig.TokenSource(context.Background(), accessToken)))
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Get userinfo sub claim
+	response, err := service.Userinfo.Get().Do()
+	if err != nil {
+		deleteAuthCookies(w)
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Process sub
+	ok := processIdp(w, "GOOGLE", response.Id)
+	if !ok {
+		return
+	}
 
 	http.Redirect(w, r, r.URL.Query().Get("state"), http.StatusTemporaryRedirect)
 }

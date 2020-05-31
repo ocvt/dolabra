@@ -60,7 +60,7 @@ def TestTripsAdmin(s):
 
 # TODO test with photos
 def TestTripPhotos():
-  url = ENDPOINT + '/10000/photos'
+  url = NOAUTH + '/10000/photos'
   
   r = req.get(url)
   assert r.status_code == 200
