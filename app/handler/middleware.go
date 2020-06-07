@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/dgrijalva/jwt-go"
@@ -55,7 +54,6 @@ func ProcessClientAuth(next http.Handler) http.Handler {
 			// Issue parsing JWT
 			// Assume will only happen if user intentionally alters JWT
 			if err != nil {
-				fmt.Printf("ONE\n")
 				deleteAuthCookies(w)
 				return "", nil
 			}
@@ -64,7 +62,6 @@ func ProcessClientAuth(next http.Handler) http.Handler {
 			// Issue looking up claims or invalid signature
 			// Assume will only happen if user intentionally alters JWT
 			if !ok || !token.Valid {
-				fmt.Printf("TWO\n")
 				deleteAuthCookies(w)
 				return "", nil
 			}
@@ -72,14 +69,12 @@ func ProcessClientAuth(next http.Handler) http.Handler {
 			// Expired
 			err = claims.Valid()
 			if err != nil {
-				fmt.Printf("THREE\n")
 				deleteAuthCookies(w)
 				return "", err
 			}
 
 			return claims["sub"].(string), nil
 		}(w, r)
-		fmt.Printf("SUB: " + sub + "\n")
 
 		// Assume error is due to expired token
 		if err != nil {
