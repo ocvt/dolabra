@@ -12,17 +12,12 @@ NOAUTH = HOST + '/noauth/trips'
 def TestGetTripsNone():
   url = NOAUTH
 
-  r = req.get(url)
-  assert r.status_code == 200
-  assert len(json.loads(r.text)['trips']) == 0
-
-  for path in ['/archive', '/archive/1', '/archive/1/2']:
+  for path in ['', '/archive', '/archive/1', '/archive/1/2']:
     url = NOAUTH + path
     r = req.get(url)
     assert r.status_code == 200
-    assert len(json.loads(r.text)['trips']) == 1
+    assert len(json.loads(r.text)['trips']) == 0
 
-# TODO trip creation
 def TestMyTrips(s):
   url = ENDPOINT + '/mytrips'
   
@@ -107,6 +102,22 @@ def TestTripsCreate(s):
   r = s.post(url, json=trip_json)
   assert r.status_code == 201
   assert json.loads(r.text)['tripId'] == 2
+
+  url = NOAUTH
+  r = req.get(url)
+  assert r.status_code == 200
+  assert len(json.loads(r.text)['trips']) == 0
+
+  url = NOAUTH + '/archive'
+  r = req.get(url)
+  assert r.status_code == 200
+  assert len(json.loads(r.text)['trips']) == 2
+
+  for path in ['/archive/1', '/archive/1/2']:
+    url = NOAUTH + path
+    r = req.get(url)
+    assert r.status_code == 200
+    assert len(json.loads(r.text)['trips']) == 1
 
 def TestTripsPublish(s1, s2):
   url_noauth = NOAUTH
