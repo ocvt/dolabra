@@ -10,9 +10,11 @@ ENDPOINT = HOST + '/trips'
 NOAUTH = HOST + '/noauth/trips'
 
 def TestGetTripsNone():
-  url = NOAUTH
+  url = NOAUTH + '/archive/1'
+  r = req.get(url)
+  assert r.status_code == 404
 
-  for path in ['', '/archive', '/archive/1', '/archive/1/2']:
+  for path in ['', '/archive', '/archive/1/2']:
     url = NOAUTH + path
     r = req.get(url)
     assert r.status_code == 200
@@ -113,7 +115,7 @@ def TestTripsCreate(s):
   assert r.status_code == 200
   assert len(json.loads(r.text)['trips']) == 2
 
-  for path in ['/archive/1', '/archive/1/2']:
+  for path in ['/archive/1/2']:
     url = NOAUTH + path
     r = req.get(url)
     assert r.status_code == 200

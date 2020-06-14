@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/go-chi/chi"
 )
@@ -452,24 +451,18 @@ func GetTripsAdmin(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string][]*tripSignupStruct{"tripSignups": tripSignups})
 }
 
-func GetTripsArchive(w http.ResponseWriter, r *http.Request) {
-	path := chi.URLParam(r, "*")
-	pathVars := strings.Split(path, "/")
+func GetTripsArchiveDefault(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, r.URL.RequestURI()+"/100000/20", http.StatusPermanentRedirect)
+}
 
-	tripStartId := MAX_INT
-	tripsPerPage := 20
-	// Process dynamic path variables
-	if len(pathVars) == 1 || len(pathVars) == 2 {
-		i, _ := strconv.Atoi(pathVars[0])
-		if i != 0 {
-			tripStartId = i
-		}
+func GetTripsArchive(w http.ResponseWriter, r *http.Request) {
+	tripStartId, ok := checkURLParam(w, r, "startId")
+	if !ok {
+		return
 	}
-	if len(pathVars) == 2 {
-		i, _ := strconv.Atoi(pathVars[1])
-		if i != 0 {
-			tripsPerPage = i
-		}
+	tripsPerPage, ok := checkURLParam(w, r, "perPage")
+	if !ok {
+		return
 	}
 
 	stmt := `

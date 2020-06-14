@@ -53,8 +53,8 @@ func setRouters() {
 	r.Route("/noauth", func(r chi.Router) {
 		r.Get("/trips", handler.GetTripsSummary)
 		r.Get("/trips/{tripId}", handler.GetTripSummary)
-		r.Get("/trips/archive", handler.GetTripsArchive)
-		r.Get("/trips/archive/*", handler.GetTripsArchive)
+		r.Get("/trips/archive", handler.GetTripsArchiveDefault)
+		r.Get("/trips/archive/{startId}/{perPage}", handler.GetTripsArchive)
 		r.Get("/trips/photos", handler.GetAllTripsPhotos)
 		r.Get("/trips/{tripId}/photos", handler.GetTripsPhotos)
 		r.Get("/trips/types", handler.GetTripsTypes)
