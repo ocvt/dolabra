@@ -94,6 +94,12 @@ def TestTripsCreate(s):
   r = s.post(url)
   assert r.status_code == 400
 
+  tmp = trip_json['notificationTypeId']
+  trip_json['notificationTypeId'] = 'NOT_A_VALID_TYPE'
+  r = s.post(url, json=trip_json)
+  assert r.status_code == 500
+
+  trip_json['notificationTypeId'] = tmp
   r = s.post(url, json=trip_json)
   assert r.status_code == 201
   assert json.loads(r.text)['tripId'] == 1

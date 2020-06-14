@@ -37,6 +37,7 @@ func checkLogin(w http.ResponseWriter, r *http.Request) (string, bool) {
 	return sub.(string), true
 }
 
+// TODO MAKE CLEAR THIS RETURNS INT
 func checkURLParam(w http.ResponseWriter, r *http.Request, param string) (int, bool) {
 	paramInt, err := strconv.Atoi(chi.URLParam(r, param))
 	if err != nil {
@@ -108,14 +109,16 @@ func dbCheckMemberWantsNotification(memberId int, notificationType string) bool 
 
 func dbEnsureMemberDoesNotExist(w http.ResponseWriter, sub string) bool {
 	exists, err := dbIsMemberWithSub(w, sub)
-	if err == nil && exists {
-		respondError(w, http.StatusBadRequest, "Member is already registered.")
+	if err != nil {
+		return false
 	}
 
-	if err == nil {
-		return !exists
+	if exists {
+		respondError(w, http.StatusBadRequest, "Member is already registered.")
+		return false
 	}
-	return false
+
+	return true
 }
 
 func dbEnsureMemberExists(w http.ResponseWriter, sub string) bool {
@@ -167,6 +170,20 @@ func dbEnsureOfficer(w http.ResponseWriter, memberId int) bool {
 		respondError(w, http.StatusBadRequest, "Must be officer.")
 		return false
 	}
+	return true
+}
+
+func dbEnsureTripExists(w http.ResponseWriter, tripId int) bool {
+	exists, err := dbIsTrip(w, tripId)
+	if err != nil {
+		return false
+	}
+
+	if !exists {
+		respondError(w, http.StatusNotFound, "Trip does not exist.")
+		return false
+	}
+
 	return true
 }
 

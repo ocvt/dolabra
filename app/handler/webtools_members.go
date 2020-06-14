@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-type tripSummaryStruct struct {
+type tripName struct {
 	Id   int `json:"id"`
 	Name int `json:"name"`
 }
@@ -87,10 +87,10 @@ func GetWebtoolsMembersTrips(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var trips = []*tripSummaryStruct{}
+	var trips = []*tripName{}
 	i := 0
 	for rows.Next() {
-		trips = append(trips, &tripSummaryStruct{})
+		trips = append(trips, &tripName{})
 		err = rows.Scan(
 			&trips[i].Id,
 			&trips[i].Name)
@@ -105,7 +105,7 @@ func GetWebtoolsMembersTrips(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJSON(w, http.StatusOK, map[string][]*tripSummaryStruct{"trips": trips})
+	respondJSON(w, http.StatusOK, map[string][]*tripName{"trips": trips})
 }
 
 func GetWebtoolsMembersAttendance(w http.ResponseWriter, r *http.Request) {
@@ -127,10 +127,10 @@ func GetWebtoolsMembersAttendance(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var trips = []*tripSummaryStruct{}
+	var trips = []*tripName{}
 	i := 0
 	for rows.Next() {
-		trips = append(trips, &tripSummaryStruct{})
+		trips = append(trips, &tripName{})
 		err = rows.Scan(
 			&trips[i].Id,
 			&trips[i].Name)
@@ -145,7 +145,7 @@ func GetWebtoolsMembersAttendance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJSON(w, http.StatusOK, map[string][]*tripSummaryStruct{"trips": trips})
+	respondJSON(w, http.StatusOK, map[string][]*tripName{"trips": trips})
 }
 
 func PatchWebtoolsDuesGrant(w http.ResponseWriter, r *http.Request) {

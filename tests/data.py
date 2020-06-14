@@ -87,7 +87,7 @@ trip_json = {
   'costDescription': '',
   'maxPeople': 10,
   'name': 'test trip',
-  'tripTypeId': 'TR02',
+  'notificationTypeId': 'TRIP_BIKING',
   'startDatetime': '2020-12-24T15:52:01Z',
   'endDatetime': '2020-12-30T15:52:01Z',
   'summary': 'hello world',

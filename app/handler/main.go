@@ -20,7 +20,7 @@ func Initialize() {
 
 	// Setup db
 	config := utils.GetConfig()
-	dbURI := fmt.Sprintf("./data/%s.sqlite3", config.DBName)
+	dbURI := fmt.Sprintf("./data/%s.sqlite3?_foreign_keys=1", config.DBName)
 	var err error
 	db, err = sql.Open("sqlite3", dbURI)
 	if err != nil {

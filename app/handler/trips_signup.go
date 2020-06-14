@@ -6,6 +6,36 @@ import (
 	"strconv"
 )
 
+// TODO may use in the future to get statuses from trip overview page
+//func GetTripsMyStatus(w http.ResponseWriter, r *http.Request) {
+//	sub, ok := checkLogin(w, r)
+//	if !ok {
+//		return
+//	}
+//
+//	// Get memberId, tripId
+//	memberId, ok := dbGetActiveMemberId(w, sub)
+//	if !ok {
+//		return
+//	}
+//	tripId, ok := checkURLParam(w, r, "tripId")
+//	if !ok {
+//		return
+//	}
+//
+//	// Permissions
+//	signedUp, err := dbIsMemberOnTrip(w, tripId, memberId)
+//	if err != nil {
+//		return
+//	}
+//	tripLeader, err := dbIsTripLeader(w, tripId, memberId)
+//	if err != nil {
+//		return
+//	}
+//
+//	respondJSON(w, http.StatusOK, map[string]bool{"signedUp": signedUp, "tripLeader": tripLeader})
+//}
+
 func GetTripsSignup(w http.ResponseWriter, r *http.Request) {
 	sub, ok := checkLogin(w, r)
 	if !ok {
@@ -207,20 +237,20 @@ func PatchTripsSignupCancel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Notify member
-	memberIdStr := strconv.Itoa(memberId)
-	tripName, ok := dbGetTripName(w, tripId)
-	if !ok {
-		return
-	}
-	emailSubject :=
-		"You have canceled your signup for trip " + tripName
-	emailBody :=
-		"This email is a notification that you have canceled your signup on " +
-			"trip " + tripName + ". Note, you cannot signup again after you have " +
-			"canceled."
-	if !stageEmail(w, memberIdStr, tripId, 0, emailSubject, emailBody) {
-		return
-	}
+	//	memberIdStr := strconv.Itoa(memberId)
+	//	tripName, ok := dbGetTripName(w, tripId)
+	//	if !ok {
+	//		return
+	//	}
+	//	emailSubject :=
+	//		"You have canceled your signup for trip " + tripName
+	//	emailBody :=
+	//		"This email is a notification that you have canceled your signup on " +
+	//			"trip " + tripName + ". Note, you cannot signup again after you have " +
+	//			"canceled."
+	//	if !stageEmail(w, memberIdStr, tripId, 0, emailSubject, emailBody) {
+	//		return
+	//	}
 
 	respondJSON(w, http.StatusNoContent, nil)
 }
