@@ -95,7 +95,7 @@ trip_json = {
   'location': 'i dunno',
   'locationDirections': 'go straight',
   'meetupLocation': 'idk surge',
-  'distance': '2.6',
+  'distance': 2.6,
   'difficulty': 5,
   'difficultyDescription': 'very very hard',
   'instructions': 'bring all this shit',

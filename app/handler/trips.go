@@ -22,27 +22,27 @@ type tripStruct struct {
 	ReminderSent   bool   `json:"reminderSent,omitempty"`
 	MemberName     string `json:"memberName,omitempty"`
 	/* Required fields for creating a trip, used for both methods */
-	MembersOnly           bool   `json:"membersOnly"`
-	AllowLateSignups      bool   `json:"allowLateSignups"`
-	DrivingRequired       bool   `json:"drivingRequired"`
-	HasCost               bool   `json:"hasCost"`
-	CostDescription       string `json:"costDescription"`
-	MaxPeople             int    `json:"maxPeople"`
-	Name                  string `json:"name"`
-	NotificationTypeId    string `json:"notificationTypeId"`
-	StartDatetime         string `json:"startDatetime"`
-	EndDatetime           string `json:"endDatetime"`
-	Summary               string `json:"summary"`
-	Description           string `json:"description"`
-	Location              string `json:"location"`
-	LocationDirections    string `json:"locationDirections"`
-	MeetupLocation        string `json:"MeetupLocation"`
-	Distance              string `json:"distance"`
-	Difficulty            int    `json:"difficulty"`
-	DifficultyDescription string `json:"difficultyDescription"`
-	Instructions          string `json:"instructions"`
-	PetsAllowed           bool   `json:"petsAllowed"`
-	PetsDescription       string `json:"petsDescription"`
+	MembersOnly           bool    `json:"membersOnly"`
+	AllowLateSignups      bool    `json:"allowLateSignups"`
+	DrivingRequired       bool    `json:"drivingRequired"`
+	HasCost               bool    `json:"hasCost"`
+	CostDescription       string  `json:"costDescription"`
+	MaxPeople             int     `json:"maxPeople"`
+	Name                  string  `json:"name"`
+	NotificationTypeId    string  `json:"notificationTypeId"`
+	StartDatetime         string  `json:"startDatetime"`
+	EndDatetime           string  `json:"endDatetime"`
+	Summary               string  `json:"summary"`
+	Description           string  `json:"description"`
+	Location              string  `json:"location"`
+	LocationDirections    string  `json:"locationDirections"`
+	MeetupLocation        string  `json:"MeetupLocation"`
+	Distance              float32 `json:"distance"`
+	Difficulty            int     `json:"difficulty"`
+	DifficultyDescription string  `json:"difficultyDescription"`
+	Instructions          string  `json:"instructions"`
+	PetsAllowed           bool    `json:"petsAllowed"`
+	PetsDescription       string  `json:"petsDescription"`
 }
 
 /*
