@@ -118,7 +118,6 @@ func GetTrip(w http.ResponseWriter, r *http.Request) {
 	// TODO ENSURE
 	// - IS MEMBER
 	// - IS ON TRIP
-	// - NOT BOOTED
 	tripIdStr := chi.URLParam(r, "tripId")
 	tripId, err := strconv.Atoi(tripIdStr)
 	if err != nil {
@@ -468,7 +467,7 @@ func GetTripsArchive(w http.ResponseWriter, r *http.Request) {
 	stmt := `
     SELECT *
     FROM trip
-    WHERE id > 0 AND id <= ?
+    WHERE id > 0 AND id <= ? AND publish = true
     ORDER BY datetime(start_datetime) DESC
     LIMIT ?`
 	rows, err := db.Query(stmt, tripStartId, tripsPerPage)
@@ -654,6 +653,10 @@ func PatchTripsCancel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !dbEnsureTripExists(w, tripId) {
+		return
+	}
+
 	// Permissions
 	if !dbEnsureOfficerOrTripLeader(w, tripId, memberId) ||
 		!dbEnsureTripNotCanceled(w, tripId) {
@@ -710,6 +713,10 @@ func PatchTripsPublish(w http.ResponseWriter, r *http.Request) {
 	}
 	tripId, ok := checkURLParam(w, r, "tripId")
 	if !ok {
+		return
+	}
+
+	if !dbEnsureTripExists(w, tripId) {
 		return
 	}
 

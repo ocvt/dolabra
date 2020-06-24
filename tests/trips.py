@@ -65,10 +65,7 @@ def TestTripPhotos():
 
 # TODO officer and trip leader
 def TestTripsModify(s):
-  paths = {
-    '/cancel': member_not_officer_tripleader_json,
-    '/publish': member_not_tripleader_json
-  }
+  paths = ['/cancel', '/publish']
 
   for path in paths:
     url = ENDPOINT + '/10000' + path
@@ -78,8 +75,8 @@ def TestTripsModify(s):
     assert json.loads(r.text) == member_not_authenticated_json
 
     r = s.patch(url)
-    assert r.status_code == 403
-    assert json.loads(r.text) == paths[path]
+    assert r.status_code == 404
+    assert json.loads(r.text) == trip_does_not_exist_json
 
 def TestTripsCreate(s):
   url = ENDPOINT
@@ -110,16 +107,11 @@ def TestTripsCreate(s):
   assert r.status_code == 200
   assert len(json.loads(r.text)['trips']) == 0
 
-  url = NOAUTH + '/archive'
-  r = req.get(url)
-  assert r.status_code == 200
-  assert len(json.loads(r.text)['trips']) == 2
-
   for path in ['/archive/1/2']:
     url = NOAUTH + path
     r = req.get(url)
     assert r.status_code == 200
-    assert len(json.loads(r.text)['trips']) == 1
+    assert len(json.loads(r.text)['trips']) == 0
 
 def TestTripsPublish(s1, s2):
   url_noauth = NOAUTH
@@ -143,6 +135,10 @@ def TestTripsPublish(s1, s2):
 
   r = s1.patch(url_publish)
   assert r.status_code == 204
+
+  r = req.get(url_noauth)
+  assert r.status_code == 200
+  assert len(json.loads(r.text)['trips']) == 1
 
   r = req.get(url_noauth)
   assert r.status_code == 200

@@ -103,6 +103,10 @@ trip_json = {
   'petsDescription': ''
 }
 
+trip_does_not_exist_json = {
+  'error': 'Trip does not exist.'
+}
+
 trip_canceled_json = {
   'error': 'Trip is canceled.'
 }

@@ -94,7 +94,7 @@ func setRouters() {
 		r.Use(handler.ProcessClientAuth)
 		r.Get("/{tripId}", handler.GetTrip)
 		r.Get("/mytrips", handler.GetTripsMyTrips)
-		//		r.Get("/{tripId}/mystatus", handler.GetTripsMyStatus) // TODO may use in the future to get statuses from trip overview page
+		//		r.Get("/{tripId}/mystatus", handler.GetTripMyStatus) // TODO may use in the future to get statuses from trip overview page
 		r.Get("/{tripId}/admin", handler.GetTripsAdmin)
 		r.Patch("/{tripId}/cancel", handler.PatchTripsCancel)
 		r.Patch("/{tripId}/publish", handler.PatchTripsPublish)

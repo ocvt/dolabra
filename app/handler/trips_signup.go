@@ -7,7 +7,7 @@ import (
 )
 
 // TODO may use in the future to get statuses from trip overview page
-//func GetTripsMyStatus(w http.ResponseWriter, r *http.Request) {
+//func GetTripMyStatus(w http.ResponseWriter, r *http.Request) {
 //	sub, ok := checkLogin(w, r)
 //	if !ok {
 //		return
@@ -20,6 +20,10 @@ import (
 //	}
 //	tripId, ok := checkURLParam(w, r, "tripId")
 //	if !ok {
+//		return
+//	}
+//
+//	if !dbEnsureTripExists(w, tripId) {
 //		return
 //	}
 //
