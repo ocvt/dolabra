@@ -36,7 +36,7 @@ type tripStruct struct {
 	Description           string  `json:"description"`
 	Location              string  `json:"location"`
 	LocationDirections    string  `json:"locationDirections"`
-	MeetupLocation        string  `json:"MeetupLocation"`
+	MeetupLocation        string  `json:"meetupLocation"`
 	Distance              float32 `json:"distance"`
 	Difficulty            int     `json:"difficulty"`
 	DifficultyDescription string  `json:"difficultyDescription"`

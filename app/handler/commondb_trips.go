@@ -90,6 +90,19 @@ func dbGetTripSignupGroup(w http.ResponseWriter, tripId int, groupId string, sig
 	return true
 }
 
+func dbGetTripSignupStatus(w http.ResponseWriter, tripId int, memberId int) (string, error) {
+	stmt := `
+		SELECT attending_code
+		FROM trip_signup
+		WHERE trip_id = ? AND member_id = ?`
+	var code string
+	err := db.QueryRow(stmt, tripId, memberId).Scan(&code)
+	if !checkError(w, err) {
+		return "", err
+	}
+	return code, nil
+}
+
 func redactDataIfOldTrip(w http.ResponseWriter, tripId int, tripSignup *tripSignupStruct) bool {
 	stmt := `
     SELECT EXISTS (

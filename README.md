@@ -84,6 +84,7 @@ production.
 
 ## TODO
 
+* Test /trips/{tripId}/mystatus
 * carCapacityTotal -> carCapacity
 * Ensure all input is sanitized
 * Round distance to 1 decimal place

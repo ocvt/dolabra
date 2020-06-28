@@ -6,39 +6,49 @@ import (
 	"strconv"
 )
 
-// TODO may use in the future to get statuses from trip overview page
-//func GetTripMyStatus(w http.ResponseWriter, r *http.Request) {
-//	sub, ok := checkLogin(w, r)
-//	if !ok {
-//		return
-//	}
-//
-//	// Get memberId, tripId
-//	memberId, ok := dbGetActiveMemberId(w, sub)
-//	if !ok {
-//		return
-//	}
-//	tripId, ok := checkURLParam(w, r, "tripId")
-//	if !ok {
-//		return
-//	}
-//
-//	if !dbEnsureTripExists(w, tripId) {
-//		return
-//	}
-//
-//	// Permissions
-//	signedUp, err := dbIsMemberOnTrip(w, tripId, memberId)
-//	if err != nil {
-//		return
-//	}
-//	tripLeader, err := dbIsTripLeader(w, tripId, memberId)
-//	if err != nil {
-//		return
-//	}
-//
-//	respondJSON(w, http.StatusOK, map[string]bool{"signedUp": signedUp, "tripLeader": tripLeader})
-//}
+func GetTripMyStatus(w http.ResponseWriter, r *http.Request) {
+	sub, ok := checkLogin(w, r)
+	if !ok {
+		return
+	}
+
+	// Get memberId, tripId
+	memberId, ok := dbGetActiveMemberId(w, sub)
+	if !ok {
+		return
+	}
+	tripId, ok := checkURLParam(w, r, "tripId")
+	if !ok {
+		return
+	}
+
+	if !dbEnsureTripExists(w, tripId) {
+		return
+	}
+
+	// Statuses
+	signedUp, err := dbIsMemberOnTrip(w, tripId, memberId)
+	if err != nil {
+		return
+	}
+	tripCreator, err := dbIsTripCreator(w, tripId, memberId)
+	if err != nil {
+		return
+	}
+	tripLeader, err := dbIsTripLeader(w, tripId, memberId)
+	if err != nil {
+		return
+	}
+	attendingCode := ""
+	if signedUp {
+		attendingCode, err = dbGetTripSignupStatus(w, tripId, memberId)
+		if err != nil {
+			return
+		}
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{"attendingCode": attendingCode, "signedUp": signedUp, "tripCreator": tripCreator, "tripLeader": tripLeader})
+}
 
 func GetTripsSignup(w http.ResponseWriter, r *http.Request) {
 	sub, ok := checkLogin(w, r)
