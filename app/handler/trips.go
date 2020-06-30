@@ -3,15 +3,15 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
-
-	"github.com/go-chi/chi"
 )
 
 /*
 	Detailed trip info. Used for:
 	- POST /trips
 	- GET /trips/{tripId}
+	Some information is redacted for:
+	- GET /noauth/trips
+	- GET /noauth/trips/{tripId}
 */
 type tripStruct struct {
 	/* Managed server side, used for GET /trips/{tripId} */
@@ -43,37 +43,6 @@ type tripStruct struct {
 	Instructions          string  `json:"instructions"`
 	PetsAllowed           bool    `json:"petsAllowed"`
 	PetsDescription       string  `json:"petsDescription"`
-}
-
-/*
-	Overview of trip for public view. Used for:
-	- GET /noauth/trips
-	- GET /noauth/trips/{tripId}
-*/
-type tripSummaryStruct struct {
-	Id                    int    `json:"id"`
-	CreateDatetime        string `json:"createDatetime"`
-	MemberName            string `json:"memberName"`
-	MembersOnly           bool   `json:"membersOnly"`
-	AllowLateSignups      bool   `json:"allowLateSignups"`
-	DrivingRequired       bool   `json:"drivingRequired"`
-	HasCost               bool   `json:"hasCost"`
-	CostDescription       string `json:"costDescription"`
-	MaxPeople             int    `json:"maxPeople"`
-	Name                  string `json:"name"`
-	NotificationTypeId    string `json:"notificationTypeId"`
-	StartDatetime         string `json:"startDatetime"`
-	EndDatetime           string `json:"endDatetime"`
-	Summary               string `json:"summary"`
-	Description           string `json:"description"`
-	Location              string `json:"location"`
-	LocationDirections    string `json:"locationDirections"`
-	Distance              string `json:"distance"`
-	Difficulty            int    `json:"difficulty"`
-	DifficultyDescription string `json:"difficultyDescription"`
-	Instructions          string `json:"instructions"`
-	PetsAllowed           bool   `json:"petsAllowed"`
-	PetsDescription       string `json:"petsDescription"`
 }
 
 type tripSignupStruct struct {
@@ -115,17 +84,23 @@ type tripSignupBootStruct struct {
 }
 
 func GetTrip(w http.ResponseWriter, r *http.Request) {
-	// TODO ENSURE
-	// - IS MEMBER
-	// - IS ON TRIP
-	tripIdStr := chi.URLParam(r, "tripId")
-	tripId, err := strconv.Atoi(tripIdStr)
-	if err != nil {
-		respondError(w, http.StatusBadRequest, "Error parsing trip id.")
+	sub, ok := checkLogin(w, r)
+	if !ok {
 		return
 	}
 
-	if !dbEnsureTripExists(w, tripId) {
+	// Get memberId, tripId
+	memberId, ok := dbGetActiveMemberId(w, sub)
+	if !ok {
+		return
+	}
+	tripId, ok := checkURLParam(w, r, "tripId")
+	if !ok {
+		return
+	}
+
+	// Permissions
+	if !dbEnsureMemberIsOnTrip(w, tripId, memberId) {
 		return
 	}
 
@@ -133,9 +108,66 @@ func GetTrip(w http.ResponseWriter, r *http.Request) {
     SELECT *
     FROM trip
     WHERE id = ?`
+	var creatorMemberId int
+	var trip tripStruct
+	err := db.QueryRow(stmt, tripId).Scan(
+		&trip.Id,
+		&trip.CreateDatetime,
+		&trip.Cancel,
+		&trip.Publish,
+		&trip.ReminderSent,
+		&creatorMemberId,
+		&trip.MembersOnly,
+		&trip.AllowLateSignups,
+		&trip.DrivingRequired,
+		&trip.HasCost,
+		&trip.CostDescription,
+		&trip.MaxPeople,
+		&trip.Name,
+		&trip.NotificationTypeId,
+		&trip.StartDatetime,
+		&trip.EndDatetime,
+		&trip.Summary,
+		&trip.Description,
+		&trip.Location,
+		&trip.LocationDirections,
+		&trip.MeetupLocation,
+		&trip.Distance,
+		&trip.Difficulty,
+		&trip.DifficultyDescription,
+		&trip.Instructions,
+		&trip.PetsAllowed,
+		&trip.PetsDescription)
+	if !checkError(w, err) {
+		return
+	}
+
+	trip.MemberName, ok = dbGetMemberName(w, creatorMemberId)
+	if !ok {
+		return
+	}
+
+	respondJSON(w, http.StatusOK, trip)
+}
+
+func GetTripSummary(w http.ResponseWriter, r *http.Request) {
+	tripId, ok := checkURLParam(w, r, "tripId")
+	if !ok {
+		return
+	}
+
+	if !dbEnsureTripExists(w, tripId) || !dbEnsurePublishedTrip(w, tripId) {
+		return
+	}
+
+	stmt := `
+    SELECT *
+		FROM trip
+    WHERE
+			id = ?`
 	var memberId int
 	var trip tripStruct
-	err = db.QueryRow(stmt, tripId).Scan(
+	err := db.QueryRow(stmt, tripId).Scan(
 		&trip.Id,
 		&trip.CreateDatetime,
 		&trip.Cancel,
@@ -167,85 +199,9 @@ func GetTrip(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var ok bool
-	trip.MemberName, ok = dbGetMemberName(w, memberId)
-	if !ok {
-		return
-	}
+	// Hide location to public
+	trip.MeetupLocation = ""
 
-	respondJSON(w, http.StatusOK, trip)
-}
-
-func GetTripSummary(w http.ResponseWriter, r *http.Request) {
-	tripIdStr := chi.URLParam(r, "tripId")
-	tripId, err := strconv.Atoi(tripIdStr)
-	if err != nil {
-		respondError(w, http.StatusBadRequest, "Error parsing trip id.")
-		return
-	}
-
-	if !dbEnsureTripExists(w, tripId) {
-		return
-	}
-
-	stmt := `
-    SELECT
-      id,
-      create_datetime,
-      member_id,
-      members_only,
-      allow_late_signups,
-      driving_required,
-      has_cost,
-      cost_description,
-      max_people,
-      name,
-      notification_type_id,
-      start_datetime,
-      end_datetime,
-      summary,
-      description,
-      location,
-      location_directions,
-      distance,
-      difficulty,
-      difficulty_description,
-      instructions,
-      pets_allowed,
-      pets_description
-    FROM trip
-    WHERE id = ?`
-	var memberId int
-	var trip tripSummaryStruct
-	err = db.QueryRow(stmt, tripId).Scan(
-		&trip.Id,
-		&trip.CreateDatetime,
-		&memberId,
-		&trip.MembersOnly,
-		&trip.AllowLateSignups,
-		&trip.DrivingRequired,
-		&trip.HasCost,
-		&trip.CostDescription,
-		&trip.MaxPeople,
-		&trip.Name,
-		&trip.NotificationTypeId,
-		&trip.StartDatetime,
-		&trip.EndDatetime,
-		&trip.Summary,
-		&trip.Description,
-		&trip.Location,
-		&trip.LocationDirections,
-		&trip.Distance,
-		&trip.Difficulty,
-		&trip.DifficultyDescription,
-		&trip.Instructions,
-		&trip.PetsAllowed,
-		&trip.PetsDescription)
-	if !checkError(w, err) {
-		return
-	}
-
-	var ok bool
 	trip.MemberName, ok = dbGetMemberName(w, memberId)
 	if !ok {
 		return
@@ -256,51 +212,30 @@ func GetTripSummary(w http.ResponseWriter, r *http.Request) {
 
 func GetTripsSummary(w http.ResponseWriter, r *http.Request) {
 	stmt := `
-    SELECT
-      id,
-      create_datetime,
-      member_id,
-      members_only,
-      allow_late_signups,
-      driving_required,
-      has_cost,
-      cost_description,
-      max_people,
-      name,
-      notification_type_id,
-      start_datetime,
-      end_datetime,
-      summary,
-      description,
-      location,
-      location_directions,
-      distance,
-      difficulty,
-      difficulty_description,
-      instructions,
-      pets_allowed,
-      pets_description
+    SELECT *
     FROM trip
     WHERE
       cancel = false
       AND publish = true
       AND datetime(start_datetime) >= datetime('now')
     ORDER BY datetime(start_datetime) DESC`
-	// TODO account for allow late signups
 	rows, err := db.Query(stmt)
 	if !checkError(w, err) {
 		return
 	}
 	defer rows.Close()
 
-	var trips = []*tripSummaryStruct{}
+	var trips = []*tripStruct{}
 	i := 0
 	for rows.Next() {
 		var memberId int
-		trips = append(trips, &tripSummaryStruct{})
+		trips = append(trips, &tripStruct{})
 		err = rows.Scan(
 			&trips[i].Id,
 			&trips[i].CreateDatetime,
+			&trips[i].Cancel,
+			&trips[i].Publish,
+			&trips[i].ReminderSent,
 			&memberId,
 			&trips[i].MembersOnly,
 			&trips[i].AllowLateSignups,
@@ -316,6 +251,7 @@ func GetTripsSummary(w http.ResponseWriter, r *http.Request) {
 			&trips[i].Description,
 			&trips[i].Location,
 			&trips[i].LocationDirections,
+			&trips[i].MeetupLocation,
 			&trips[i].Distance,
 			&trips[i].Difficulty,
 			&trips[i].DifficultyDescription,
@@ -325,6 +261,9 @@ func GetTripsSummary(w http.ResponseWriter, r *http.Request) {
 		if !checkError(w, err) {
 			return
 		}
+
+		// Hide location to public
+		trips[i].MeetupLocation = ""
 
 		var ok bool
 		trips[i].MemberName, ok = dbGetMemberName(w, memberId)
@@ -339,7 +278,7 @@ func GetTripsSummary(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJSON(w, http.StatusOK, map[string][]*tripSummaryStruct{"trips": trips})
+	respondJSON(w, http.StatusOK, map[string][]*tripStruct{"trips": trips})
 }
 
 func GetTripsAdmin(w http.ResponseWriter, r *http.Request) {
