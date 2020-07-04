@@ -9,8 +9,7 @@ import (
 )
 
 func deleteAuthCookies(w http.ResponseWriter) {
-	deleteCookie(w, "idp")
-	deleteCookie(w, "token")
+	deleteCookie(w, "DOLABRA_SESSION")
 }
 
 func EnsureOfficer(next http.Handler) http.Handler {
