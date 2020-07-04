@@ -400,7 +400,7 @@ func dbIsTripInPast(w http.ResponseWriter, tripId int) (bool, error) {
     SELECT EXISTS (
       SELECT 1
       FROM trip
-      WHERE id = ? AND datetime(start_datetime) < datetime('now'))`
+      WHERE id = ? AND datetime(end_datetime) < datetime('now'))`
 	var exists bool
 	err := db.QueryRow(stmt, tripId).Scan(&exists)
 	checkError(w, err)

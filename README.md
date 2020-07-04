@@ -84,13 +84,9 @@ production.
 
 ## TODO
 
+* Remove redacted check
 * organize functions A-Z
-* signup -> mysignup where applicable
-* Use end_datetime instead of start_datetime for comparision
-* cancel -> canceled
-* memberId -> creatorMemberId where needed
 * Test /trips/{tripId}/mystatus
-* {c,C}arCapacityTotal -> carCapacity
 * Ensure all input is sanitized
 * Round distance to 1 decimal place
 * Test GetTripMyStatus
