@@ -65,7 +65,7 @@ def TestTripPhotos():
 
 # TODO officer and trip leader
 def TestTripsModify(s):
-  paths = ['/cancel', '/publish']
+  paths = ['/admin/cancel', '/admin/publish']
 
   for path in paths:
     url = ENDPOINT + '/10000' + path
@@ -115,7 +115,7 @@ def TestTripsCreate(s):
 
 def TestTripsPublish(s1, s2):
   url_noauth = NOAUTH
-  url_publish = ENDPOINT + '/1/publish'
+  url_publish = ENDPOINT + '/1/admin/publish'
   url_signup = ENDPOINT + '/1/signup'
   
   r = req.get(url_noauth)
@@ -169,7 +169,7 @@ def TestTripsPostSignup(s1, s2, s3):
   assert r.status_code == 204
 
 def TestTripsGetSignup(s1, s2):
-  url = ENDPOINT + '/1/signup'
+  url = ENDPOINT + '/1/mysignup'
 
   r = req.get(url)
   assert r.status_code == 401
@@ -184,7 +184,7 @@ def TestTripsGetSignup(s1, s2):
   assert json.loads(r.text)['id'] == 2
 
 def TestTripsSignupCancel(s1, s2):
-  url = ENDPOINT + '/1/signup/cancel'
+  url = ENDPOINT + '/1/mysignup/cancel'
   url_signup = ENDPOINT + '/1/signup'
 
   r = req.patch(url)
@@ -209,7 +209,7 @@ def TestTripsSignupCancel(s1, s2):
 # TODO Test admin
 
 def TestTripsCancel(s1, s2, s3):
-  url = ENDPOINT + '/1/cancel'
+  url = ENDPOINT + '/1/admin/cancel'
   url_noauth = NOAUTH
 
   r = req.patch(url)

@@ -85,7 +85,6 @@ production.
 ## TODO
 
 * signup -> mysignup where applicable
-* Re-organize trip admin endpoints
 * Use end_datetime instead of start_datetime for comparision
 * cancel -> canceled
 * memberId -> creatorMemberId where needed
