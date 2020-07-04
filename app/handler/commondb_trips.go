@@ -267,7 +267,7 @@ func dbEnsureTripLeader(w http.ResponseWriter, tripId int, memberId int) bool {
 }
 
 func dbEnsureValidSignup(w http.ResponseWriter, tripId int, memberId int,
-	carpool bool, driver bool, carCapacityTotal int, pet bool) bool {
+	carpool bool, driver bool, carCapacity int, pet bool) bool {
 	tooLateSignup, err := dbIsTooLateSignup(w, tripId)
 	if err != nil {
 		return false
@@ -281,7 +281,7 @@ func dbEnsureValidSignup(w http.ResponseWriter, tripId int, memberId int,
 		respondError(w, http.StatusBadRequest, "Cannot carpool without being a driver.")
 		return false
 	}
-	if carCapacityTotal < 0 {
+	if carCapacity < 0 {
 		respondError(w, http.StatusBadRequest, "Cannot have negative car capacity.")
 		return false
 	}

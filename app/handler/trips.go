@@ -71,12 +71,12 @@ type tripSignupStruct struct {
 	EmergencyContactNumber       string `json:"emergencyContactNumber,omitempty"`
 	EmergencyContactRelationship string `json:"emergencyContactRelationship,omitempty"`
 	/* Required fields for signing up for a trip */
-	ShortNotice      bool   `json:"shortNotice"`
-	Driver           bool   `json:"driver"`
-	Carpool          bool   `json:"carpool"`
-	CarCapacityTotal int    `json:carCapacityTotal"`
-	Notes            string `json:"notes"`
-	Pet              bool   `json:"pet"`
+	ShortNotice bool   `json:"shortNotice"`
+	Driver      bool   `json:"driver"`
+	Carpool     bool   `json:"carpool"`
+	CarCapacity int    `json:"carCapacity"`
+	Notes       string `json:"notes"`
+	Pet         bool   `json:"pet"`
 }
 
 type tripSignupBootStruct struct {

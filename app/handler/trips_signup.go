@@ -88,7 +88,7 @@ func GetTripsSignup(w http.ResponseWriter, r *http.Request) {
 		&tripSignup.ShortNotice,
 		&tripSignup.Driver,
 		&tripSignup.Carpool,
-		&tripSignup.CarCapacityTotal,
+		&tripSignup.CarCapacity,
 		&tripSignup.Notes,
 		&tripSignup.Pet,
 		&tripSignup.Attended)
@@ -441,7 +441,7 @@ func PostTripsSignup(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if !dbEnsureValidSignup(w, tripId, memberId, tripSignup.Carpool,
-			tripSignup.Driver, tripSignup.CarCapacityTotal, tripSignup.Pet) {
+			tripSignup.Driver, tripSignup.CarCapacity, tripSignup.Pet) {
 			return
 		}
 
@@ -475,7 +475,7 @@ func PostTripsSignup(w http.ResponseWriter, r *http.Request) {
 		tripSignup.ShortNotice,
 		tripSignup.Driver,
 		tripSignup.Carpool,
-		tripSignup.CarCapacityTotal,
+		tripSignup.CarCapacity,
 		tripSignup.Notes,
 		tripSignup.Pet,
 		attended)

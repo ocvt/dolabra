@@ -84,6 +84,7 @@ production.
 
 ## TODO
 
+* organize functions A-Z
 * signup -> mysignup where applicable
 * Use end_datetime instead of start_datetime for comparision
 * cancel -> canceled
