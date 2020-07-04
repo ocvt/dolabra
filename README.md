@@ -87,7 +87,6 @@ production.
 * organize functions A-Z
 * Test /trips/{tripId}/mystatus
 * Ensure all input is sanitized
-* Round distance to 1 decimal place
 * Test GetTripMyStatus
 * Return 403 (not authorized) instead of 400 (not authenticated) where necessary
 * Make tasks work (db locking issue and no error check after rows.Next())
