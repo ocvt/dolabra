@@ -103,32 +103,6 @@ func dbGetTripSignupStatus(w http.ResponseWriter, tripId int, memberId int) (str
 	return code, nil
 }
 
-func redactDataIfOldTrip(w http.ResponseWriter, tripId int, tripSignup *tripSignupStruct) bool {
-	stmt := `
-    SELECT EXISTS (
-      SELECT 1
-      FROM trip
-      WHERE id = ? AND datetime(start_datetime) < datetime('now', '-1 month'))`
-	var exists bool
-	err := db.QueryRow(stmt, tripId).Scan(&exists)
-	if !checkError(w, err) {
-		return false
-	}
-
-	if exists {
-		tripSignup.Email = "redacted@redacted.com"
-		tripSignup.FirstName = "Red"
-		tripSignup.LastName = "Acted"
-		tripSignup.CellNumber = "(RED) ACT-EDDD"
-		tripSignup.Gender = "redacted"
-		tripSignup.BirthYear = 1990
-		tripSignup.MedicalCond = false
-		tripSignup.MedicalCondDesc = "redacted"
-	}
-	return true
-}
-
-/* "Ensure" helpers */
 func dbEnsureActiveTrip(w http.ResponseWriter, tripId int) bool {
 	if !dbEnsureIsTrip(w, tripId) {
 		return false

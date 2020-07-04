@@ -84,7 +84,6 @@ production.
 
 ## TODO
 
-* Remove redacted check
 * organize functions A-Z
 * Test /trips/{tripId}/mystatus
 * Ensure all input is sanitized

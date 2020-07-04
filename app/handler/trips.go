@@ -374,10 +374,6 @@ func GetTripsAdmin(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if !redactDataIfOldTrip(w, tripId, tripSignups[i]) {
-			return
-		}
-
 		i++
 	}
 
