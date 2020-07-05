@@ -153,8 +153,8 @@ func PostWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
 	// Get request body
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
-	var officer officerStruct
-	err := decoder.Decode(&officer)
+	var newOfficer officerStruct
+	err := decoder.Decode(&newOfficer)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
@@ -162,8 +162,8 @@ func PostWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
 
 	// Permissions
 	// TODO Don't allow officers with less privileges to modify officers with more privileges
-	if !dbEnsureMemberIdExists(w, officer.MemberId) ||
-		!dbEnsureNotOfficer(w, officer.MemberId) {
+	if !dbEnsureMemberIdExists(w, newOfficer.MemberId) ||
+		!dbEnsureNotOfficer(w, newOfficer.MemberId) {
 		return
 	}
 
@@ -177,10 +177,10 @@ func PostWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
 		VALUES (?, datetime('now'), ?, ?, ?)`
 	_, err = db.Exec(
 		stmt,
-		officer.MemberId,
-		officer.ExpireDatetime,
-		officer.Position,
-		officer.Security)
+		newOfficer.MemberId,
+		newOfficer.ExpireDatetime,
+		newOfficer.Position,
+		newOfficer.Security)
 	if !checkError(w, err) {
 		return
 	}
