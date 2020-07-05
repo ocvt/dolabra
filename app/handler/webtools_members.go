@@ -11,24 +11,24 @@ type tripName struct {
 
 func GetWebtoolsMembers(w http.ResponseWriter, r *http.Request) {
 	stmt := `
-    SELECT
-      member.id,
-      member.email,
-      member.first_name,
-      member.last_name,
-      member.create_datetime,
-      member.cell_number,
-      member.gender,
-      member.birth_year,
-      member.active,
-      member.medical_cond,
-      member.medical_cond_desc,
-      member.paid_expire_datetime,
-      emergency_contact.name,
-      emergency_contact.number,
-      emergency_contact.relationship
-    FROM member
-    INNER JOIN emergency_contact ON emergency_contact.member_id = member.id`
+		SELECT
+			member.id,
+			member.email,
+			member.first_name,
+			member.last_name,
+			member.create_datetime,
+			member.cell_number,
+			member.gender,
+			member.birth_year,
+			member.active,
+			member.medical_cond,
+			member.medical_cond_desc,
+			member.paid_expire_datetime,
+			emergency_contact.name,
+			emergency_contact.number,
+			emergency_contact.relationship
+		FROM member
+		INNER JOIN emergency_contact ON emergency_contact.member_id = member.id`
 	rows, err := db.Query(stmt)
 	if !checkError(w, err) {
 		return
@@ -76,12 +76,12 @@ func GetWebtoolsMembersAttendance(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    SELECT
-      trip.id,
-      trip.name
-    FROM trip_signup
-    INNER JOIN trip ON trip.id = trip_signup.trip_id
-    WHERE trip_signup.id = ? AND trip_signup.attended = true`
+		SELECT
+			trip.id,
+			trip.name
+		FROM trip_signup
+		INNER JOIN trip ON trip.id = trip_signup.trip_id
+		WHERE trip_signup.id = ? AND trip_signup.attended = true`
 	rows, err := db.Query(stmt, memberId)
 	if !checkError(w, err) {
 		return
@@ -116,11 +116,11 @@ func GetWebtoolsMembersTrips(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    SELECT
-      id,
-      name
-    FROM trip
-    WHERE trip.member_id = ?`
+		SELECT
+			id,
+			name
+		FROM trip
+		WHERE trip.member_id = ?`
 	rows, err := db.Query(stmt, memberId)
 	if !checkError(w, err) {
 		return
@@ -155,9 +155,9 @@ func PatchWebtoolsDuesGrant(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    UPDATE member
-    SET paid_expire_datetime = datetime(paid_expire_datetime, '+1 year')
-    WHERE id = ?`
+		UPDATE member
+		SET paid_expire_datetime = datetime(paid_expire_datetime, '+1 year')
+		WHERE id = ?`
 	_, err := db.Exec(stmt, memberId)
 	if !checkError(w, err) {
 		return
@@ -173,9 +173,9 @@ func PatchWebtoolsDuesRevoke(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    UPDATE member
-    SET paid_expire_datetime = datetime('now')
-    WHERE id = ?`
+		UPDATE member
+		SET paid_expire_datetime = datetime('now')
+		WHERE id = ?`
 	_, err := db.Exec(stmt, memberId)
 	if !checkError(w, err) {
 		return

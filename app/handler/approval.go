@@ -10,17 +10,17 @@ import (
 // for i in approved_people -> create guid, send emails (TODO create PATCH /tripApproval/{approvalGuid}/{status}, status must be APPROVE|DECLINE
 // in PatchWebtoolsApproval:
 // - if !dbEnsureTripNoApproval(w, tripId) -> ensure not exists with
-//   tripId AND status != NONE, otherwise return bad request
-//    - DECLINE -> return no conent
-//    - APPROVE -> stageEmailNewTrip(w, tripId)
+//	 tripId AND status != NONE, otherwise return bad request
+//		- DECLINE -> return no conent
+//		- APPROVE -> stageEmailNewTrip(w, tripId)
 const GUID_LENGTH = 64
 
 /* HELPERS */
 func approveNewTrip(w http.ResponseWriter, tripId int) bool {
 	stmt := `
-    SELECT member_id
-    FROM trip_approver
-    WHERE datetime('now') < datetime(expire_datetime)`
+		SELECT member_id
+		FROM trip_approver
+		WHERE datetime('now') < datetime(expire_datetime)`
 	rows, err := db.Query(stmt)
 	if !checkError(w, err) {
 		return false
@@ -36,12 +36,12 @@ func approveNewTrip(w http.ResponseWriter, tripId int) bool {
 
 		guidCode := generateCode(GUID_LENGTH)
 		stmt = `
-      INSERT INTO guid (
-        code,
-        member_id,
-        trip_id,
-        status)
-      VALUES (?, ?, ?, 'NONE')`
+			INSERT INTO guid (
+				code,
+				member_id,
+				trip_id,
+				status)
+			VALUES (?, ?, ?, 'NONE')`
 		_, err = db.Exec(stmt, guidCode, memberId, tripId)
 		if !checkError(w, err) {
 			return false

@@ -72,9 +72,9 @@ func GetTripsSignup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    SELECT *
-    FROM trip_signup
-    WHERE trip_id = ? AND member_id = ?`
+		SELECT *
+		FROM trip_signup
+		WHERE trip_id = ? AND member_id = ?`
 	var tripSignup tripSignupStruct
 	err := db.QueryRow(stmt, tripId, memberId).Scan(
 		&tripSignup.Id,
@@ -128,9 +128,9 @@ func PatchTripsSignupAbsent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    UPDATE trip_signup
-    SET attended = false
-    WHERE trip_id = ? and member_id = ?`
+		UPDATE trip_signup
+		SET attended = false
+		WHERE trip_id = ? and member_id = ?`
 	_, err := db.Exec(stmt, tripId, signupId)
 	if !checkError(w, err) {
 		return
@@ -183,13 +183,13 @@ func PatchTripsSignupBoot(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    UPDATE trip_signup
-    SET
-      leader = false,
-      attending_code = 'BOOT',
-      boot_reason = ?,
-      attended = false
-    WHERE trip_id = ? AND member_id = ?`
+		UPDATE trip_signup
+		SET
+			leader = false,
+			attending_code = 'BOOT',
+			boot_reason = ?,
+			attended = false
+		WHERE trip_id = ? AND member_id = ?`
 	_, err = db.Exec(stmt, tripSignupBoot.BootReason, tripId, signupId)
 	if !checkError(w, err) {
 		return
@@ -239,12 +239,12 @@ func PatchTripsSignupCancel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    UPDATE trip_signup
-    SET
-      leader = false,
-      attending_code = 'CANCEL',
-      attended = false
-    WHERE trip_id = ? AND member_id = ?`
+		UPDATE trip_signup
+		SET
+			leader = false,
+			attending_code = 'CANCEL',
+			attended = false
+		WHERE trip_id = ? AND member_id = ?`
 	_, err := db.Exec(stmt, tripId, memberId)
 	if !checkError(w, err) {
 		return
@@ -301,9 +301,9 @@ func PatchTripsSignupForceadd(w http.ResponseWriter, r *http.Request) {
 
 	// Change to FORCE code
 	stmt := `
-    UPDATE trip_signup
-    SET attending_code = 'FORCE'
-    WHERE trip_id = ? AND member_id = ?`
+		UPDATE trip_signup
+		SET attending_code = 'FORCE'
+		WHERE trip_id = ? AND member_id = ?`
 	_, err := db.Exec(stmt, tripId, signupId)
 	if !checkError(w, err) {
 		return
@@ -362,11 +362,11 @@ func PatchTripsSignupTripLeaderPromote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    UPDATE trip_signup
-    SET
-      leader = ?,
-      attending_code = 'FORCE'
-    WHERE trip_id = ? AND member_id = ?`
+		UPDATE trip_signup
+		SET
+			leader = ?,
+			attending_code = 'FORCE'
+		WHERE trip_id = ? AND member_id = ?`
 	_, err := db.Exec(stmt, promote, tripId, signupId)
 	if !checkError(w, err) {
 		return
@@ -449,22 +449,22 @@ func PostTripsSignup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    INSERT INTO trip_signup (
-      trip_id,
-      member_id,
-      leader,
-      signup_datetime,
-      paid_member,
-      attending_code,
-      boot_reason,
-      short_notice,
-      driver,
-      carpool,
-      car_capacity_total,
-      notes,
-      pet,
-      attended)
-    VALUES (?, ?, ?, datetime('now'), ?, ?, '', ?, ?, ?, ?, ?, ?, ?)`
+		INSERT INTO trip_signup (
+			trip_id,
+			member_id,
+			leader,
+			signup_datetime,
+			paid_member,
+			attending_code,
+			boot_reason,
+			short_notice,
+			driver,
+			carpool,
+			car_capacity_total,
+			notes,
+			pet,
+			attended)
+		VALUES (?, ?, ?, datetime('now'), ?, ?, '', ?, ?, ?, ?, ?, ?, ?)`
 	_, err = db.Exec(
 		stmt,
 		tripId,

@@ -25,9 +25,9 @@ func DeleteWebtoolsNews(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    UPDATE news
-    SET publish = false
-    WHERE id = ?`
+		UPDATE news
+		SET publish = false
+		WHERE id = ?`
 	_, err := db.Exec(stmt, newsId)
 	if !checkError(w, err) {
 		return
@@ -38,18 +38,18 @@ func DeleteWebtoolsNews(w http.ResponseWriter, r *http.Request) {
 
 func GetNews(w http.ResponseWriter, r *http.Request) {
 	stmt := `
-    SELECT
-      member.first_name,
-      news.id,
-      news.create_datetime,
-      news.title,
-      news.summary,
-      news.content
-    FROM member
-    INNER JOIN news ON news.member_id = member.id
-    WHERE news.publish = true
-    ORDER BY datetime(news.create_datetime) DESC
-    LIMIT 10`
+		SELECT
+			member.first_name,
+			news.id,
+			news.create_datetime,
+			news.title,
+			news.summary,
+			news.content
+		FROM member
+		INNER JOIN news ON news.member_id = member.id
+		WHERE news.publish = true
+		ORDER BY datetime(news.create_datetime) DESC
+		LIMIT 10`
 	rows, err := db.Query(stmt)
 	if !checkError(w, err) {
 		return
@@ -83,16 +83,16 @@ func GetNews(w http.ResponseWriter, r *http.Request) {
 
 func GetNewsArchive(w http.ResponseWriter, r *http.Request) {
 	stmt := `
-    SELECT
-      member.first_name,
-      news.id,
-      news.create_datetime,
-      news.title,
-      news.summary,
-      news.content
-    FROM member
-    INNER JOIN news ON news.member_id = member.id
-    WHERE news.publish = true`
+		SELECT
+			member.first_name,
+			news.id,
+			news.create_datetime,
+			news.title,
+			news.summary,
+			news.content
+		FROM member
+		INNER JOIN news ON news.member_id = member.id
+		WHERE news.publish = true`
 	rows, err := db.Query(stmt)
 	if !checkError(w, err) {
 		return
@@ -147,13 +147,13 @@ func PostWebtoolsNews(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    INSERT INTO news (
-      member_id,
-      create_datetime,
-      title,
-      summary,
-      content)
-    VALUES (?, datetime('now'), ?, ?, ?)`
+		INSERT INTO news (
+			member_id,
+			create_datetime,
+			title,
+			summary,
+			content)
+		VALUES (?, datetime('now'), ?, ?, ?)`
 	_, err = db.Exec(
 		stmt,
 		memberId,

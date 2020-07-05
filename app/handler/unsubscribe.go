@@ -23,17 +23,17 @@ func PostUnsubscribeAll(w http.ResponseWriter, r *http.Request) {
 	notificationsStr := string(notificationsArr)
 
 	stmt := `
-    DELETE FROM quick_signup
-    WHERE email = ?`
+		DELETE FROM quick_signup
+		WHERE email = ?`
 	_, err = db.Exec(stmt, email.Email)
 	if !checkError(w, err) {
 		return
 	}
 
 	stmt = `
-    UPDATE member
-    SET notification_preference = ?
-    WHERE email = ?`
+		UPDATE member
+		SET notification_preference = ?
+		WHERE email = ?`
 	_, err = db.Exec(stmt, notificationsStr, email.Email)
 	if !checkError(w, err) {
 		return

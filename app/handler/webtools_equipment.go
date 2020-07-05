@@ -17,8 +17,8 @@ type equipmentStruct struct {
 
 func GetWebtoolsEquipment(w http.ResponseWriter, r *http.Request) {
 	stmt := `
-    SELECT * FROM equipment
-    ORDER BY datetime(create_datetime) DESC`
+		SELECT * FROM equipment
+		ORDER BY datetime(create_datetime) DESC`
 	rows, err := db.Query(stmt)
 	if !checkError(w, err) {
 		return
@@ -59,9 +59,9 @@ func PatchWebtoolsEquipment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    UPDATE equipment
-    SET count = ?
-    WHERE id = ?`
+		UPDATE equipment
+		SET count = ?
+		WHERE id = ?`
 	_, err := db.Exec(stmt, equipmentId, count)
 	if !checkError(w, err) {
 		return
@@ -87,11 +87,11 @@ func PostWebtoolsEquipment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    INSERT INTO equipment (
-      create_datetime,
-      description,
-      count)
-    VALUES (datetime('now'), ?, ?)`
+		INSERT INTO equipment (
+			create_datetime,
+			description,
+			count)
+		VALUES (datetime('now'), ?, ?)`
 	_, err = db.Exec(stmt, equipment.Description, count)
 	if !checkError(w, err) {
 		return

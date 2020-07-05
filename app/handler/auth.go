@@ -49,12 +49,12 @@ func processIdp(w http.ResponseWriter, idp string, idpSub string) bool {
 		}
 
 		stmt := `
-      INSERT INTO auth(
-        member_id,
-        sub,
-        idp,
-        idp_sub)
-		  VALUES (0, ?, ?, ?)`
+			INSERT INTO auth(
+				member_id,
+				sub,
+				idp,
+				idp_sub)
+			VALUES (0, ?, ?, ?)`
 		_, err = db.Exec(stmt, sub, idp, idpSub)
 		if !checkError(w, err) {
 			return false

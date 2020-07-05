@@ -115,9 +115,9 @@ func PostPaymentRedeem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    SELECT *
-    FROM store_code
-    WHERE redeemed = false AND code = ?`
+		SELECT *
+		FROM store_code
+		WHERE redeemed = false AND code = ?`
 	rows, err := db.Query(stmt, simpleStoreCode.Code)
 	if !checkError(w, err) {
 		return
@@ -152,18 +152,18 @@ func PostPaymentRedeem(w http.ResponseWriter, r *http.Request) {
 
 		// Transfer to be proper payment associated with member
 		stmt = `
-      INSERT INTO payment (
-        create_datetime,
-        entered_by_id,
-        note,
-        member_id,
-        store_item_id,
-        store_item_count,
-        amount,
-        payment_method,
-        payment_id,
-        completed)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'MANUAL', ?, ?)`
+			INSERT INTO payment (
+				create_datetime,
+				entered_by_id,
+				note,
+				member_id,
+				store_item_id,
+				store_item_count,
+				amount,
+				payment_method,
+				payment_id,
+				completed)
+			VALUES (?, ?, ?, ?, ?, ?, ?, 'MANUAL', ?, ?)`
 		_, err = db.Exec(stmt,
 			storeCode.CreateDatetime,
 			storeCode.GeneratedById,
@@ -180,9 +180,9 @@ func PostPaymentRedeem(w http.ResponseWriter, r *http.Request) {
 
 		// Prevent from redeeming item again
 		stmt = `
-      UPDATE store_code
-      SET redeemed = true
-      WHERE id = ?`
+			UPDATE store_code
+			SET redeemed = true
+			WHERE id = ?`
 		_, err = db.Exec(stmt, storeCode.Id)
 		if !checkError(w, err) {
 			return
@@ -234,21 +234,21 @@ func PostPaymentSucceeded(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    UPDATE member
-    SET paid_expire_datetime = datetime(paid_expire_datetime, '+? years')
-    WHERE member.id = ?`
+		UPDATE member
+		SET paid_expire_datetime = datetime(paid_expire_datetime, '+? years')
+		WHERE member.id = ?`
 	_, err = db.Exec(stmt, membershipYears, memberId)
 	if !checkError(w, err) {
 		return
 	}
 
 	stmt = `
-    UPDATE payment
-    SET completed = true
-    WHERE
-      store_item_id = 'MEMBERSHIP'
-      AND method = 'STRIPE'
-      AND payment_id = ?`
+		UPDATE payment
+		SET completed = true
+		WHERE
+			store_item_id = 'MEMBERSHIP'
+			AND method = 'STRIPE'
+			AND payment_id = ?`
 	_, err = db.Exec(stmt, myPI.ID)
 	if !checkError(w, err) {
 		return

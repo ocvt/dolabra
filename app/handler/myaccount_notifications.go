@@ -104,9 +104,9 @@ func PatchMyAccountNotifications(w http.ResponseWriter, r *http.Request) {
 	notificationsStr := string(notificationsArr)
 
 	stmt := `
-    UPDATE member
-    SET notification_preference = ?
-    WHERE id = ?`
+		UPDATE member
+		SET notification_preference = ?
+		WHERE id = ?`
 	_, err = db.Exec(stmt, notificationsStr, memberId)
 	if !checkError(w, err) {
 		return

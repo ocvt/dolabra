@@ -3,7 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
-	//  "net/smtp"
+	//	"net/smtp"
 	"strconv"
 	"strings"
 )
@@ -37,13 +37,13 @@ func sendEmail(fromName string, fromEmail string, replyName string,
 		subject,
 		body)
 
-	//  auth := smtp.PlainAuth("", SMTP_USERNAME, SMTP_PASSWORD, SMTP_HOSTNAME)
+	//	auth := smtp.PlainAuth("", SMTP_USERNAME, SMTP_PASSWORD, SMTP_HOSTNAME)
 	fmt.Printf("MESSAGE: %s\n", message)
-	//  err := smtp.SendMail(fmt.Sprintf("%s:%s", SMTP_HOSTNAME, SMTP_PORT), auth,
-	//      SMTP_FROM_EMAIL_DEFAULT, []string{toEmail}, []byte(message))
-	//  if err != nil {
-	//    log.Fatal(err)
-	//  }
+	//	err := smtp.SendMail(fmt.Sprintf("%s:%s", SMTP_HOSTNAME, SMTP_PORT), auth,
+	//			SMTP_FROM_EMAIL_DEFAULT, []string{toEmail}, []byte(message))
+	//	if err != nil {
+	//		log.Fatal(err)
+	//	}
 }
 
 /*
@@ -64,7 +64,7 @@ func processAndSendEmail(w http.ResponseWriter, emailId int) bool {
  * Insert entry into email table to eventually send
  * - TRIP_ALERT_* are special types to indicate direct trip alerts
  * - tripId field is used ONLY with TRIP_ALERT_* types
- *   otherwise it is purely for logging the relevant trip
+ *	 otherwise it is purely for logging the relevant trip
  */
 func stageEmail(w http.ResponseWriter, notificationType string, tripId int,
 	replyToId int, subject string, body string) bool {
@@ -83,16 +83,16 @@ func stageEmail(w http.ResponseWriter, notificationType string, tripId int,
 	}
 
 	stmt := `
-    INSERT INTO email (
-      create_datetime,
-      sent,
-      notification_type_id,
-      trip_id,
-      from_id,
-      reply_to_id,
-      subject,
-      body)
-    VALUES (datetime('now'), false, ?, ?, ?, ?, ?, ?)`
+		INSERT INTO email (
+			create_datetime,
+			sent,
+			notification_type_id,
+			trip_id,
+			from_id,
+			reply_to_id,
+			subject,
+			body)
+		VALUES (datetime('now'), false, ?, ?, ?, ?, ?, ?)`
 	_, err = db.Exec(
 		stmt,
 		notificationType,

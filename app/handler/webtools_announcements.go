@@ -22,9 +22,9 @@ type emailStruct struct {
 
 func GetWebtoolsEmails(w http.ResponseWriter, r *http.Request) {
 	stmt := `
-    SELECT *
-    FROM email
-    ORDER BY datetime(create_datetime) DESC`
+		SELECT *
+		FROM email
+		ORDER BY datetime(create_datetime) DESC`
 	rows, err := db.Query(stmt)
 	if !checkError(w, err) {
 		return

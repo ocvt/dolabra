@@ -53,67 +53,67 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
 	notificationsStr := string(notificationsArr)
 
 	stmt := `
-    UPDATE member
-    SET
-      email = '',
-      first_name = '',
-      last_name = '',
-      create_datetime = 0,
-      cell_number = '',
-      gender = '',
-      birth_year = 0,
-      active = false,
-      medical_cond = false,
-      medical_cond_desc = '',
-      paid_expire_datetime = 0,
-      notification_preference = ?
-    WHERE id = ?`
+		UPDATE member
+		SET
+			email = '',
+			first_name = '',
+			last_name = '',
+			create_datetime = 0,
+			cell_number = '',
+			gender = '',
+			birth_year = 0,
+			active = false,
+			medical_cond = false,
+			medical_cond_desc = '',
+			paid_expire_datetime = 0,
+			notification_preference = ?
+		WHERE id = ?`
 	_, err = db.Exec(stmt, notificationsStr, memberId)
 	if !checkError(w, err) {
 		return
 	}
 
 	stmt = `
-    UPDATE emergency_contact
-    SET
-      name = '',
-      number = '',
-      relationship = ''
-    WHERE member_id = ?`
+		UPDATE emergency_contact
+		SET
+			name = '',
+			number = '',
+			relationship = ''
+		WHERE member_id = ?`
 	_, err = db.Exec(stmt, memberId)
 	if !checkError(w, err) {
 		return
 	}
 
 	stmt = `
-    UPDATE auth
-    SET
+		UPDATE auth
+		SET
 			sub = '',
 			idp = '',
 			idp_sub = ''
-    WHERE member_id = ?`
+		WHERE member_id = ?`
 	_, err = db.Exec(stmt, memberId)
 	if !checkError(w, err) {
 		return
 	}
 
 	stmt = `
-    UPDATE trip_signup
-    SET
-      trip_id = 0,
-      leader = false,
-      signup_datetime = 0,
-      paid_member = false,
-      attending_code = 'ATTEN',
-      boot_reason = '',
-      short_notice = false,
-      driver = false,
-      carpool = false,
-      car_capacity_total = 0,
-      notes = '',
-      pet = false,
-      attended = false
-    WHERE member_id = ?`
+		UPDATE trip_signup
+		SET
+			trip_id = 0,
+			leader = false,
+			signup_datetime = 0,
+			paid_member = false,
+			attending_code = 'ATTEN',
+			boot_reason = '',
+			short_notice = false,
+			driver = false,
+			carpool = false,
+			car_capacity_total = 0,
+			notes = '',
+			pet = false,
+			attended = false
+		WHERE member_id = ?`
 	_, err = db.Exec(stmt, memberId)
 	if !checkError(w, err) {
 		return
@@ -141,25 +141,25 @@ func GetMyAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    SELECT
-      member.id,
-      member.email,
-      member.first_name,
-      member.last_name,
-      member.create_datetime,
-      member.cell_number,
-      member.gender,
-      member.birth_year,
-      member.active,
-      member.medical_cond,
-      member.medical_cond_desc,
-      member.paid_expire_datetime,
-      emergency_contact.name,
-      emergency_contact.number,
-      emergency_contact.relationship
-    FROM member
-    INNER JOIN emergency_contact ON emergency_contact.member_id = member.id
-    WHERE member.id = ?`
+		SELECT
+			member.id,
+			member.email,
+			member.first_name,
+			member.last_name,
+			member.create_datetime,
+			member.cell_number,
+			member.gender,
+			member.birth_year,
+			member.active,
+			member.medical_cond,
+			member.medical_cond_desc,
+			member.paid_expire_datetime,
+			emergency_contact.name,
+			emergency_contact.number,
+			emergency_contact.relationship
+		FROM member
+		INNER JOIN emergency_contact ON emergency_contact.member_id = member.id
+		WHERE member.id = ?`
 	var member memberStruct
 	err := db.QueryRow(stmt, memberId).Scan(
 		&member.Id,
@@ -197,9 +197,9 @@ func GetMyAccountName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    SELECT first_name
-    FROM member
-    WHERE id = ?`
+		SELECT first_name
+		FROM member
+		WHERE id = ?`
 	var firstName string
 	err := db.QueryRow(stmt, memberId).Scan(&firstName)
 	if !checkError(w, err) {
@@ -232,16 +232,16 @@ func PatchMyAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    UPDATE member
-    SET
+		UPDATE member
+		SET
 			email = ?,
-      first_name = ?,
-      last_name = ?,
-      cell_number = ?,
-      gender = ?,
-      birth_year = ?,
-      medical_cond = ?,
-      medical_cond_desc = ?
+			first_name = ?,
+			last_name = ?,
+			cell_number = ?,
+			gender = ?,
+			birth_year = ?,
+			medical_cond = ?,
+			medical_cond_desc = ?
 		WHERE id = ?`
 	_, err = db.Exec(
 		stmt,
@@ -274,9 +274,9 @@ func PatchMyAccountDeactivate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    UPDATE member
-    SET active = false
-    WHERE id = ?`
+		UPDATE member
+		SET active = false
+		WHERE id = ?`
 	_, err := db.Exec(stmt, memberId)
 	if !checkError(w, err) {
 		return
@@ -308,12 +308,12 @@ func PatchMyAccountEmergency(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    UPDATE emergency_contact
-    SET
-      name = ?,
-      number = ?,
-      relationship = ?
-    WHERE member_id = ?`
+		UPDATE emergency_contact
+		SET
+			name = ?,
+			number = ?,
+			relationship = ?
+		WHERE member_id = ?`
 	_, err = db.Exec(stmt,
 		emergency.EmergencyContactName,
 		emergency.EmergencyContactNumber,
@@ -339,9 +339,9 @@ func PatchMyAccountReactivate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    UPDATE member
-    SET active = 1
-    WHERE id = ?`
+		UPDATE member
+		SET active = 1
+		WHERE id = ?`
 	_, err := db.Exec(stmt, memberId)
 	if !checkError(w, err) {
 		return
@@ -380,20 +380,20 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 	notificationsStr := string(notificationsArr)
 
 	stmt := `
-    INSERT INTO member (
-      email,
-      first_name,
-      last_name,
-      create_datetime,
-      cell_number,
-      gender,
-      birth_year,
-      active,
-      medical_cond,
-      medical_cond_desc,
-      paid_expire_datetime,
-      notification_preference)
-    VALUES (?, ?, ?, datetime('now'), ?, ?, ?, 1, ?, ?, datetime('now'), ?)`
+		INSERT INTO member (
+			email,
+			first_name,
+			last_name,
+			create_datetime,
+			cell_number,
+			gender,
+			birth_year,
+			active,
+			medical_cond,
+			medical_cond_desc,
+			paid_expire_datetime,
+			notification_preference)
+		VALUES (?, ?, ?, datetime('now'), ?, ?, ?, 1, ?, ?, datetime('now'), ?)`
 	result, err := db.Exec(
 		stmt,
 		member.Email,
@@ -417,12 +417,12 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 
 	// Insert placeholder values for emergency contact
 	stmt = `
-    INSERT INTO emergency_contact (
-      member_id,
-      name,
-      number,
-      relationship)
-    VALUES (?, '', '', '')`
+		INSERT INTO emergency_contact (
+			member_id,
+			name,
+			number,
+			relationship)
+		VALUES (?, '', '', '')`
 	_, err = db.Exec(
 		stmt,
 		memberId)
@@ -434,7 +434,7 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 	stmt = `
 		UPDATE auth
 			SET member_id = ?
-    WHERE sub = ?`
+		WHERE sub = ?`
 	_, err = db.Exec(stmt, memberId, sub)
 	if !checkError(w, err) {
 		return
@@ -442,8 +442,8 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 
 	// Remove from quicksignup table
 	stmt = `
-    DELETE FROM quick_signup
-    WHERE email = ?`
+		DELETE FROM quick_signup
+		WHERE email = ?`
 	_, err = db.Exec(stmt, member.Email)
 	if !checkError(w, err) {
 		return

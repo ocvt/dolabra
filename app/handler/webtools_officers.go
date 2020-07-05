@@ -45,8 +45,8 @@ func DeleteWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-   DELETE FROM officer
-   WHERE member_id = ?`
+	 DELETE FROM officer
+	 WHERE member_id = ?`
 	_, err := db.Exec(stmt, officerId)
 	if !checkError(w, err) {
 		return
@@ -60,17 +60,17 @@ func GetWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
 	// TODO Don't allow officers with less privileges to modify officers with more privileges
 
 	stmt := `
-    SELECT
-      member.id,
-      member.email,
-      member.first_name,
-      member.last_name,
-      member.cell_number,
-      officer.expire_datetime,
-      officer.position,
-      officer.security
-    FROM member
-    INNER JOIN officer ON officer.member_id = member.id`
+		SELECT
+			member.id,
+			member.email,
+			member.first_name,
+			member.last_name,
+			member.cell_number,
+			officer.expire_datetime,
+			officer.position,
+			officer.security
+		FROM member
+		INNER JOIN officer ON officer.member_id = member.id`
 	rows, err := db.Query(stmt)
 	if !checkError(w, err) {
 		return
@@ -138,9 +138,9 @@ func PatchWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    UPDATE officer
-    SET ` + action + ` = ?
-    WHERE member_id = ?`
+		UPDATE officer
+		SET ` + action + ` = ?
+		WHERE member_id = ?`
 	_, err = db.Exec(stmt, action, data, officerId) // sqlvet: ignore
 	if !checkError(w, err) {
 		return
@@ -168,13 +168,13 @@ func PostWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    INSERT INTO officer (
-      member_id,
-      create_datetime,
-      expire_datetime,
-      position,
-      security)
-    VALUES (?, datetime('now'), ?, ?, ?)`
+		INSERT INTO officer (
+			member_id,
+			create_datetime,
+			expire_datetime,
+			position,
+			security)
+		VALUES (?, datetime('now'), ?, ?, ?)`
 	_, err = db.Exec(
 		stmt,
 		officer.MemberId,

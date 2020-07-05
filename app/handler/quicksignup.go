@@ -21,11 +21,11 @@ func PostQuicksignup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    INSERT OR REPLACE INTO quick_signup (
-      create_datetime,
-      expire_datetime,
-      email)
-    VALUES (datetime('now'), datetime('now', '+6 months'), ?)`
+		INSERT OR REPLACE INTO quick_signup (
+			create_datetime,
+			expire_datetime,
+			email)
+		VALUES (datetime('now'), datetime('now', '+6 months'), ?)`
 	_, err = db.Exec(stmt, email.Email) // sqlvet: ignore
 	if !checkError(w, err) {
 		return

@@ -5,9 +5,9 @@ import (
 )
 
 /* Contains Trip (including signups) specific functions:
-   - General helpers
-   - "Ensure" helpers to guarantee a specific result
-   - EXISTS helpers
+- General helpers
+- "Ensure" helpers to guarantee a specific result
+- EXISTS helpers
 */
 
 /* General helpers */
@@ -183,12 +183,12 @@ func dbEnsureValidSignup(w http.ResponseWriter, tripId int, memberId int,
 func dbGetTripApprovalSummary(w http.ResponseWriter, tripId int) (string,
 	string, string, bool) {
 	stmt := `
-    SELECT
-      create_datetime,
-      name,
-      description
-    FROM trip
-    WHERE id = ?`
+		SELECT
+			create_datetime,
+			name,
+			description
+		FROM trip
+		WHERE id = ?`
 	row, err := db.Query(stmt, tripId)
 	if !checkError(w, err) {
 		return "", "", "", false
@@ -218,9 +218,9 @@ func dbGetTripApprovalSummary(w http.ResponseWriter, tripId int) (string,
 
 func dbGetTripName(w http.ResponseWriter, tripId int) (string, bool) {
 	stmt := `
-    SELECT name
-    FROM trip
-    WHERE trip.id = ?`
+		SELECT name
+		FROM trip
+		WHERE trip.id = ?`
 	var name string
 	err := db.QueryRow(stmt, tripId).Scan(&name)
 	if !checkError(w, err) {
@@ -232,9 +232,9 @@ func dbGetTripName(w http.ResponseWriter, tripId int) (string, bool) {
 
 func dbGetTripSignupGroup(w http.ResponseWriter, tripId int, groupId string, signups *[]int) bool {
 	stmt := `
-    SELECT member_id
-    FROM trip_signup
-    WHERE trip_signup.trip_id = ? AND trip_signup.attending_code = ?`
+		SELECT member_id
+		FROM trip_signup
+		WHERE trip_signup.trip_id = ? AND trip_signup.attending_code = ?`
 	rows, err := db.Query(stmt, tripId, groupId)
 	if !checkError(w, err) {
 		return false
@@ -275,10 +275,10 @@ func dbGetTripSignupStatus(w http.ResponseWriter, tripId int, memberId int) (str
 /* EXISTS helpers */
 func dbCheckSignupCode(w http.ResponseWriter, tripId int, memberId int, code string) (bool, error) {
 	stmt := `
-    SELECT EXISTS (
-      SELECT 1
-      FROM trip_signup
-      WHERE trip_id = ? AND member_id = ? AND attending_code = ?)`
+		SELECT EXISTS (
+			SELECT 1
+			FROM trip_signup
+			WHERE trip_id = ? AND member_id = ? AND attending_code = ?)`
 	var exists bool
 	err := db.QueryRow(stmt, tripId, memberId, code).Scan(&exists)
 	checkError(w, err)
@@ -287,10 +287,10 @@ func dbCheckSignupCode(w http.ResponseWriter, tripId int, memberId int, code str
 
 func dbIsMemberOnTrip(w http.ResponseWriter, tripId int, memberId int) (bool, error) {
 	stmt := `
-    SELECT EXISTS (
-      SELECT 1
-      FROM trip_signup
-      WHERE (trip_id = ? AND member_id = ?))`
+		SELECT EXISTS (
+			SELECT 1
+			FROM trip_signup
+			WHERE (trip_id = ? AND member_id = ?))`
 	var exists bool
 	err := db.QueryRow(stmt, tripId, memberId).Scan(&exists)
 	checkError(w, err)
@@ -299,10 +299,10 @@ func dbIsMemberOnTrip(w http.ResponseWriter, tripId int, memberId int) (bool, er
 
 func dbIsPetAllowed(w http.ResponseWriter, tripId int) (bool, error) {
 	stmt := `
-    SELECT EXISTS (
-      SELECT 1
-      FROM trip
-      WHERE id = ? AND pets_allowed = true)`
+		SELECT EXISTS (
+			SELECT 1
+			FROM trip
+			WHERE id = ? AND pets_allowed = true)`
 	var exists bool
 	err := db.QueryRow(stmt, tripId).Scan(&exists)
 	checkError(w, err)
@@ -311,10 +311,10 @@ func dbIsPetAllowed(w http.ResponseWriter, tripId int) (bool, error) {
 
 func dbIsTooLateSignup(w http.ResponseWriter, tripId int) (bool, error) {
 	stmt := `
-    SELECT EXISTS (
-      SELECT 1
-      FROM trip
-      WHERE id = ? AND datetime(start_datetime) < datetime('now', '+12 hours') AND allow_late_signups = true)`
+		SELECT EXISTS (
+			SELECT 1
+			FROM trip
+			WHERE id = ? AND datetime(start_datetime) < datetime('now', '+12 hours') AND allow_late_signups = true)`
 	var exists bool
 	err := db.QueryRow(stmt, tripId).Scan(&exists)
 	checkError(w, err)
@@ -323,10 +323,10 @@ func dbIsTooLateSignup(w http.ResponseWriter, tripId int) (bool, error) {
 
 func dbIsTrip(w http.ResponseWriter, tripId int) (bool, error) {
 	stmt := `
-    SELECT EXISTS (
-      SELECT 1
-      FROM trip
-      WHERE id = ?)`
+		SELECT EXISTS (
+			SELECT 1
+			FROM trip
+			WHERE id = ?)`
 	var exists bool
 	err := db.QueryRow(stmt, tripId).Scan(&exists)
 	checkError(w, err)
@@ -335,10 +335,10 @@ func dbIsTrip(w http.ResponseWriter, tripId int) (bool, error) {
 
 func dbIsTripCanceled(w http.ResponseWriter, tripId int) (bool, error) {
 	stmt := `
-    SELECT EXISTS (
-      SELECT 1
-      FROM trip
-      WHERE id = ? AND cancel = true)`
+		SELECT EXISTS (
+			SELECT 1
+			FROM trip
+			WHERE id = ? AND cancel = true)`
 	var exists bool
 	err := db.QueryRow(stmt, tripId).Scan(&exists)
 	checkError(w, err)
@@ -347,10 +347,10 @@ func dbIsTripCanceled(w http.ResponseWriter, tripId int) (bool, error) {
 
 func dbIsTripCreator(w http.ResponseWriter, tripId int, memberId int) (bool, error) {
 	stmt := `
-    SELECT EXISTS (
-      SELECT 1
-      FROM trip
-      WHERE id = ? AND member_id = ?)`
+		SELECT EXISTS (
+			SELECT 1
+			FROM trip
+			WHERE id = ? AND member_id = ?)`
 	var exists bool
 	err := db.QueryRow(stmt, tripId, memberId).Scan(&exists)
 	checkError(w, err)
@@ -359,10 +359,10 @@ func dbIsTripCreator(w http.ResponseWriter, tripId int, memberId int) (bool, err
 
 func dbIsTripInFuture(w http.ResponseWriter, tripId int) (bool, error) {
 	stmt := `
-    SELECT EXISTS (
-      SELECT 1
-      FROM trip
-      WHERE id = ? AND datetime('now') < datetime(start_datetime))`
+		SELECT EXISTS (
+			SELECT 1
+			FROM trip
+			WHERE id = ? AND datetime('now') < datetime(start_datetime))`
 	var exists bool
 	err := db.QueryRow(stmt, tripId).Scan(&exists)
 	checkError(w, err)
@@ -371,10 +371,10 @@ func dbIsTripInFuture(w http.ResponseWriter, tripId int) (bool, error) {
 
 func dbIsTripInPast(w http.ResponseWriter, tripId int) (bool, error) {
 	stmt := `
-    SELECT EXISTS (
-      SELECT 1
-      FROM trip
-      WHERE id = ? AND datetime(end_datetime) < datetime('now'))`
+		SELECT EXISTS (
+			SELECT 1
+			FROM trip
+			WHERE id = ? AND datetime(end_datetime) < datetime('now'))`
 	var exists bool
 	err := db.QueryRow(stmt, tripId).Scan(&exists)
 	checkError(w, err)
@@ -383,10 +383,10 @@ func dbIsTripInPast(w http.ResponseWriter, tripId int) (bool, error) {
 
 func dbIsTripLeader(w http.ResponseWriter, tripId int, memberId int) (bool, error) {
 	stmt := `
-    SELECT EXISTS (
-      SELECT 1
-      FROM trip_signup
-      WHERE (trip_id = ? AND member_id = ? AND leader = true))`
+		SELECT EXISTS (
+			SELECT 1
+			FROM trip_signup
+			WHERE (trip_id = ? AND member_id = ? AND leader = true))`
 	var isTripLeader bool
 	err := db.QueryRow(stmt, tripId, memberId).Scan(&isTripLeader)
 	checkError(w, err)
@@ -395,10 +395,10 @@ func dbIsTripLeader(w http.ResponseWriter, tripId int, memberId int) (bool, erro
 
 func dbIsTripPublished(w http.ResponseWriter, tripId int) (bool, error) {
 	stmt := `
-    SELECT EXISTS (
-      SELECT 1
-      FROM trip
-      WHERE id = ? AND publish = true)`
+		SELECT EXISTS (
+			SELECT 1
+			FROM trip
+			WHERE id = ? AND publish = true)`
 	var exists bool
 	err := db.QueryRow(stmt, tripId).Scan(&exists)
 	checkError(w, err)

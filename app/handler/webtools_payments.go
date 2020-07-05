@@ -47,9 +47,9 @@ type storeCodeStruct struct {
 
 func GetWebtoolsPayments(w http.ResponseWriter, r *http.Request) {
 	stmt := `
-    SELECT *
-    FROM payment
-    ORDER BY datetime(create_datetim) DESC`
+		SELECT *
+		FROM payment
+		ORDER BY datetime(create_datetim) DESC`
 	rows, err := db.Query(stmt)
 	if !checkError(w, err) {
 		return
@@ -108,9 +108,9 @@ func PatchWebtoolsPaymentsCompleted(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    UPDATE payment
-    SET completed = true
-    WHERE id = ?`
+		UPDATE payment
+		SET completed = true
+		WHERE id = ?`
 	_, err := db.Exec(stmt, paymentRowId)
 	if !checkError(w, err) {
 		return
@@ -152,17 +152,17 @@ func PostWebtoolsGenerateCode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    INSERT INTO store_code (
-      create_datetime,
-      generated_by_id,
-      note,
-      store_item_id,
-      store_item_count,
-      amount,
-      code,
-      completed,
-      redeemed)
-    VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, ?, false)`
+		INSERT INTO store_code (
+			create_datetime,
+			generated_by_id,
+			note,
+			store_item_id,
+			store_item_count,
+			amount,
+			code,
+			completed,
+			redeemed)
+		VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, ?, false)`
 	_, err = db.Exec(stmt,
 		memberId,
 		storeCode.Note,
@@ -219,18 +219,18 @@ func PostWebtoolsPayments(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    INSERT INTO payment (
-      create_datetime,
-      created_by_id,
-      note,
-      member_id,
-      store_item_id,
-      store_item_count,
-      amount,
-      payment_method,
-      payment_id,
-      completed)
-    VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, 'METHOD', ?, ?)`
+		INSERT INTO payment (
+			create_datetime,
+			created_by_id,
+			note,
+			member_id,
+			store_item_id,
+			store_item_count,
+			amount,
+			payment_method,
+			payment_id,
+			completed)
+		VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, 'METHOD', ?, ?)`
 	_, err = db.Exec(stmt,
 		memberId,
 		payment.Note,

@@ -105,9 +105,9 @@ func GetTrip(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    SELECT *
-    FROM trip
-    WHERE id = ?`
+		SELECT *
+		FROM trip
+		WHERE id = ?`
 	var creatorMemberId int
 	var trip tripStruct
 	err := db.QueryRow(stmt, tripId).Scan(
@@ -161,9 +161,9 @@ func GetTripSummary(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    SELECT *
+		SELECT *
 		FROM trip
-    WHERE
+		WHERE
 			id = ?`
 	var creatorMemberId int
 	var trip tripStruct
@@ -232,10 +232,10 @@ func GetTripsAdmin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    SELECT *
-    FROM trip_signup
-    WHERE trip_id = ?
-    ORDER BY datetime(signup_datetime) DESC`
+		SELECT *
+		FROM trip_signup
+		WHERE trip_id = ?
+		ORDER BY datetime(signup_datetime) DESC`
 	rows, err := db.Query(stmt, tripId)
 	if !checkError(w, err) {
 		return
@@ -267,17 +267,17 @@ func GetTripsAdmin(w http.ResponseWriter, r *http.Request) {
 		}
 
 		stmt = `
-      SELECT
-        email,
-        first_name,
-        last_name,
-        cell_number,
-        gender,
-        birth_year,
-        medical_cond,
-        medical_cond_desc
-      FROM member
-      WHERE id = ?`
+			SELECT
+				email,
+				first_name,
+				last_name,
+				cell_number,
+				gender,
+				birth_year,
+				medical_cond,
+				medical_cond_desc
+			FROM member
+			WHERE id = ?`
 		err := db.QueryRow(stmt, tripSignups[i].MemberId).Scan(
 			&tripSignups[i].Email,
 			&tripSignups[i].FirstName,
@@ -292,9 +292,9 @@ func GetTripsAdmin(w http.ResponseWriter, r *http.Request) {
 		}
 
 		stmt = `
-      SELECT name, number, relationship
-      FROM emergency_contact
-      WHERE member_id = ?`
+			SELECT name, number, relationship
+			FROM emergency_contact
+			WHERE member_id = ?`
 		err = db.QueryRow(stmt, tripSignups[i].MemberId).Scan(
 			&tripSignups[i].EmergencyContactName,
 			&tripSignups[i].EmergencyContactNumber,
@@ -325,11 +325,11 @@ func GetTripsArchive(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    SELECT *
-    FROM trip
-    WHERE id > 0 AND id <= ? AND publish = true
-    ORDER BY datetime(end_datetime) DESC
-    LIMIT ?`
+		SELECT *
+		FROM trip
+		WHERE id > 0 AND id <= ? AND publish = true
+		ORDER BY datetime(end_datetime) DESC
+		LIMIT ?`
 	rows, err := db.Query(stmt, tripStartId, tripsPerPage)
 	if !checkError(w, err) {
 		return
@@ -406,10 +406,10 @@ func GetTripsMyTrips(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    SELECT *
-    FROM trip
-    WHERE
-      member_id = ?`
+		SELECT *
+		FROM trip
+		WHERE
+			member_id = ?`
 	rows, err := db.Query(stmt, memberId)
 	if !checkError(w, err) {
 		return
@@ -470,13 +470,13 @@ func GetTripsMyTrips(w http.ResponseWriter, r *http.Request) {
 
 func GetTripsSummary(w http.ResponseWriter, r *http.Request) {
 	stmt := `
-    SELECT *
-    FROM trip
-    WHERE
-      cancel = false
-      AND publish = true
-      AND datetime(end_datetime) >= datetime('now')
-    ORDER BY datetime(start_datetime) DESC`
+		SELECT *
+		FROM trip
+		WHERE
+			cancel = false
+			AND publish = true
+			AND datetime(end_datetime) >= datetime('now')
+		ORDER BY datetime(start_datetime) DESC`
 	rows, err := db.Query(stmt)
 	if !checkError(w, err) {
 		return
@@ -541,8 +541,8 @@ func GetTripsSummary(w http.ResponseWriter, r *http.Request) {
 
 func GetTripsTypes(w http.ResponseWriter, r *http.Request) {
 	stmt := `
-    SELECT *
-    FROM notification_type`
+		SELECT *
+		FROM notification_type`
 	rows, err := db.Query(stmt)
 	if !checkError(w, err) {
 		return
@@ -599,9 +599,9 @@ func PatchTripsCancel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    UPDATE trip
-    SET cancel = true
-    WHERE id = ?`
+		UPDATE trip
+		SET cancel = true
+		WHERE id = ?`
 	_, err := db.Exec(stmt, tripId)
 	if !checkError(w, err) {
 		return
@@ -661,9 +661,9 @@ func PatchTripsPublish(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-    UPDATE trip
-    SET publish = true
-    WHERE id = ?`
+		UPDATE trip
+		SET publish = true
+		WHERE id = ?`
 	_, err := db.Exec(stmt, tripId)
 	if !checkError(w, err) {
 		return
@@ -705,35 +705,35 @@ func PostTrips(w http.ResponseWriter, r *http.Request) {
 
 	// Insert new trip
 	stmt := `
-    INSERT INTO trip (
-      create_datetime,
-      cancel,
-      publish,
-      reminder_sent,
-      member_id,
-      members_only,
-      allow_late_signups,
-      driving_required,
-      has_cost,
-      cost_description,
-      max_people,
-      name,
-      notification_type_id,
-      start_datetime,
-      end_datetime,
-      summary,
-      description,
-      location,
-      location_directions,
-      meetup_location,
-      distance,
-      difficulty,
-      difficulty_description,
-      instructions,
-      pets_allowed,
-      pets_description)
-    VALUES (datetime('now'), false, false, false, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		INSERT INTO trip (
+			create_datetime,
+			cancel,
+			publish,
+			reminder_sent,
+			member_id,
+			members_only,
+			allow_late_signups,
+			driving_required,
+			has_cost,
+			cost_description,
+			max_people,
+			name,
+			notification_type_id,
+			start_datetime,
+			end_datetime,
+			summary,
+			description,
+			location,
+			location_directions,
+			meetup_location,
+			distance,
+			difficulty,
+			difficulty_description,
+			instructions,
+			pets_allowed,
+			pets_description)
+		VALUES (datetime('now'), false, false, false, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+						?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	result, err := db.Exec(
 		stmt,
 		memberId,

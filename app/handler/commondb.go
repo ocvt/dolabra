@@ -11,9 +11,9 @@ import (
 )
 
 /* Contains:
-   - General helpers
-   - "Ensure" helpers to guarantee a specific result
-   - EXISTS helpers
+- General helpers
+- "Ensure" helpers to guarantee a specific result
+- EXISTS helpers
 */
 
 const MAX_INT = 4294967295
@@ -59,11 +59,11 @@ func generateCode(n int) string {
 /* General db helpers */
 func dbCreateNullTrip() error {
 	stmt := `
-    INSERT OR REPLACE INTO trip
-    VALUES (0, '1990-01-01 00:00:00', true, false, 0, false, false, false,
-            false, false, '', 0, 'Null Trip for Announcement logs',
-            'TRIP_OTHER', '1990-01-02 00:00:00', '1990-01-03 00:00:00', '', '',
-            '', '', '', 0, 0, '', '', false, '')`
+		INSERT OR REPLACE INTO trip
+		VALUES (0, '1990-01-01 00:00:00', true, false, 0, false, false, false,
+						false, false, '', 0, 'Null Trip for Announcement logs',
+						'TRIP_OTHER', '1990-01-02 00:00:00', '1990-01-03 00:00:00', '', '',
+						'', '', '', 0, 0, '', '', false, '')`
 	_, err := db.Exec(stmt) // sqlvet: ignore
 	return err
 }
@@ -77,10 +77,10 @@ func dbCreateSystemMember() error {
 	notificationsStr := string(notificationsArr)
 
 	stmt := `
-    INSERT OR REPLACE INTO member
-    VALUES (0, ?, ?, ?, datetime('now'), '555-555-5555', 'Prefer not to say',
-            1990, true, 'Robot', 'Require frequent oiling',
-            datetime('now', '+100 years'), ?)`
+		INSERT OR REPLACE INTO member
+		VALUES (0, ?, ?, ?, datetime('now'), '555-555-5555', 'Prefer not to say',
+						1990, true, 'Robot', 'Require frequent oiling',
+						datetime('now', '+100 years'), ?)`
 	_, err = db.Exec(
 		stmt,
 		SMTP_FROM_EMAIL_DEFAULT,
@@ -94,9 +94,9 @@ func dbCreateSystemMember() error {
 /* "Ensure" helpers */
 func dbCheckMemberWantsNotification(memberId int, notificationType string) bool {
 	stmt := `
-    SELECT notification_preference
-    FROM member
-    WHERE id = ?`
+		SELECT notification_preference
+		FROM member
+		WHERE id = ?`
 	var notificationsStrMap = map[string]bool{}
 	err := db.QueryRow(stmt, memberId).Scan(&notificationsStrMap)
 	if err != nil {
@@ -188,9 +188,9 @@ func dbEnsureTripExists(w http.ResponseWriter, tripId int) bool {
 
 func dbExtendMembership(w http.ResponseWriter, memberId int, years int) bool {
 	stmt := `
-    UPDATE member
-    SET paid_expire_datetime = datetime(paid_expire_datetime, '+? years')
-    WHERE id = ?`
+		UPDATE member
+		SET paid_expire_datetime = datetime(paid_expire_datetime, '+? years')
+		WHERE id = ?`
 	_, err := db.Exec(stmt, years, memberId)
 	if !checkError(w, err) {
 		return false
@@ -218,11 +218,11 @@ func dbGetActiveMemberId(w http.ResponseWriter, sub string) (int, bool) {
 func dbGetItemCount(w http.ResponseWriter, storeItemId string,
 	paymentMethod string, paymentId string) (int, int, bool) {
 	stmt := `
-    SELECT
-      member_id,
-      store_item_count
-    FROM payment
-    WHERE payment_method = ? AND payment_id = ?`
+		SELECT
+			member_id,
+			store_item_count
+		FROM payment
+		WHERE payment_method = ? AND payment_id = ?`
 	var memberId int
 	var storeItemCount int
 	err := db.QueryRow(stmt, paymentMethod, paymentId).Scan(&memberId, &storeItemCount)
@@ -235,9 +235,9 @@ func dbGetItemCount(w http.ResponseWriter, storeItemId string,
 
 func dbGetMemberEmail(w http.ResponseWriter, memberId int) (string, bool) {
 	stmt := `
-    SELECT email
-    FROM member
-    WHERE id = ?`
+		SELECT email
+		FROM member
+		WHERE id = ?`
 	var email string
 	err := db.QueryRow(stmt, memberId).Scan(&email)
 	if !checkError(w, err) {
@@ -252,9 +252,9 @@ func dbGetMemberId(w http.ResponseWriter, sub string) (int, bool) {
 	}
 
 	stmt := `
-    SELECT member_id
-    FROM auth
-    WHERE sub = ?`
+		SELECT member_id
+		FROM auth
+		WHERE sub = ?`
 	var memberId int
 	err := db.QueryRow(stmt, sub).Scan(&memberId)
 	if !checkError(w, err) {
@@ -265,9 +265,9 @@ func dbGetMemberId(w http.ResponseWriter, sub string) (int, bool) {
 
 func dbGetMemberName(w http.ResponseWriter, memberId int) (string, bool) {
 	stmt := `
-    SELECT first_name || ' ' || last_name AS full_name
-    FROM member
-    WHERE id = ?`
+		SELECT first_name || ' ' || last_name AS full_name
+		FROM member
+		WHERE id = ?`
 	var fullName string
 	err := db.QueryRow(stmt, memberId).Scan(&fullName)
 	if !checkError(w, err) {
@@ -278,11 +278,11 @@ func dbGetMemberName(w http.ResponseWriter, memberId int) (string, bool) {
 
 func dbGetMemberNameEmail(memberId int) (string, string) {
 	stmt := `
-    SELECT
-      email,
-      first_name || ' ' || last_name AS full_name
-    FROM member
-    WHERE id = ?`
+		SELECT
+			email,
+			first_name || ' ' || last_name AS full_name
+		FROM member
+		WHERE id = ?`
 	var name, email string
 	err := db.QueryRow(stmt, memberId).Scan(&email, &name)
 	if err != nil {
@@ -293,9 +293,9 @@ func dbGetMemberNameEmail(memberId int) (string, string) {
 
 func dbGetMemberNotifications(w http.ResponseWriter, memberId int) (notificationsStruct, bool) {
 	stmt := `
-    SELECT notification_preference
-    FROM member
-    WHERE id = ?`
+		SELECT notification_preference
+		FROM member
+		WHERE id = ?`
 	var notificationsStr string
 	err := db.QueryRow(stmt, memberId).Scan(&notificationsStr)
 	if !checkError(w, err) {
@@ -313,9 +313,9 @@ func dbGetMemberNotifications(w http.ResponseWriter, memberId int) (notification
 
 func dbGetMemberSubWithIdp(w http.ResponseWriter, idp string, idpSub string) (string, bool) {
 	stmt := `
-    SELECT sub
-    FROM auth
-    WHERE idp = ? AND idp_sub = ?`
+		SELECT sub
+		FROM auth
+		WHERE idp = ? AND idp_sub = ?`
 	var sub string
 	err := db.QueryRow(stmt, idp, idpSub).Scan(&sub)
 	if !checkError(w, err) {
@@ -328,18 +328,18 @@ func dbInsertPayment(w http.ResponseWriter, enteredById int, note string,
 	memberId int, storeItemId string, storeItemCount int, amount int,
 	paymentMethod string, paymentId string, completed bool) bool {
 	stmt := `
-    INSERT INTO payment (
-      create_datetime,
-      entered_by_id,
-      note,
-      member_id,
-      store_item_id,
-      store_item_count,
-      amount,
-      payment_method,
-      payment_id,
-      completed)
-    VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		INSERT INTO payment (
+			create_datetime,
+			entered_by_id,
+			note,
+			member_id,
+			store_item_id,
+			store_item_count,
+			amount,
+			payment_method,
+			payment_id,
+			completed)
+		VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	_, err := db.Exec(stmt,
 		enteredById,
 		note,
@@ -356,10 +356,10 @@ func dbInsertPayment(w http.ResponseWriter, enteredById int, note string,
 /* EXISTS helpers */
 func dbIsActiveMember(w http.ResponseWriter, memberId int) (bool, error) {
 	stmt := `
-    SELECT EXISTS (
-      SELECT 1
-      FROM member
-      WHERE id = ? AND active = true)`
+		SELECT EXISTS (
+			SELECT 1
+			FROM member
+			WHERE id = ? AND active = true)`
 	var exists bool
 	err := db.QueryRow(stmt, memberId).Scan(&exists)
 	checkError(w, err)
@@ -368,10 +368,10 @@ func dbIsActiveMember(w http.ResponseWriter, memberId int) (bool, error) {
 
 func dbIsMemberWithIdp(w http.ResponseWriter, idp string, idpSub string) (bool, error) {
 	stmt := `
-    SELECT EXISTS (
-      SELECT 1
-      FROM auth
-      WHERE idp = ? AND idp_sub = ?)`
+		SELECT EXISTS (
+			SELECT 1
+			FROM auth
+			WHERE idp = ? AND idp_sub = ?)`
 	var exists bool
 	err := db.QueryRow(stmt, idp, idpSub).Scan(&exists)
 	checkError(w, err)
@@ -380,10 +380,10 @@ func dbIsMemberWithIdp(w http.ResponseWriter, idp string, idpSub string) (bool, 
 
 func dbIsMemberWithMemberId(w http.ResponseWriter, memberId int) (bool, error) {
 	stmt := `
-    SELECT EXISTS (
-      SELECT 1
-      FROM auth
-      WHERE member_id > 0 AND member_id = ?)`
+		SELECT EXISTS (
+			SELECT 1
+			FROM auth
+			WHERE member_id > 0 AND member_id = ?)`
 	var exists bool
 	err := db.QueryRow(stmt, memberId).Scan(&exists)
 	checkError(w, err)
@@ -392,10 +392,10 @@ func dbIsMemberWithMemberId(w http.ResponseWriter, memberId int) (bool, error) {
 
 func dbIsMemberWithSub(w http.ResponseWriter, sub string) (bool, error) {
 	stmt := `
-    SELECT EXISTS (
-      SELECT 1
-      FROM auth
-      WHERE member_id > 0 AND sub = ?)`
+		SELECT EXISTS (
+			SELECT 1
+			FROM auth
+			WHERE member_id > 0 AND sub = ?)`
 	var exists bool
 	err := db.QueryRow(stmt, sub).Scan(&exists)
 	checkError(w, err)
@@ -404,10 +404,10 @@ func dbIsMemberWithSub(w http.ResponseWriter, sub string) (bool, error) {
 
 func dbIsOfficer(w http.ResponseWriter, memberId int) (bool, error) {
 	stmt := `
-    SELECT EXISTS (
-      SELECT 1
-      FROM officer
-      WHERE member_id = ? AND date(expire_datetime) > datetime('now'))`
+		SELECT EXISTS (
+			SELECT 1
+			FROM officer
+			WHERE member_id = ? AND date(expire_datetime) > datetime('now'))`
 	var exists bool
 	err := db.QueryRow(stmt, memberId).Scan(&exists)
 	checkError(w, err)
@@ -416,10 +416,10 @@ func dbIsOfficer(w http.ResponseWriter, memberId int) (bool, error) {
 
 func dbIsPaidMember(w http.ResponseWriter, memberId int) (bool, error) {
 	stmt := `
-    SELECT EXISTS (
-      SELECT 1
-      FROM member
-      WHERE id = ? AND date(paid_expire_datetime) > datetime('now'))`
+		SELECT EXISTS (
+			SELECT 1
+			FROM member
+			WHERE id = ? AND date(paid_expire_datetime) > datetime('now'))`
 	var exists bool
 	err := db.QueryRow(stmt, memberId).Scan(&exists)
 	checkError(w, err)
