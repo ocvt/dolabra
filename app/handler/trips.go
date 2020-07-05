@@ -210,77 +210,6 @@ func GetTripSummary(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, trip)
 }
 
-func GetTripsSummary(w http.ResponseWriter, r *http.Request) {
-	stmt := `
-    SELECT *
-    FROM trip
-    WHERE
-      cancel = false
-      AND publish = true
-      AND datetime(end_datetime) >= datetime('now')
-    ORDER BY datetime(start_datetime) DESC`
-	rows, err := db.Query(stmt)
-	if !checkError(w, err) {
-		return
-	}
-	defer rows.Close()
-
-	var trips = []*tripStruct{}
-	i := 0
-	for rows.Next() {
-		var creatorMemberId int
-		trips = append(trips, &tripStruct{})
-		err = rows.Scan(
-			&trips[i].Id,
-			&trips[i].CreateDatetime,
-			&trips[i].Cancel,
-			&trips[i].Publish,
-			&trips[i].ReminderSent,
-			&creatorMemberId,
-			&trips[i].MembersOnly,
-			&trips[i].AllowLateSignups,
-			&trips[i].DrivingRequired,
-			&trips[i].HasCost,
-			&trips[i].CostDescription,
-			&trips[i].MaxPeople,
-			&trips[i].Name,
-			&trips[i].NotificationTypeId,
-			&trips[i].StartDatetime,
-			&trips[i].EndDatetime,
-			&trips[i].Summary,
-			&trips[i].Description,
-			&trips[i].Location,
-			&trips[i].LocationDirections,
-			&trips[i].MeetupLocation,
-			&trips[i].Distance,
-			&trips[i].Difficulty,
-			&trips[i].DifficultyDescription,
-			&trips[i].Instructions,
-			&trips[i].PetsAllowed,
-			&trips[i].PetsDescription)
-		if !checkError(w, err) {
-			return
-		}
-
-		// Hide location to public
-		trips[i].MeetupLocation = ""
-
-		var ok bool
-		trips[i].MemberName, ok = dbGetMemberName(w, creatorMemberId)
-		if !ok {
-			return
-		}
-		i++
-	}
-
-	err = rows.Err()
-	if !checkError(w, err) {
-		return
-	}
-
-	respondJSON(w, http.StatusOK, map[string][]*tripStruct{"trips": trips})
-}
-
 func GetTripsAdmin(w http.ResponseWriter, r *http.Request) {
 	sub, ok := checkLogin(w, r)
 	if !ok {
@@ -385,10 +314,6 @@ func GetTripsAdmin(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string][]*tripSignupStruct{"tripSignups": tripSignups})
 }
 
-func GetTripsArchiveDefault(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, r.URL.RequestURI()+"/100000/20", http.StatusPermanentRedirect)
-}
-
 func GetTripsArchive(w http.ResponseWriter, r *http.Request) {
 	tripStartId, ok := checkURLParam(w, r, "startId")
 	if !ok {
@@ -464,6 +389,10 @@ func GetTripsArchive(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string][]*tripStruct{"trips": trips})
 }
 
+func GetTripsArchiveDefault(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, r.URL.RequestURI()+"/100000/20", http.StatusPermanentRedirect)
+}
+
 func GetTripsMyTrips(w http.ResponseWriter, r *http.Request) {
 	sub, ok := checkLogin(w, r)
 	if !ok {
@@ -522,6 +451,77 @@ func GetTripsMyTrips(w http.ResponseWriter, r *http.Request) {
 		if !checkError(w, err) {
 			return
 		}
+
+		var ok bool
+		trips[i].MemberName, ok = dbGetMemberName(w, creatorMemberId)
+		if !ok {
+			return
+		}
+		i++
+	}
+
+	err = rows.Err()
+	if !checkError(w, err) {
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string][]*tripStruct{"trips": trips})
+}
+
+func GetTripsSummary(w http.ResponseWriter, r *http.Request) {
+	stmt := `
+    SELECT *
+    FROM trip
+    WHERE
+      cancel = false
+      AND publish = true
+      AND datetime(end_datetime) >= datetime('now')
+    ORDER BY datetime(start_datetime) DESC`
+	rows, err := db.Query(stmt)
+	if !checkError(w, err) {
+		return
+	}
+	defer rows.Close()
+
+	var trips = []*tripStruct{}
+	i := 0
+	for rows.Next() {
+		var creatorMemberId int
+		trips = append(trips, &tripStruct{})
+		err = rows.Scan(
+			&trips[i].Id,
+			&trips[i].CreateDatetime,
+			&trips[i].Cancel,
+			&trips[i].Publish,
+			&trips[i].ReminderSent,
+			&creatorMemberId,
+			&trips[i].MembersOnly,
+			&trips[i].AllowLateSignups,
+			&trips[i].DrivingRequired,
+			&trips[i].HasCost,
+			&trips[i].CostDescription,
+			&trips[i].MaxPeople,
+			&trips[i].Name,
+			&trips[i].NotificationTypeId,
+			&trips[i].StartDatetime,
+			&trips[i].EndDatetime,
+			&trips[i].Summary,
+			&trips[i].Description,
+			&trips[i].Location,
+			&trips[i].LocationDirections,
+			&trips[i].MeetupLocation,
+			&trips[i].Distance,
+			&trips[i].Difficulty,
+			&trips[i].DifficultyDescription,
+			&trips[i].Instructions,
+			&trips[i].PetsAllowed,
+			&trips[i].PetsDescription)
+		if !checkError(w, err) {
+			return
+		}
+
+		// Hide location to public
+		trips[i].MeetupLocation = ""
 
 		var ok bool
 		trips[i].MemberName, ok = dbGetMemberName(w, creatorMemberId)

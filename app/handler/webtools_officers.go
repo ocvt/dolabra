@@ -21,6 +21,40 @@ type officerStruct struct {
 	Security       int    `json:"security"`
 }
 
+func DeleteWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
+	sub, ok := checkLogin(w, r)
+	if !ok {
+		return
+	}
+
+	// Get memberId, officerId
+	memberId, ok := dbGetActiveMemberId(w, sub)
+	if !ok {
+		return
+	}
+	officerId, ok := checkURLParam(w, r, "memberId")
+	if !ok {
+		return
+	}
+
+	// Permissions
+	// TODO Don't allow officers with less privileges to modify officers with more privileges
+	if memberId == officerId {
+		respondError(w, http.StatusBadRequest, "Cannot remove yourself from officers.")
+		return
+	}
+
+	stmt := `
+   DELETE FROM officer
+   WHERE member_id = ?`
+	_, err := db.Exec(stmt, officerId)
+	if !checkError(w, err) {
+		return
+	}
+
+	respondJSON(w, http.StatusNoContent, nil)
+}
+
 func GetWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
 	// Permissions
 	// TODO Don't allow officers with less privileges to modify officers with more privileges
@@ -68,40 +102,6 @@ func GetWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJSON(w, http.StatusOK, map[string][]*officerStruct{"officers": officers})
-}
-
-func DeleteWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
-	sub, ok := checkLogin(w, r)
-	if !ok {
-		return
-	}
-
-	// Get memberId, officerId
-	memberId, ok := dbGetActiveMemberId(w, sub)
-	if !ok {
-		return
-	}
-	officerId, ok := checkURLParam(w, r, "memberId")
-	if !ok {
-		return
-	}
-
-	// Permissions
-	// TODO Don't allow officers with less privileges to modify officers with more privileges
-	if memberId == officerId {
-		respondError(w, http.StatusBadRequest, "Cannot remove yourself from officers.")
-		return
-	}
-
-	stmt := `
-   DELETE FROM officer
-   WHERE member_id = ?`
-	_, err := db.Exec(stmt, officerId)
-	if !checkError(w, err) {
-		return
-	}
-
-	respondJSON(w, http.StatusNoContent, nil)
 }
 
 func PatchWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {

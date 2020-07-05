@@ -8,52 +8,6 @@ import (
 	"github.com/go-chi/chi"
 )
 
-func PostTripsNotifySignup(w http.ResponseWriter, r *http.Request) {
-	sub, ok := checkLogin(w, r)
-	if !ok {
-		return
-	}
-
-	// Get memberId, tripId, signupId
-	memberId, ok := dbGetActiveMemberId(w, sub)
-	if !ok {
-		return
-	}
-	tripId, ok := checkURLParam(w, r, "tripId")
-	if !ok {
-		return
-	}
-	signupId, ok := checkURLParam(w, r, "signupId")
-	if !ok {
-		return
-	}
-
-	// Get email fields
-	decoder := json.NewDecoder(r.Body)
-	var jsonBody map[string]string
-	err := decoder.Decode(&jsonBody)
-	if err != nil {
-		respondError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	emailBody := jsonBody["emailBody"]
-	emailSubject := jsonBody["emailSubject"]
-
-	// Permissions
-	if !dbEnsurePublishedTrip(w, tripId) ||
-		!dbEnsureOfficerOrTripLeader(w, tripId, memberId) {
-		return
-	}
-
-	// Notify signup
-	signupIdStr := strconv.Itoa(signupId)
-	if !stageEmail(w, signupIdStr, tripId, memberId, emailSubject, emailBody) {
-		return
-	}
-
-	respondJSON(w, http.StatusNoContent, nil)
-}
-
 func PostTripsNotifyGroup(w http.ResponseWriter, r *http.Request) {
 	sub, ok := checkLogin(w, r)
 	if !ok {
@@ -116,6 +70,52 @@ func PostTripsNotifyGroup(w http.ResponseWriter, r *http.Request) {
 	emailBody = "You are receiving this because you sent a notification for a" +
 		" trip you are the trip leader of."
 	if !stageEmail(w, memberIdStr, tripId, memberId, emailSubject, emailBody) {
+		return
+	}
+
+	respondJSON(w, http.StatusNoContent, nil)
+}
+
+func PostTripsNotifySignup(w http.ResponseWriter, r *http.Request) {
+	sub, ok := checkLogin(w, r)
+	if !ok {
+		return
+	}
+
+	// Get memberId, tripId, signupId
+	memberId, ok := dbGetActiveMemberId(w, sub)
+	if !ok {
+		return
+	}
+	tripId, ok := checkURLParam(w, r, "tripId")
+	if !ok {
+		return
+	}
+	signupId, ok := checkURLParam(w, r, "signupId")
+	if !ok {
+		return
+	}
+
+	// Get email fields
+	decoder := json.NewDecoder(r.Body)
+	var jsonBody map[string]string
+	err := decoder.Decode(&jsonBody)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	emailBody := jsonBody["emailBody"]
+	emailSubject := jsonBody["emailSubject"]
+
+	// Permissions
+	if !dbEnsurePublishedTrip(w, tripId) ||
+		!dbEnsureOfficerOrTripLeader(w, tripId, memberId) {
+		return
+	}
+
+	// Notify signup
+	signupIdStr := strconv.Itoa(signupId)
+	if !stageEmail(w, signupIdStr, tripId, memberId, emailSubject, emailBody) {
 		return
 	}
 

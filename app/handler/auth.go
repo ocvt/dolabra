@@ -83,12 +83,6 @@ func DevLogin(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, r.URL.Query().Get("state"), http.StatusTemporaryRedirect)
 }
 
-func GoogleLogin(w http.ResponseWriter, r *http.Request) {
-	promptParam := oauth2.SetAuthURLParam("prompt", "consent select_account")
-	url := googleOAuthConfig.AuthCodeURL(r.URL.Query().Get("state"), promptParam)
-	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
-}
-
 func GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	// Get access token
 	accessToken, err := googleOAuthConfig.Exchange(context.Background(), r.FormValue("code"))
@@ -119,4 +113,10 @@ func GoogleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, r.URL.Query().Get("state"), http.StatusTemporaryRedirect)
+}
+
+func GoogleLogin(w http.ResponseWriter, r *http.Request) {
+	promptParam := oauth2.SetAuthURLParam("prompt", "consent select_account")
+	url := googleOAuthConfig.AuthCodeURL(r.URL.Query().Get("state"), promptParam)
+	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }

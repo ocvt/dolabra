@@ -58,6 +58,17 @@ func generateCode(n int) string {
 }
 
 /* General db helpers */
+func dbCreateNullTrip() error {
+	stmt := `
+    INSERT OR REPLACE INTO trip
+    VALUES (0, '1990-01-01 00:00:00', true, false, 0, false, false, false,
+            false, false, '', 0, 'Null Trip for Announcement logs',
+            'TRIP_OTHER', '1990-01-02 00:00:00', '1990-01-03 00:00:00', '', '',
+            '', '', '', 0, 0, '', '', false, '')`
+	_, err := db.Exec(stmt) // sqlvet: ignore
+	return err
+}
+
 func dbCreateSystemMember() error {
 	notifications := setAllPreferences()
 	notificationsArr, err := json.Marshal(notifications)
@@ -78,17 +89,6 @@ func dbCreateSystemMember() error {
 		SMTP_FROM_LAST_NAME_DEFAULT,
 		notificationsStr) // sqlvet: ignore
 
-	return err
-}
-
-func dbCreateNullTrip() error {
-	stmt := `
-    INSERT OR REPLACE INTO trip
-    VALUES (0, '1990-01-01 00:00:00', true, false, 0, false, false, false,
-            false, false, '', 0, 'Null Trip for Announcement logs',
-            'TRIP_OTHER', '1990-01-02 00:00:00', '1990-01-03 00:00:00', '', '',
-            '', '', '', 0, 0, '', '', false, '')`
-	_, err := db.Exec(stmt) // sqlvet: ignore
 	return err
 }
 
@@ -264,19 +264,6 @@ func dbGetMemberId(w http.ResponseWriter, sub string) (int, bool) {
 	return memberId, true
 }
 
-func dbGetMemberSubWithIdp(w http.ResponseWriter, idp string, idpSub string) (string, bool) {
-	stmt := `
-    SELECT sub
-    FROM auth
-    WHERE idp = ? AND idp_sub = ?`
-	var sub string
-	err := db.QueryRow(stmt, idp, idpSub).Scan(&sub)
-	if !checkError(w, err) {
-		return "", false
-	}
-	return sub, true
-}
-
 func dbGetMemberName(w http.ResponseWriter, memberId int) (string, bool) {
 	stmt := `
     SELECT first_name || ' ' || last_name AS full_name
@@ -323,6 +310,19 @@ func dbGetMemberNotifications(w http.ResponseWriter, memberId int) (notification
 	}
 
 	return notifications, true
+}
+
+func dbGetMemberSubWithIdp(w http.ResponseWriter, idp string, idpSub string) (string, bool) {
+	stmt := `
+    SELECT sub
+    FROM auth
+    WHERE idp = ? AND idp_sub = ?`
+	var sub string
+	err := db.QueryRow(stmt, idp, idpSub).Scan(&sub)
+	if !checkError(w, err) {
+		return "", false
+	}
+	return sub, true
 }
 
 func dbInsertPayment(w http.ResponseWriter, enteredById int, note string,

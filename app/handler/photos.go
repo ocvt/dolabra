@@ -13,6 +13,33 @@ var HOME_PHOTOS_FOLDER_ID string
 var TRIPS_FOLDER_ID string
 
 /* HELPERS */
+func getPhotos(w http.ResponseWriter, tripFolderId string) ([]map[string]string, bool) {
+	// Use Google Application Default Credentials
+	service, err := drive.NewService(context.Background())
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return nil, false
+	}
+
+	// Get trip photos
+	query := fmt.Sprintf("'%s' in parents", tripFolderId)
+	fileListStruct, err := service.Files.List().Q(query).Fields("files(id, name)").Do()
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return nil, false
+	}
+
+	var imageList []map[string]string
+	for i := 0; i < len(fileListStruct.Files); i++ {
+		imageList = append(imageList, map[string]string{
+			"name": fileListStruct.Files[i].Name,
+			"url":  fmt.Sprintf("https://drive.google.com/uc?id=%s&export=view", fileListStruct.Files[i].Id),
+		})
+	}
+
+	return imageList, true
+}
+
 func getTripFolderId(w http.ResponseWriter, tripId string) (string, bool) {
 	// Use Google Application Default Credentials
 	service, err := drive.NewService(context.Background())
@@ -48,33 +75,6 @@ func getTripFolderId(w http.ResponseWriter, tripId string) (string, bool) {
 	}
 
 	return newFolder.Id, true
-}
-
-func getPhotos(w http.ResponseWriter, tripFolderId string) ([]map[string]string, bool) {
-	// Use Google Application Default Credentials
-	service, err := drive.NewService(context.Background())
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
-		return nil, false
-	}
-
-	// Get trip photos
-	query := fmt.Sprintf("'%s' in parents", tripFolderId)
-	fileListStruct, err := service.Files.List().Q(query).Fields("files(id, name)").Do()
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
-		return nil, false
-	}
-
-	var imageList []map[string]string
-	for i := 0; i < len(fileListStruct.Files); i++ {
-		imageList = append(imageList, map[string]string{
-			"name": fileListStruct.Files[i].Name,
-			"url":  fmt.Sprintf("https://drive.google.com/uc?id=%s&export=view", fileListStruct.Files[i].Id),
-		})
-	}
-
-	return imageList, true
 }
 
 func uploadTripPhoto(w http.ResponseWriter, r *http.Request, tripId string, fileName string) bool {

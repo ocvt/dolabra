@@ -11,98 +11,6 @@ import (
 */
 
 /* General helpers */
-func dbGetTripApprovalSummary(w http.ResponseWriter, tripId int) (string,
-	string, string, bool) {
-	stmt := `
-    SELECT
-      create_datetime,
-      name,
-      description
-    FROM trip
-    WHERE id = ?`
-	row, err := db.Query(stmt, tripId)
-	if !checkError(w, err) {
-		return "", "", "", false
-	}
-	defer row.Close()
-
-	for row.Next() {
-		var createDatetime, name, description string
-		err = row.Scan(
-			&createDatetime,
-			&name,
-			&description)
-		if !checkError(w, err) {
-			return "", "", "", false
-		}
-
-		return createDatetime, name, description, true
-	}
-
-	err = row.Err()
-	if !checkError(w, err) {
-		return "", "", "", false
-	}
-
-	return "", "", "", false
-}
-
-func dbGetTripName(w http.ResponseWriter, tripId int) (string, bool) {
-	stmt := `
-    SELECT name
-    FROM trip
-    WHERE trip.id = ?`
-	var name string
-	err := db.QueryRow(stmt, tripId).Scan(&name)
-	if !checkError(w, err) {
-		return "", false
-	}
-
-	return name, true
-}
-
-func dbGetTripSignupGroup(w http.ResponseWriter, tripId int, groupId string, signups *[]int) bool {
-	stmt := `
-    SELECT member_id
-    FROM trip_signup
-    WHERE trip_signup.trip_id = ? AND trip_signup.attending_code = ?`
-	rows, err := db.Query(stmt, tripId, groupId)
-	if !checkError(w, err) {
-		return false
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var memberId int
-		err = rows.Scan(&memberId)
-		if !checkError(w, err) {
-			return false
-		}
-
-		*signups = append(*signups, memberId)
-	}
-
-	err = rows.Err()
-	if !checkError(w, err) {
-		return false
-	}
-
-	return true
-}
-
-func dbGetTripSignupStatus(w http.ResponseWriter, tripId int, memberId int) (string, error) {
-	stmt := `
-		SELECT attending_code
-		FROM trip_signup
-		WHERE trip_id = ? AND member_id = ?`
-	var code string
-	err := db.QueryRow(stmt, tripId, memberId).Scan(&code)
-	if !checkError(w, err) {
-		return "", err
-	}
-	return code, nil
-}
-
 func dbEnsureActiveTrip(w http.ResponseWriter, tripId int) bool {
 	if !dbEnsureIsTrip(w, tripId) {
 		return false
@@ -125,18 +33,6 @@ func dbEnsureActiveTrip(w http.ResponseWriter, tripId int) bool {
 		return false
 	}
 
-	return true
-}
-
-func dbEnsureTripNotCanceled(w http.ResponseWriter, tripId int) bool {
-	isCanceled, err := dbIsTripCanceled(w, tripId)
-	if err != nil {
-		return false
-	}
-	if isCanceled {
-		respondError(w, http.StatusBadRequest, "Trip is canceled.")
-		return false
-	}
 	return true
 }
 
@@ -240,6 +136,18 @@ func dbEnsureTripLeader(w http.ResponseWriter, tripId int, memberId int) bool {
 	return true
 }
 
+func dbEnsureTripNotCanceled(w http.ResponseWriter, tripId int) bool {
+	isCanceled, err := dbIsTripCanceled(w, tripId)
+	if err != nil {
+		return false
+	}
+	if isCanceled {
+		respondError(w, http.StatusBadRequest, "Trip is canceled.")
+		return false
+	}
+	return true
+}
+
 func dbEnsureValidSignup(w http.ResponseWriter, tripId int, memberId int,
 	carpool bool, driver bool, carCapacity int, pet bool) bool {
 	tooLateSignup, err := dbIsTooLateSignup(w, tripId)
@@ -270,6 +178,98 @@ func dbEnsureValidSignup(w http.ResponseWriter, tripId int, memberId int,
 	}
 
 	return true
+}
+
+func dbGetTripApprovalSummary(w http.ResponseWriter, tripId int) (string,
+	string, string, bool) {
+	stmt := `
+    SELECT
+      create_datetime,
+      name,
+      description
+    FROM trip
+    WHERE id = ?`
+	row, err := db.Query(stmt, tripId)
+	if !checkError(w, err) {
+		return "", "", "", false
+	}
+	defer row.Close()
+
+	for row.Next() {
+		var createDatetime, name, description string
+		err = row.Scan(
+			&createDatetime,
+			&name,
+			&description)
+		if !checkError(w, err) {
+			return "", "", "", false
+		}
+
+		return createDatetime, name, description, true
+	}
+
+	err = row.Err()
+	if !checkError(w, err) {
+		return "", "", "", false
+	}
+
+	return "", "", "", false
+}
+
+func dbGetTripName(w http.ResponseWriter, tripId int) (string, bool) {
+	stmt := `
+    SELECT name
+    FROM trip
+    WHERE trip.id = ?`
+	var name string
+	err := db.QueryRow(stmt, tripId).Scan(&name)
+	if !checkError(w, err) {
+		return "", false
+	}
+
+	return name, true
+}
+
+func dbGetTripSignupGroup(w http.ResponseWriter, tripId int, groupId string, signups *[]int) bool {
+	stmt := `
+    SELECT member_id
+    FROM trip_signup
+    WHERE trip_signup.trip_id = ? AND trip_signup.attending_code = ?`
+	rows, err := db.Query(stmt, tripId, groupId)
+	if !checkError(w, err) {
+		return false
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var memberId int
+		err = rows.Scan(&memberId)
+		if !checkError(w, err) {
+			return false
+		}
+
+		*signups = append(*signups, memberId)
+	}
+
+	err = rows.Err()
+	if !checkError(w, err) {
+		return false
+	}
+
+	return true
+}
+
+func dbGetTripSignupStatus(w http.ResponseWriter, tripId int, memberId int) (string, error) {
+	stmt := `
+		SELECT attending_code
+		FROM trip_signup
+		WHERE trip_id = ? AND member_id = ?`
+	var code string
+	err := db.QueryRow(stmt, tripId, memberId).Scan(&code)
+	if !checkError(w, err) {
+		return "", err
+	}
+	return code, nil
 }
 
 /* EXISTS helpers */

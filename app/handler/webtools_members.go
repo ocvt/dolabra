@@ -69,7 +69,7 @@ func GetWebtoolsMembers(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string][]*memberStruct{"members": members})
 }
 
-func GetWebtoolsMembersTrips(w http.ResponseWriter, r *http.Request) {
+func GetWebtoolsMembersAttendance(w http.ResponseWriter, r *http.Request) {
 	memberId, ok := checkURLParam(w, r, "memberId")
 	if !ok {
 		return
@@ -77,10 +77,11 @@ func GetWebtoolsMembersTrips(w http.ResponseWriter, r *http.Request) {
 
 	stmt := `
     SELECT
-      id,
-      name
-    FROM trip
-    WHERE trip.member_id = ?`
+      trip.id,
+      trip.name
+    FROM trip_signup
+    INNER JOIN trip ON trip.id = trip_signup.trip_id
+    WHERE trip_signup.id = ? AND trip_signup.attended = true`
 	rows, err := db.Query(stmt, memberId)
 	if !checkError(w, err) {
 		return
@@ -108,7 +109,7 @@ func GetWebtoolsMembersTrips(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string][]*tripName{"trips": trips})
 }
 
-func GetWebtoolsMembersAttendance(w http.ResponseWriter, r *http.Request) {
+func GetWebtoolsMembersTrips(w http.ResponseWriter, r *http.Request) {
 	memberId, ok := checkURLParam(w, r, "memberId")
 	if !ok {
 		return
@@ -116,11 +117,10 @@ func GetWebtoolsMembersAttendance(w http.ResponseWriter, r *http.Request) {
 
 	stmt := `
     SELECT
-      trip.id,
-      trip.name
-    FROM trip_signup
-    INNER JOIN trip ON trip.id = trip_signup.trip_id
-    WHERE trip_signup.id = ? AND trip_signup.attended = true`
+      id,
+      name
+    FROM trip
+    WHERE trip.member_id = ?`
 	rows, err := db.Query(stmt, memberId)
 	if !checkError(w, err) {
 		return

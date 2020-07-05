@@ -261,6 +261,30 @@ func PatchMyAccount(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusNoContent, nil)
 }
 
+func PatchMyAccountDeactivate(w http.ResponseWriter, r *http.Request) {
+	sub, ok := checkLogin(w, r)
+	if !ok {
+		return
+	}
+
+	// Get memberId
+	memberId, ok := dbGetActiveMemberId(w, sub)
+	if !ok {
+		return
+	}
+
+	stmt := `
+    UPDATE member
+    SET active = false
+    WHERE id = ?`
+	_, err := db.Exec(stmt, memberId)
+	if !checkError(w, err) {
+		return
+	}
+
+	respondJSON(w, http.StatusNoContent, nil)
+}
+
 func PatchMyAccountEmergency(w http.ResponseWriter, r *http.Request) {
 	sub, ok := checkLogin(w, r)
 	if !ok {
@@ -295,30 +319,6 @@ func PatchMyAccountEmergency(w http.ResponseWriter, r *http.Request) {
 		emergency.EmergencyContactNumber,
 		emergency.EmergencyContactRelationship,
 		memberId)
-	if !checkError(w, err) {
-		return
-	}
-
-	respondJSON(w, http.StatusNoContent, nil)
-}
-
-func PatchMyAccountDeactivate(w http.ResponseWriter, r *http.Request) {
-	sub, ok := checkLogin(w, r)
-	if !ok {
-		return
-	}
-
-	// Get memberId
-	memberId, ok := dbGetActiveMemberId(w, sub)
-	if !ok {
-		return
-	}
-
-	stmt := `
-    UPDATE member
-    SET active = false
-    WHERE id = ?`
-	_, err := db.Exec(stmt, memberId)
 	if !checkError(w, err) {
 		return
 	}
