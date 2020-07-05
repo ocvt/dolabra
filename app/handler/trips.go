@@ -426,6 +426,7 @@ func GetTripsMyTrips(w http.ResponseWriter, r *http.Request) {
 			&trips[i].CreateDatetime,
 			&trips[i].Cancel,
 			&trips[i].Publish,
+			&trips[i].ReminderSent,
 			&creatorMemberId,
 			&trips[i].MembersOnly,
 			&trips[i].AllowLateSignups,
