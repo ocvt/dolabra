@@ -108,7 +108,7 @@ func setRouters() {
 			r.Patch("/signup/{signupId}/boot", handler.PatchTripsSignupBoot)
 			r.Patch("/signup/{signupId}/forceadd", handler.PatchTripsSignupForceadd)
 			r.Patch("/signup/{signupId}/tripleader/{promote}", handler.PatchTripsSignupTripLeaderPromote)
-			r.Post("/mainphoto", handler.PostTripsMainphoto)
+			r.Post("/mainphoto", handler.PatchTripsMainphoto)
 			r.Post("/notify/signup/{signupId}", handler.PostTripsNotifySignup)
 			r.Post("/notify/{groupId}", handler.PostTripsNotifyGroup)
 		})

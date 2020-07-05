@@ -194,7 +194,7 @@ func GetTripsPhotos(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string][]map[string]string{"images": imageList})
 }
 
-func PostTripsMainphoto(w http.ResponseWriter, r *http.Request) {
+func PatchTripsMainphoto(w http.ResponseWriter, r *http.Request) {
 	sub, ok := checkLogin(w, r)
 	if !ok {
 		return
