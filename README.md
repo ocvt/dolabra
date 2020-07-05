@@ -95,7 +95,6 @@ production.
 * Ensure all input is sanitized
 * Test GetTripMyStatus
 * Make tasks work (db locking issue and no error check after rows.Next())
-* Make indentation for long db scans consistent
 * Use db transactions
 * Use proper 1/0 instead of true/false for sqlite
 * Add NotFound & MethodNotAllowed handlers
