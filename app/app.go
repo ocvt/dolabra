@@ -93,6 +93,7 @@ func setRouters() {
 	r.Route("/trips", func(r chi.Router) {
 		r.Use(handler.ProcessClientAuth)
 		r.Get("/{tripId}", handler.GetTrip)
+		r.Get("/myattendance", handler.GetMyAttendance)
 		r.Get("/mytrips", handler.GetTripsMyTrips)
 		r.Get("/{tripId}/mysignup", handler.GetTripsSignup)
 		r.Get("/{tripId}/mystatus", handler.GetTripMyStatus)

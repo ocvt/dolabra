@@ -90,6 +90,7 @@ production.
 
 ## TODO
 
+* Test /trips/myattendance
 * Validate trip input data
 * organize functions A-Z (approval & notify related files: TODO)
 * Test /trips/{tripId}/mystatus

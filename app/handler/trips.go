@@ -83,6 +83,99 @@ type tripSignupBootStruct struct {
 	BootReason string `json:"bootReason"`
 }
 
+func GetMyAttendance(w http.ResponseWriter, r *http.Request) {
+	sub, ok := checkLogin(w, r)
+	if !ok {
+		return
+	}
+
+	// Get member id and trip id
+	memberId, ok := dbGetActiveMemberId(w, sub)
+	if !ok {
+		return
+	}
+
+	stmt := `
+		SELECT *
+		FROM trip_signup
+		INNER JOIN trip ON trip.id = trip_signup.trip_id
+		WHERE trip_signup.member_id = ?`
+	rows, err := db.Query(stmt, memberId)
+	if !checkError(w, err) {
+		return
+	}
+	defer rows.Close()
+
+	var trips = []*tripStruct{}
+	var tripSignups = []*tripSignupStruct{}
+	i := 0
+	for rows.Next() {
+		var creatorMemberId int
+		trips = append(trips, &tripStruct{})
+		tripSignups = append(tripSignups, &tripSignupStruct{})
+		err = rows.Scan(
+			&tripSignups[i].Id,
+			&tripSignups[i].TripId,
+			&tripSignups[i].MemberId,
+			&tripSignups[i].Leader,
+			&tripSignups[i].SignupDatetime,
+			&tripSignups[i].PaidMember,
+			&tripSignups[i].AttendingCode,
+			&tripSignups[i].BootReason,
+			&tripSignups[i].ShortNotice,
+			&tripSignups[i].Driver,
+			&tripSignups[i].Carpool,
+			&tripSignups[i].CarCapacity,
+			&tripSignups[i].Notes,
+			&tripSignups[i].Pet,
+			&tripSignups[i].Attended,
+			&trips[i].Id,
+			&trips[i].CreateDatetime,
+			&trips[i].Cancel,
+			&trips[i].Publish,
+			&trips[i].ReminderSent,
+			&creatorMemberId,
+			&trips[i].MembersOnly,
+			&trips[i].AllowLateSignups,
+			&trips[i].DrivingRequired,
+			&trips[i].HasCost,
+			&trips[i].CostDescription,
+			&trips[i].MaxPeople,
+			&trips[i].Name,
+			&trips[i].NotificationTypeId,
+			&trips[i].StartDatetime,
+			&trips[i].EndDatetime,
+			&trips[i].Summary,
+			&trips[i].Description,
+			&trips[i].Location,
+			&trips[i].LocationDirections,
+			&trips[i].MeetupLocation,
+			&trips[i].Distance,
+			&trips[i].Difficulty,
+			&trips[i].DifficultyDescription,
+			&trips[i].Instructions,
+			&trips[i].PetsAllowed,
+			&trips[i].PetsDescription)
+		if !checkError(w, err) {
+			return
+		}
+
+		var ok bool
+		trips[i].MemberName, ok = dbGetMemberName(w, creatorMemberId)
+		if !ok {
+			return
+		}
+		i++
+	}
+
+	err = rows.Err()
+	if !checkError(w, err) {
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]interface{}{"trips": trips, "tripSignups": tripSignups})
+}
+
 func GetTrip(w http.ResponseWriter, r *http.Request) {
 	sub, ok := checkLogin(w, r)
 	if !ok {
