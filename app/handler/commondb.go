@@ -37,8 +37,7 @@ func checkLogin(w http.ResponseWriter, r *http.Request) (string, bool) {
 	return sub.(string), true
 }
 
-// TODO MAKE CLEAR THIS RETURNS INT
-func checkURLParam(w http.ResponseWriter, r *http.Request, param string) (int, bool) {
+func getURLIntParam(w http.ResponseWriter, r *http.Request, param string) (int, bool) {
 	paramInt, err := strconv.Atoi(chi.URLParam(r, param))
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())

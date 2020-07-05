@@ -84,8 +84,6 @@ production.
 
 ## TODO
 
-* PostTripsMainphoto -> PatchTripsMainphoto
-* checkURLParam -> getURLIntParam
 * organize functions A-Z (approval & notify related files: TODO)
 * Test /trips/{tripId}/mystatus
 * Ensure all input is sanitized

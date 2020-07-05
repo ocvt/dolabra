@@ -17,7 +17,7 @@ func GetTripMyStatus(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	tripId, ok := checkURLParam(w, r, "tripId")
+	tripId, ok := getURLIntParam(w, r, "tripId")
 	if !ok {
 		return
 	}
@@ -61,7 +61,7 @@ func GetTripsSignup(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	tripId, ok := checkURLParam(w, r, "tripId")
+	tripId, ok := getURLIntParam(w, r, "tripId")
 	if !ok {
 		return
 	}
@@ -110,11 +110,11 @@ func PatchTripsSignupAbsent(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	tripId, ok := checkURLParam(w, r, "tripId")
+	tripId, ok := getURLIntParam(w, r, "tripId")
 	if !ok {
 		return
 	}
-	signupId, ok := checkURLParam(w, r, "signupId")
+	signupId, ok := getURLIntParam(w, r, "signupId")
 	if !ok {
 		return
 	}
@@ -150,11 +150,11 @@ func PatchTripsSignupBoot(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	tripId, ok := checkURLParam(w, r, "tripId")
+	tripId, ok := getURLIntParam(w, r, "tripId")
 	if !ok {
 		return
 	}
-	signupId, ok := checkURLParam(w, r, "signupId")
+	signupId, ok := getURLIntParam(w, r, "signupId")
 	if !ok {
 		return
 	}
@@ -224,7 +224,7 @@ func PatchTripsSignupCancel(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	tripId, ok := checkURLParam(w, r, "tripId")
+	tripId, ok := getURLIntParam(w, r, "tripId")
 	if !ok {
 		return
 	}
@@ -280,11 +280,11 @@ func PatchTripsSignupForceadd(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	tripId, ok := checkURLParam(w, r, "tripId")
+	tripId, ok := getURLIntParam(w, r, "tripId")
 	if !ok {
 		return
 	}
-	signupId, ok := checkURLParam(w, r, "signupId")
+	signupId, ok := getURLIntParam(w, r, "signupId")
 	if !ok {
 		return
 	}
@@ -338,15 +338,15 @@ func PatchTripsSignupTripLeaderPromote(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	tripId, ok := checkURLParam(w, r, "tripId")
+	tripId, ok := getURLIntParam(w, r, "tripId")
 	if !ok {
 		return
 	}
-	signupId, ok := checkURLParam(w, r, "signupId")
+	signupId, ok := getURLIntParam(w, r, "signupId")
 	if !ok {
 		return
 	}
-	promote, ok := checkURLParam(w, r, "promote")
+	promote, ok := getURLIntParam(w, r, "promote")
 	if !ok {
 		return
 	}
@@ -401,7 +401,7 @@ func PostTripsSignup(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	tripId, ok := checkURLParam(w, r, "tripId")
+	tripId, ok := getURLIntParam(w, r, "tripId")
 	if !ok {
 		return
 	}

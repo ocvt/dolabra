@@ -19,7 +19,7 @@ func PostTripsNotifyGroup(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	tripId, ok := checkURLParam(w, r, "tripId")
+	tripId, ok := getURLIntParam(w, r, "tripId")
 	if !ok {
 		return
 	}
@@ -87,11 +87,11 @@ func PostTripsNotifySignup(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	tripId, ok := checkURLParam(w, r, "tripId")
+	tripId, ok := getURLIntParam(w, r, "tripId")
 	if !ok {
 		return
 	}
-	signupId, ok := checkURLParam(w, r, "signupId")
+	signupId, ok := getURLIntParam(w, r, "signupId")
 	if !ok {
 		return
 	}

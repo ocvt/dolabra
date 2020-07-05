@@ -70,7 +70,7 @@ func GetWebtoolsMembers(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetWebtoolsMembersAttendance(w http.ResponseWriter, r *http.Request) {
-	memberId, ok := checkURLParam(w, r, "memberId")
+	memberId, ok := getURLIntParam(w, r, "memberId")
 	if !ok {
 		return
 	}
@@ -110,7 +110,7 @@ func GetWebtoolsMembersAttendance(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetWebtoolsMembersTrips(w http.ResponseWriter, r *http.Request) {
-	memberId, ok := checkURLParam(w, r, "memberId")
+	memberId, ok := getURLIntParam(w, r, "memberId")
 	if !ok {
 		return
 	}
@@ -149,7 +149,7 @@ func GetWebtoolsMembersTrips(w http.ResponseWriter, r *http.Request) {
 }
 
 func PatchWebtoolsDuesGrant(w http.ResponseWriter, r *http.Request) {
-	memberId, ok := checkURLParam(w, r, "memberId")
+	memberId, ok := getURLIntParam(w, r, "memberId")
 	if !ok {
 		return
 	}
@@ -167,7 +167,7 @@ func PatchWebtoolsDuesGrant(w http.ResponseWriter, r *http.Request) {
 }
 
 func PatchWebtoolsDuesRevoke(w http.ResponseWriter, r *http.Request) {
-	memberId, ok := checkURLParam(w, r, "memberId")
+	memberId, ok := getURLIntParam(w, r, "memberId")
 	if !ok {
 		return
 	}

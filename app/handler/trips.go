@@ -94,7 +94,7 @@ func GetTrip(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	tripId, ok := checkURLParam(w, r, "tripId")
+	tripId, ok := getURLIntParam(w, r, "tripId")
 	if !ok {
 		return
 	}
@@ -151,7 +151,7 @@ func GetTrip(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTripSummary(w http.ResponseWriter, r *http.Request) {
-	tripId, ok := checkURLParam(w, r, "tripId")
+	tripId, ok := getURLIntParam(w, r, "tripId")
 	if !ok {
 		return
 	}
@@ -221,7 +221,7 @@ func GetTripsAdmin(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	tripId, ok := checkURLParam(w, r, "tripId")
+	tripId, ok := getURLIntParam(w, r, "tripId")
 	if !ok {
 		return
 	}
@@ -315,11 +315,11 @@ func GetTripsAdmin(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTripsArchive(w http.ResponseWriter, r *http.Request) {
-	tripStartId, ok := checkURLParam(w, r, "startId")
+	tripStartId, ok := getURLIntParam(w, r, "startId")
 	if !ok {
 		return
 	}
-	tripsPerPage, ok := checkURLParam(w, r, "perPage")
+	tripsPerPage, ok := getURLIntParam(w, r, "perPage")
 	if !ok {
 		return
 	}
@@ -583,7 +583,7 @@ func PatchTripsCancel(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	tripId, ok := checkURLParam(w, r, "tripId")
+	tripId, ok := getURLIntParam(w, r, "tripId")
 	if !ok {
 		return
 	}
@@ -646,7 +646,7 @@ func PatchTripsPublish(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	tripId, ok := checkURLParam(w, r, "tripId")
+	tripId, ok := getURLIntParam(w, r, "tripId")
 	if !ok {
 		return
 	}

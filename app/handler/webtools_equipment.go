@@ -49,11 +49,11 @@ func GetWebtoolsEquipment(w http.ResponseWriter, r *http.Request) {
 
 func PatchWebtoolsEquipment(w http.ResponseWriter, r *http.Request) {
 	// Get equipmentId, count
-	equipmentId, ok := checkURLParam(w, r, "equipmentId")
+	equipmentId, ok := getURLIntParam(w, r, "equipmentId")
 	if !ok {
 		return
 	}
-	count, ok := checkURLParam(w, r, "count")
+	count, ok := getURLIntParam(w, r, "count")
 	if !ok {
 		return
 	}

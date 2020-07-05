@@ -32,7 +32,7 @@ func DeleteWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	officerId, ok := checkURLParam(w, r, "memberId")
+	officerId, ok := getURLIntParam(w, r, "memberId")
 	if !ok {
 		return
 	}
@@ -106,7 +106,7 @@ func GetWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
 
 func PatchWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
 	// Get officerId
-	officerId, ok := checkURLParam(w, r, "memberId")
+	officerId, ok := getURLIntParam(w, r, "memberId")
 	if !ok {
 		return
 	}

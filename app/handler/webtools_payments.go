@@ -102,7 +102,7 @@ func GetWebtoolsPayments(w http.ResponseWriter, r *http.Request) {
 func PatchWebtoolsPaymentsCompleted(w http.ResponseWriter, r *http.Request) {
 	// Get paymentRowId
 	// NOTE: uses id (primary key) field, NOT payment_id field
-	paymentRowId, ok := checkURLParam(w, r, "paymentRowId")
+	paymentRowId, ok := getURLIntParam(w, r, "paymentRowId")
 	if !ok {
 		return
 	}
@@ -189,7 +189,7 @@ func PostWebtoolsPayments(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	paymentMemberId, ok := checkURLParam(w, r, "paymentMemberId")
+	paymentMemberId, ok := getURLIntParam(w, r, "paymentMemberId")
 	if !ok {
 		return
 	}

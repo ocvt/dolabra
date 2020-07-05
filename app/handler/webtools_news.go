@@ -19,7 +19,7 @@ type newsStruct struct {
 
 func DeleteWebtoolsNews(w http.ResponseWriter, r *http.Request) {
 	// Get newsId
-	newsId, ok := checkURLParam(w, r, "newsId")
+	newsId, ok := getURLIntParam(w, r, "newsId")
 	if !ok {
 		return
 	}

@@ -171,7 +171,7 @@ func GetHomePhotos(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTripsPhotos(w http.ResponseWriter, r *http.Request) {
-	tripId, ok := checkURLParam(w, r, "tripId")
+	tripId, ok := getURLIntParam(w, r, "tripId")
 	if !ok {
 		return
 	}
@@ -205,7 +205,7 @@ func PatchTripsMainphoto(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	tripId, ok := checkURLParam(w, r, "tripId")
+	tripId, ok := getURLIntParam(w, r, "tripId")
 	if !ok {
 		return
 	}
@@ -233,7 +233,7 @@ func PostTripsPhotos(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	tripId, ok := checkURLParam(w, r, "tripId")
+	tripId, ok := getURLIntParam(w, r, "tripId")
 	if !ok {
 		return
 	}
