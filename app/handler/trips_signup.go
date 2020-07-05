@@ -168,7 +168,7 @@ func PatchTripsSignupBoot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if tripSignupBoot.BootReason == "" {
-		respondError(w, http.StatusBadRequest, "BOOT action must have reason.")
+		respondError(w, http.StatusForbidden, "BOOT action must have reason.")
 		return
 	}
 

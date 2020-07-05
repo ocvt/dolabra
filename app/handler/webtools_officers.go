@@ -40,7 +40,7 @@ func DeleteWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
 	// Permissions
 	// TODO Don't allow officers with less privileges to modify officers with more privileges
 	if memberId == officerId {
-		respondError(w, http.StatusBadRequest, "Cannot remove yourself from officers.")
+		respondError(w, http.StatusForbidden, "Cannot remove yourself from officers.")
 		return
 	}
 

@@ -82,13 +82,18 @@ production.
   from the `tests` folder
 
 
+### Notes
+
+* 403 is returned if the error is related to permissions or user input (ie trying to signup with a
+  pet on a trip that does not allow pets), otherwise 400 is used for generic errors or whenever we
+  don't 100% know the cause of the issue
+
 ## TODO
 
 * organize functions A-Z (approval & notify related files: TODO)
 * Test /trips/{tripId}/mystatus
 * Ensure all input is sanitized
 * Test GetTripMyStatus
-* Return 403 (not authorized) instead of 400 (not authenticated) where necessary
 * Make tasks work (db locking issue and no error check after rows.Next())
 * Make indentation for long db scans consistent
 * Use db transactions

@@ -155,16 +155,16 @@ func dbEnsureValidSignup(w http.ResponseWriter, tripId int, memberId int,
 		return false
 	}
 	if tooLateSignup {
-		respondError(w, http.StatusBadRequest, "Cannot signup past trip deadline.")
+		respondError(w, http.StatusForbidden, "Cannot signup past trip deadline.")
 		return false
 	}
 
 	if carpool && !driver {
-		respondError(w, http.StatusBadRequest, "Cannot carpool without being a driver.")
+		respondError(w, http.StatusForbidden, "Cannot carpool without being a driver.")
 		return false
 	}
 	if carCapacity < 0 {
-		respondError(w, http.StatusBadRequest, "Cannot have negative car capacity.")
+		respondError(w, http.StatusForbidden, "Cannot have negative car capacity.")
 		return false
 	}
 
@@ -173,7 +173,7 @@ func dbEnsureValidSignup(w http.ResponseWriter, tripId int, memberId int,
 		return false
 	}
 	if pet && !petAllowed {
-		respondError(w, http.StatusBadRequest, "Cannot bring pet on trip.")
+		respondError(w, http.StatusForbidden, "Cannot bring pet on trip.")
 		return false
 	}
 

@@ -699,7 +699,7 @@ func PostTrips(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if trip.Difficulty < 0 || trip.Difficulty > 5 {
-		respondError(w, http.StatusBadRequest, "Trip difficulty must be between 0 and 5.")
+		respondError(w, http.StatusForbidden, "Trip difficulty must be between 0 and 5.")
 		return
 	}
 
