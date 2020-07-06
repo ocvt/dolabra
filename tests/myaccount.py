@@ -48,7 +48,7 @@ def TestMyAccountName(s):
   url = HOST + '/myaccount/name'
   r = s.get(url)
   assert r.status_code == 200
-  assert json.loads(r.text) == {'firstName': member_json['firstName']}
+  assert json.loads(r.text) == {'firstName': member_json['firstName'], 'officer': False}
 
 def TestMyAccountNotifications(s):
   url = HOST + '/myaccount/notifications'

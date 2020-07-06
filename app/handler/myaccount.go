@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 )
 
 // All fields are returned to client
@@ -196,17 +197,22 @@ func GetMyAccountName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	isOfficer, err := dbIsOfficer(w, memberId)
+	if err != nil {
+		return
+	}
+
 	stmt := `
 		SELECT first_name
 		FROM member
 		WHERE id = ?`
 	var firstName string
-	err := db.QueryRow(stmt, memberId).Scan(&firstName)
+	err = db.QueryRow(stmt, memberId).Scan(&firstName)
 	if !checkError(w, err) {
 		return
 	}
 
-	respondJSON(w, http.StatusOK, map[string]string{"firstName": firstName})
+	respondJSON(w, http.StatusOK, map[string]interface{}{"firstName": firstName, "officer": isOfficer})
 }
 
 func PatchMyAccount(w http.ResponseWriter, r *http.Request) {
@@ -447,6 +453,26 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 	_, err = db.Exec(stmt, member.Email)
 	if !checkError(w, err) {
 		return
+	}
+
+	// Mark as officer if first person
+	initOfficerId := int64(2)
+	if len(os.Getenv("DEV")) > 0 {
+		initOfficerId = 4
+	}
+	if memberId == initOfficerId {
+		stmt = `
+			INSERT INTO officer (
+				member_id,
+				create_datetime,
+				expire_datetime,
+				position,
+				security)
+			VALUES (?, datetime('now'), datetime('now', '+1000 years'), 'Super Admin', 100)`
+		_, err = db.Exec(stmt, memberId)
+		if !checkError(w, err) {
+			return
+		}
 	}
 
 	respondJSON(w, http.StatusCreated, member)

@@ -193,7 +193,17 @@ func GetTrip(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Permissions
-	if !dbEnsureMemberIsOnTrip(w, tripId, memberId) {
+	isOfficer, err := dbIsOfficer(w, memberId)
+	if err != nil {
+		return
+	}
+	onTrip, err := dbIsMemberOnTrip(w, tripId, memberId)
+	if err != nil {
+		return
+	}
+
+	if !isOfficer && !onTrip {
+		respondError(w, http.StatusUnauthorized, "Must be officer or on trip.")
 		return
 	}
 
@@ -203,7 +213,7 @@ func GetTrip(w http.ResponseWriter, r *http.Request) {
 		WHERE id = ?`
 	var creatorMemberId int
 	var trip tripStruct
-	err := db.QueryRow(stmt, tripId).Scan(
+	err = db.QueryRow(stmt, tripId).Scan(
 		&trip.Id,
 		&trip.CreateDatetime,
 		&trip.Cancel,
