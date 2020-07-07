@@ -15,6 +15,7 @@ type paymentStruct struct {
 	MemberId       int    `json:"memberId,omitempty"`
 	PaymentMethod  string `json:"paymentMethod,omitempty"`
 	// Only for client view when returning data
+	Email         string `json:"email,omitempty"`
 	EnteredByName string `json:"enteredByName,omitempty"`
 	MemberName    string `json:"memberName,omitempty"`
 	/* Required fields */
@@ -46,9 +47,22 @@ type storeCodeStruct struct {
 
 func GetWebtoolsPayments(w http.ResponseWriter, r *http.Request) {
 	stmt := `
-		SELECT *
+		SELECT
+			member.first_name || ' ' || member.last_name AS full_name,
+			member.email,
+			payment.id,
+			payment.create_datetime,
+			payment.note,
+			payment.member_id,
+			payment.store_item_id,
+			payment.store_item_count,
+			payment.amount,
+			payment.payment_method,
+			payment.payment_id,
+			payment.completed
 		FROM payment
-		ORDER BY datetime(create_datetim) DESC`
+		INNER JOIN member ON member.id = payment.member_id
+		ORDER BY datetime(payment.create_datetime) DESC`
 	rows, err := db.Query(stmt)
 	if !checkError(w, err) {
 		return
@@ -60,6 +74,8 @@ func GetWebtoolsPayments(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		payments = append(payments, &paymentStruct{})
 		err = rows.Scan(
+			&payments[i].MemberName,
+			&payments[i].Email,
 			&payments[i].Id,
 			&payments[i].CreateDatetime,
 			&payments[i].EnteredById,
@@ -79,13 +95,7 @@ func GetWebtoolsPayments(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			return
 		}
-		memberName, ok := dbGetMemberName(w, payments[i].MemberId)
-		if !ok {
-			return
-		}
-
 		payments[i].EnteredByName = enteredByName
-		payments[i].MemberName = memberName
 
 		i++
 	}
