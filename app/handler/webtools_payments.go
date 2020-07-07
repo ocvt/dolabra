@@ -40,9 +40,8 @@ type storeCodeStruct struct {
 	StoreItemId    string `json:"storeItemId"`
 	StoreItemCount int    `json:"storeItemCount"`
 	Amount         int    `json:"amount"`
-	// Only used if multiple items in 1 payment
-	Code      string `json:"code"`
-	Completed bool   `json:"completed"`
+	Code           string `json:"code"`
+	Completed      bool   `json:"completed"`
 }
 
 func GetWebtoolsPayments(w http.ResponseWriter, r *http.Request) {
@@ -141,6 +140,7 @@ func PostWebtoolsGenerateCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// If multiple items associated with a single purchase, re-use same code (with same purchase amount)
 	code := storeCode.Code
 	if code == "" {
 		code = generateCode(MANUAL_PAYMENT_ID_LENGTH)
@@ -184,7 +184,7 @@ func PostWebtoolsPayments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get officerId, memberId
+	// Get memberId
 	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return
@@ -204,6 +204,7 @@ func PostWebtoolsPayments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// If multiple items associated with a single purchase, re-use same id (with same purchase amount)
 	paymentId := payment.PaymentId
 	if paymentId == "" {
 		paymentId = generateCode(MANUAL_PAYMENT_ID_LENGTH)
@@ -230,7 +231,7 @@ func PostWebtoolsPayments(w http.ResponseWriter, r *http.Request) {
 			payment_method,
 			payment_id,
 			completed)
-		VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, 'METHOD', ?, ?)`
+		VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, 'MANUAL', ?, ?)`
 	_, err = db.Exec(stmt,
 		memberId,
 		payment.Note,
