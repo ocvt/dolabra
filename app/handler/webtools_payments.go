@@ -32,10 +32,11 @@ type paymentStruct struct {
 // a separate struct
 type storeCodeStruct struct {
 	/* Managed Server side */
-	Id             int    `json:"id,omitempty"`
-	CreateDatetime string `json:"createDatetime,omitempty"`
-	GeneratedById  int    `json:"generatedById,omitempty"`
-	Redeemed       bool   `json:"redeemed,omitempty"`
+	Id              int    `json:"id,omitempty"`
+	CreateDatetime  string `json:"createDatetime,omitempty"`
+	GeneratedById   int    `json:"generatedById,omitempty"`
+	GeneratedByName string `json:"generatedByName,omitempty"`
+	Redeemed        bool   `json:"redeemed,omitempty"`
 	/* Required fields */
 	Note           string `json:"note"`
 	StoreItemId    string `json:"storeItemId"`
@@ -43,6 +44,53 @@ type storeCodeStruct struct {
 	Amount         int    `json:"amount"`
 	Code           string `json:"code"`
 	Completed      bool   `json:"completed"`
+}
+
+func GetWebtoolsCodes(w http.ResponseWriter, r *http.Request) {
+	stmt := `
+		SELECT *
+		FROM store_code
+		WHERE redeemed = false`
+	rows, err := db.Query(stmt)
+	if !checkError(w, err) {
+		return
+	}
+	defer rows.Close()
+
+	var codes = []*storeCodeStruct{}
+	i := 0
+	for rows.Next() {
+		codes = append(codes, &storeCodeStruct{})
+		err = rows.Scan(
+			&codes[i].Id,
+			&codes[i].CreateDatetime,
+			&codes[i].GeneratedById,
+			&codes[i].Note,
+			&codes[i].StoreItemId,
+			&codes[i].StoreItemCount,
+			&codes[i].Amount,
+			&codes[i].Code,
+			&codes[i].Completed,
+			&codes[i].Redeemed)
+		if !checkError(w, err) {
+			return
+		}
+
+		generatedByName, ok := dbGetMemberName(w, codes[i].GeneratedById)
+		if !ok {
+			return
+		}
+		codes[i].GeneratedByName = generatedByName
+
+		i++
+	}
+
+	err = rows.Err()
+	if !checkError(w, err) {
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string][]*storeCodeStruct{"codes": codes})
 }
 
 func GetWebtoolsPayments(w http.ResponseWriter, r *http.Request) {

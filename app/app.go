@@ -120,6 +120,7 @@ func setRouters() {
 		r.Use(handler.EnsureOfficer)
 		r.Delete("/news/{tripId}", handler.DeleteWebtoolsNews)
 		r.Delete("/officers/{memberId}", handler.DeleteWebtoolsOfficers)
+		r.Get("/codes", handler.GetWebtoolsCodes)
 		r.Get("/emails", handler.GetWebtoolsEmails)
 		r.Get("/equipment", handler.GetWebtoolsEquipment)
 		r.Get("/officers", handler.GetWebtoolsOfficers)
