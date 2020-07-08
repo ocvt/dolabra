@@ -148,7 +148,7 @@ func GetWebtoolsMembersTrips(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string][]*tripName{"trips": trips})
 }
 
-func PatchWebtoolsDuesGrant(w http.ResponseWriter, r *http.Request) {
+func PostWebtoolsDuesGrant(w http.ResponseWriter, r *http.Request) {
 	memberId, ok := getURLIntParam(w, r, "memberId")
 	if !ok {
 		return
@@ -166,7 +166,7 @@ func PatchWebtoolsDuesGrant(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusNoContent, nil)
 }
 
-func PatchWebtoolsDuesRevoke(w http.ResponseWriter, r *http.Request) {
+func PostWebtoolsDuesRevoke(w http.ResponseWriter, r *http.Request) {
 	memberId, ok := getURLIntParam(w, r, "memberId")
 	if !ok {
 		return

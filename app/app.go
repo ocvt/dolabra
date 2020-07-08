@@ -136,8 +136,8 @@ func setRouters() {
 			r.Get("/", handler.GetWebtoolsMembers)
 			r.Get("/{memberId}/attendance", handler.GetWebtoolsMembersAttendance)
 			r.Get("/{memberId}/trips", handler.GetWebtoolsMembersTrips)
-			r.Patch("/{memberId}/dues/grant", handler.PatchWebtoolsDuesGrant)
-			r.Patch("/{memberId}/dues/revoke", handler.PatchWebtoolsDuesRevoke)
+			r.Post("/{memberId}/dues/grant", handler.PostWebtoolsDuesGrant)
+			r.Post("/{memberId}/dues/revoke", handler.PostWebtoolsDuesRevoke)
 		})
 	})
 }
