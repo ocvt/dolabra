@@ -12,13 +12,13 @@ type paymentStruct struct {
 	Id             int    `json:"id,omitempty"`
 	CreateDatetime string `json:"createDatetime,omitempty"`
 	EnteredById    int    `json:"enteredById,omitempty"`
-	MemberId       int    `json:"memberId,omitempty"`
 	PaymentMethod  string `json:"paymentMethod,omitempty"`
 	// Only for client view when returning data
 	Email         string `json:"email,omitempty"`
 	EnteredByName string `json:"enteredByName,omitempty"`
 	MemberName    string `json:"memberName,omitempty"`
 	/* Required fields */
+	MemberId       int    `json:"memberId"`
 	Note           string `json:"note"`
 	StoreItemId    string `json:"storeItemId"`
 	StoreItemCount int    `json:"storeItemCount"`
@@ -100,6 +100,7 @@ func GetWebtoolsPayments(w http.ResponseWriter, r *http.Request) {
 			member.email,
 			payment.id,
 			payment.create_datetime,
+			payment.entered_by_id,
 			payment.note,
 			payment.member_id,
 			payment.store_item_id,
@@ -247,10 +248,6 @@ func PostWebtoolsPayments(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	paymentMemberId, ok := getURLIntParam(w, r, "paymentMemberId")
-	if !ok {
-		return
-	}
 
 	// Get request body
 	decoder := json.NewDecoder(r.Body)
@@ -271,7 +268,7 @@ func PostWebtoolsPayments(w http.ResponseWriter, r *http.Request) {
 	// Complete order if possible
 	completed := payment.Completed
 	if payment.StoreItemId == "MEMBERSHIP" {
-		if !dbExtendMembership(w, paymentMemberId, payment.StoreItemCount) {
+		if !dbExtendMembership(w, payment.MemberId, payment.StoreItemCount) {
 			return
 		}
 		completed = true
@@ -280,7 +277,7 @@ func PostWebtoolsPayments(w http.ResponseWriter, r *http.Request) {
 	stmt := `
 		INSERT INTO payment (
 			create_datetime,
-			created_by_id,
+			entered_by_id,
 			note,
 			member_id,
 			store_item_id,
@@ -293,7 +290,7 @@ func PostWebtoolsPayments(w http.ResponseWriter, r *http.Request) {
 	_, err = db.Exec(stmt,
 		memberId,
 		payment.Note,
-		paymentMemberId,
+		payment.MemberId,
 		payment.StoreItemId,
 		payment.StoreItemCount,
 		payment.Amount,
