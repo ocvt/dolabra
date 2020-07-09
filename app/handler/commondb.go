@@ -187,13 +187,15 @@ func dbEnsureTripExists(w http.ResponseWriter, tripId int) bool {
 }
 
 func dbExtendMembership(w http.ResponseWriter, memberId int, years int) bool {
-	stmt := `
-		UPDATE member
-		SET paid_expire_datetime = datetime(paid_expire_datetime, '+? years')
-		WHERE id = ?`
-	_, err := db.Exec(stmt, years, memberId)
-	if !checkError(w, err) {
-		return false
+	for i := 0; i < years; i++ {
+		stmt := `
+			UPDATE member
+			SET paid_expire_datetime = datetime(paid_expire_datetime, '+1 year')
+			WHERE id = ?`
+		_, err := db.Exec(stmt, memberId)
+		if !checkError(w, err) {
+			return false
+		}
 	}
 	return true
 }

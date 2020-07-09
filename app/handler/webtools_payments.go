@@ -50,7 +50,8 @@ func GetWebtoolsCodes(w http.ResponseWriter, r *http.Request) {
 	stmt := `
 		SELECT *
 		FROM store_code
-		WHERE redeemed = false`
+		WHERE redeemed = false
+		ORDER BY datetime(store_code.create_datetime) DESC`
 	rows, err := db.Query(stmt)
 	if !checkError(w, err) {
 		return
