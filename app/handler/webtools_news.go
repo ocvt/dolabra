@@ -7,7 +7,7 @@ import (
 
 type newsStruct struct {
 	/* Managed server side */
-	Id             int    `json:"id"`
+	Id             int    `json:"id,omitempty"`
 	CreateDatetime string `json:"createDatetime,omitempty"`
 	// from member table
 	FirstName string `json:"firstName,omitempty"`
@@ -150,10 +150,11 @@ func PostWebtoolsNews(w http.ResponseWriter, r *http.Request) {
 		INSERT INTO news (
 			member_id,
 			create_datetime,
+			publish,
 			title,
 			summary,
 			content)
-		VALUES (?, datetime('now'), ?, ?, ?)`
+		VALUES (?, datetime('now'), true, ?, ?, ?)`
 	_, err = db.Exec(
 		stmt,
 		memberId,
