@@ -47,7 +47,7 @@ func setRouters() {
 
 	r.Get("/homephotos", handler.GetHomePhotos)
 	r.Get("/news", handler.GetNews)
-	r.Get("/newsArchive", handler.GetNewsArchive)
+	r.Get("/news/archive", handler.GetNewsArchive)
 	r.Post("/quicksignup", handler.PostQuicksignup)
 	r.Post("/unsubscribe/all", handler.PostUnsubscribeAll)
 	r.Route("/noauth", func(r chi.Router) {
@@ -118,7 +118,7 @@ func setRouters() {
 	r.Route("/webtools", func(r chi.Router) {
 		r.Use(handler.ProcessClientAuth)
 		r.Use(handler.EnsureOfficer)
-		r.Delete("/news/{tripId}", handler.DeleteWebtoolsNews)
+		r.Delete("/news/{newsId}", handler.DeleteWebtoolsNews)
 		r.Delete("/officers/{memberId}", handler.DeleteWebtoolsOfficers)
 		r.Get("/codes", handler.GetWebtoolsCodes)
 		r.Get("/emails", handler.GetWebtoolsEmails)
@@ -127,6 +127,7 @@ func setRouters() {
 		r.Get("/payments", handler.GetWebtoolsPayments)
 		r.Patch("/equipment/{equipmentId}/{count}", handler.PatchWebtoolsEquipment)
 		r.Patch("/payments/{paymentRowId}/completed", handler.PatchWebtoolsPaymentsCompleted)
+		r.Post("/emails", handler.PostWebtoolsEmails)
 		r.Post("/equipment", handler.PostWebtoolsEquipment)
 		r.Post("/payments", handler.PostWebtoolsPayments)
 		r.Post("/payments/generateCode", handler.PostWebtoolsGenerateCode)
