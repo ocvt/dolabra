@@ -97,13 +97,18 @@ func dbCheckMemberWantsNotification(memberId int, notificationType string) bool 
 		SELECT notification_preference
 		FROM member
 		WHERE id = ?`
-	var notificationsStrMap = map[string]bool{}
-	err := db.QueryRow(stmt, memberId).Scan(&notificationsStrMap)
+	var notificationsStr string
+	err := db.QueryRow(stmt, memberId).Scan(&notificationsStr)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return notificationsStrMap[notificationType]
+	notifications := map[string]bool{}
+	err = json.Unmarshal([]byte(notificationsStr), &notifications)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return notifications[notificationType]
 }
 
 func dbEnsureMemberDoesNotExist(w http.ResponseWriter, sub string) bool {

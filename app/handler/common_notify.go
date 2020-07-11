@@ -30,26 +30,35 @@ type emailStruct struct {
 	Body    string `json:"body"`
 }
 
+type rawEmailStruct struct {
+	FromName     string
+	FromEmail    string
+	ReplyToEmail string
+	ReplyToName  string
+	ToName       string
+	ToEmail      string
+	Subject      string
+	Body         string
+}
+
 /*
  * Actually send an email
  */
-func sendEmail(fromName string, fromEmail string, replyName string,
-	replyEmail string, toName string, toEmail string, subject string,
-	body string) {
+func sendEmail(email rawEmailStruct) {
 	message := fmt.Sprintf(
 		"From: %s <%s>\n"+
 			"Reply-To: %s <%s>\n"+
 			"To: %s <%s>\n"+
 			"Subject: %s\n\n"+
 			"%s",
-		fromName,
-		fromEmail,
-		replyName,
-		replyEmail,
-		toName,
-		toEmail,
-		subject,
-		body)
+		email.FromName,
+		email.FromEmail,
+		email.ReplyToName,
+		email.ReplyToEmail,
+		email.ToName,
+		email.ToEmail,
+		email.Subject,
+		email.Body)
 
 	//	auth := smtp.PlainAuth("", SMTP_USERNAME, SMTP_PASSWORD, SMTP_HOSTNAME)
 	fmt.Printf("MESSAGE: %s\n", message)
@@ -82,8 +91,6 @@ func processAndSendEmail(w http.ResponseWriter, emailId int) bool {
  *   or not all for a non trip related email
  */
 func stageEmail(w http.ResponseWriter, email emailStruct) bool {
-
-	// fromId should always member id of default Websystem account
 	email.Subject = "[OCVT] " + email.Subject
 
 	stmt := `

@@ -189,15 +189,10 @@ trips_types_json = {
     "id": "TRIP_LASER_TAG",
     "name": "Laser Tag"
   },
-  "TRIP_MESSAGE_ALL": {
-    "description": "Trip message to attendees and waitlist",
-    "id": "TRIP_MESSAGE_ALL",
-    "name": "Trip message to attendees and waitlist"
-  },
   "TRIP_MESSAGE_ATTEND": {
-    "description": "Trip message to attendees",
+    "description": "Trip message to force-added and attendees",
     "id": "TRIP_MESSAGE_ATTEND",
-    "name": "Trip message to attendees"
+    "name": "Trip message to force-added and attendees"
   },
   "TRIP_MESSAGE_DIRECT": {
     "description": "Direct message related to trip",
@@ -205,9 +200,9 @@ trips_types_json = {
     "name": "Direct message related to trip"
   },
   "TRIP_MESSAGE_NOTIFY": {
-    "description": "Trip reminder for attendees and waitlist",
+    "description": "Trip message for force-added, attendees, and waitlist",
     "id": "TRIP_MESSAGE_NOTIFY",
-    "name": "Trip reminder for attendees and waitlist"
+    "name": "Trip message for force-added, attendees, and waitlist"
   },
   "TRIP_MESSAGE_WAIT": {
     "description": "Trip message to waitlist",

@@ -90,6 +90,7 @@ production.
 
 ## TODO
 
+* Ensure errors after row db queries are checked
 * Test /trips/myattendance
 * Validate trip input data
 * organize functions A-Z (approval & notify related files: TODO)

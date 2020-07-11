@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"container/list"
 	"crypto/rand"
 	"database/sql"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 )
 
 var db *sql.DB
+var emailQueue *list.List
 
 // Initialize global variables
 func Initialize() {
@@ -38,6 +40,9 @@ func Initialize() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Initialize email queue
+	emailQueue = list.New()
 
 	// Load envs
 	TRIPS_FOLDER_ID = os.Getenv("GDRIVE_TRIPS_FOLDER_ID")

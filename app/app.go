@@ -153,21 +153,21 @@ func Run(host string) {
 	}()
 
 	// Run tasks every 5 minutes
-	//	ticker := time.NewTicker(5 * time.Minute)
-	//	tickerQuit := make(chan struct{})
-	//	go func() {
-	//		log.Printf("Task ticker started, running every 5 minutes")
-	//		for {
-	//			select {
-	//			case <-ticker.C:
-	//				handler.DoTasks()
-	//			case <-tickerQuit:
-	//				log.Printf("Task ticker stopped")
-	//				ticker.Stop()
-	//				return
-	//			}
-	//		}
-	//	}()
+	ticker := time.NewTicker(1 * time.Minute)
+	tickerQuit := make(chan struct{})
+	go func() {
+		log.Printf("Task ticker started, running every 5 minutes")
+		for {
+			select {
+			case <-ticker.C:
+				handler.DoTasks()
+			case <-tickerQuit:
+				log.Printf("Task ticker stopped")
+				ticker.Stop()
+				return
+			}
+		}
+	}()
 
 	// Wait for SIGINT
 	stop := make(chan os.Signal, 1)
@@ -179,7 +179,7 @@ func Run(host string) {
 	defer cancel()
 
 	// Shutdown ticker
-	//	close(tickerQuit)
+	close(tickerQuit)
 
 	// Shutdown server
 	err := server.Shutdown(ctx)

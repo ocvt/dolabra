@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"container/list"
+	"database/sql"
 	"log"
-	"strconv"
+	"strings"
 )
 
 func DoTasks() {
@@ -14,6 +16,7 @@ func DoTasks() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	/********************************/
 
 	/* Stage trip reminder email */
 	stmt = `
@@ -52,19 +55,11 @@ func DoTasks() {
 			log.Fatal(err)
 		}
 	}
+	/*****************************/
 
-	/* Sent any un-sent emails	*/
-	// TODO SES rate limiting
-	// Get emails
+	/* Load staged emails into queue to send */
 	stmt = `
-		SELECT
-			id,
-			notification_type_id,
-			trip_id,
-			from_id,
-			reply_to_id,
-			subject,
-			body
+		SELECT *
 		FROM email
 		WHERE sent = false`
 	rows, err = db.Query(stmt)
@@ -73,93 +68,122 @@ func DoTasks() {
 	}
 	defer rows.Close()
 
+	emails := list.New()
 	for rows.Next() {
-		var id, tripId, fromId, replyToId int
-		var notificationTypeId, subject, body string
+		email := emailStruct{}
 		err = rows.Scan(
-			&id,
-			&notificationTypeId,
-			&tripId,
-			&fromId,
-			&replyToId,
-			&subject,
-			&body)
+			&email.Id,
+			&email.CreateDatetime,
+			&email.SentDatetime,
+			&email.Sent,
+			&email.NotificationTypeId,
+			&email.TripId,
+			&email.ToId,
+			&email.ReplyToId,
+			&email.Subject,
+			&email.Body)
 		if err != nil {
 			log.Fatal(err)
 		}
+		emails.PushBack(email)
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-		fromName, fromEmail := dbGetMemberNameEmail(fromId)
-		replyToName, replyToEmail := dbGetMemberNameEmail(replyToId)
+	for e := emails.Front(); e != nil; e = e.Next() {
+		email := e.Value.(emailStruct)
+		// Always send from System Account
+		fromName, fromEmail := dbGetMemberNameEmail(0)
+		replyToName, replyToEmail := dbGetMemberNameEmail(email.ReplyToId)
 
-		stmt := ""
-		// Direct Email
-		if toId, err := strconv.Atoi(notificationTypeId); err == nil {
-			toName, toEmail := dbGetMemberNameEmail(toId)
-			sendEmail(fromName, fromEmail, replyToName, replyToEmail, toName, toEmail, subject, body)
-			// Trip Alerts
-		} else if notificationTypeId == "TRIP_ALERT_ALL" {
-			stmt = `
-				SELECT id
+		var rows *sql.Rows
+		var err error
+		if email.NotificationTypeId == "TRIP_APPROVAL" {
+			stmt := `
+				SELECT member_id
+				FROM trip_approver`
+			rows, err = db.Query(stmt)
+		} else if email.NotificationTypeId == "TRIP_MESSAGE_DIRECT" {
+			stmt := `
+				SELECT member_id
+				FROM trip_signup
+				WHERE member_id = ? AND trip_id = ?`
+			rows, err = db.Query(stmt, email.ToId, email.TripId)
+		} else if email.NotificationTypeId == "TRIP_MESSAGE_NOTIFY" {
+			stmt := `
+				SELECT member_id
 				FROM trip_signup
 				WHERE trip_id = ? AND
 					(attending_code = 'ATTEND' OR
 					 attending_code = 'FORCE' OR
 					 attending_code = 'WAIT')`
-		} else if notificationTypeId == "TRIP_ALERT_ATTEND" {
-			stmt = `
-				SELECT id
+			rows, err = db.Query(stmt, email.TripId)
+		} else if email.NotificationTypeId == "TRIP_MESSAGE_ATTEND" {
+			stmt := `
+				SELECT member_id
 				FROM trip_signup
 				WHERE trip_id = ? AND
 					(attending_code = 'ATTEND' OR attending_code = 'FORCE')`
-		} else if notificationTypeId == "TRIP_ALERT_WAIT" {
-			stmt = `
-				SELECT id
+			rows, err = db.Query(stmt, email.TripId)
+		} else if email.NotificationTypeId == "TRIP_MESSAGE_WAIT" {
+			stmt := `
+				SELECT member_id
 				FROM trip_signup
 				WHERE trip_id = ? AND attending_code = 'WAIT'`
-			// All other email types
+			rows, err = db.Query(stmt, email.TripId)
 		} else {
 			// Send to all ACTIVE members with notification preference set
 			stmt := `
 				SELECT id
 				FROM member
 				WHERE active = true`
-			rows, err := db.Query(stmt)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			for rows.Next() {
-				var toId int
-				err = rows.Scan(&toId)
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				if !dbCheckMemberWantsNotification(toId, notificationTypeId) {
-					continue
-				}
-				toName, toEmail := dbGetMemberNameEmail(toId)
-				sendEmail(fromName, fromEmail, replyToName, replyToEmail, toName, toEmail, subject, body)
-			}
+			rows, err = db.Query(stmt)
 		}
 
-		// Send TRIP_ALERT_* emails
-		if stmt != "" {
-			rows, err = db.Query(stmt, tripId)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer rows.Close()
+
+		memberIds := list.New()
+		for rows.Next() {
+			var memberId int
+			err = rows.Scan(&memberId)
 			if err != nil {
 				log.Fatal(err)
 			}
+			memberIds.PushBack(memberId)
+		}
 
-			for rows.Next() {
-				var toId int
-				err = rows.Scan(&toId)
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				toName, toEmail := dbGetMemberNameEmail(toId)
-				sendEmail(fromName, fromEmail, replyToName, replyToEmail, toName, toEmail, subject, body)
+		for m := memberIds.Front(); m != nil; m = m.Next() {
+			memberId := m.Value.(int)
+			if email.NotificationTypeId != "TRIP_APPROVAL" &&
+				!strings.HasPrefix(email.NotificationTypeId, "TRIP_ALERT") &&
+				!strings.HasPrefix(email.NotificationTypeId, "TRIP_MESSAGE") &&
+				!dbCheckMemberWantsNotification(memberId, email.NotificationTypeId) {
+				continue
 			}
+			toName, toEmail := dbGetMemberNameEmail(memberId)
+
+			// Put into queue
+			rawEmail := rawEmailStruct{
+				FromName:     fromName,
+				FromEmail:    fromEmail,
+				ReplyToEmail: replyToEmail,
+				ReplyToName:  replyToName,
+				ToName:       toName,
+				ToEmail:      toEmail,
+				Subject:      email.Subject,
+				Body:         email.Body,
+			}
+
+			emailQueue.PushBack(rawEmail)
+		}
+		err = rows.Err()
+		if err != nil {
+			log.Fatal(err)
 		}
 
 		// Mark email as sent
@@ -167,9 +191,20 @@ func DoTasks() {
 			UPDATE email
 			SET sent = true
 			WHERE id = ?`
-		_, err = db.Exec(stmt, id)
+		_, err = db.Exec(stmt, email.Id)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
+	/***************************/
+
+	/* Send emails from queue */
+	var next *list.Element
+	for e := emailQueue.Front(); e != nil; e = next {
+		next = e.Next()
+		email := e.Value.(rawEmailStruct)
+		sendEmail(email)
+		emailQueue.Remove(e)
+	}
+	/**************************/
 }
