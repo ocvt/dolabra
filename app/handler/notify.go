@@ -3,9 +3,6 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
-
-	"github.com/go-chi/chi"
 )
 
 func PostTripsNotifyGroup(w http.ResponseWriter, r *http.Request) {
@@ -23,18 +20,19 @@ func PostTripsNotifyGroup(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	groupId := chi.URLParam(r, "groupId")
 
 	// Get email fields
 	decoder := json.NewDecoder(r.Body)
-	var jsonBody map[string]string
-	err := decoder.Decode(&jsonBody)
+	decoder.DisallowUnknownFields()
+	var email emailStruct
+	err := decoder.Decode(&email)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	emailSubject := jsonBody["emailSubject"]
-	emailBody := jsonBody["emailBody"]
+	email.ToId = 0
+	email.TripId = tripId
+	email.ReplyToId = memberId
 
 	// Permissions
 	if !dbEnsurePublishedTrip(w, tripId) ||
@@ -42,40 +40,21 @@ func PostTripsNotifyGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if groupId != "all" && groupId != "attending" && groupId != "waitlist" {
-		respondError(w, http.StatusBadRequest, "Invalid group id")
+	if email.NotificationTypeId != "TRIP_ALERT_ALL" &&
+		email.NotificationTypeId != "TRIP_ALERT_WAIT" &&
+		email.NotificationTypeId != "TRIP_ALERT_ATTEND" {
+		respondError(w, http.StatusBadRequest, "Invalid notification type id")
 		return
 	}
 
-	// Notify signups
-	if groupId == "all" {
-		if !stageEmail(w, "TRIP_ALERT_ALL", tripId, memberId, emailSubject,
-			emailBody) {
-			return
-		}
-	} else if groupId == "attending" {
-		if !stageEmail(w, "TRIP_ALERT_ATTEND", tripId, memberId, emailSubject,
-			emailBody) {
-			return
-		}
-	} else {
-		if !stageEmail(w, "TRIP_ALERT_WAIT", tripId, memberId, emailSubject,
-			emailBody) {
-			return
-		}
-	}
-
-	memberIdStr := strconv.Itoa(memberId)
-	emailSubject = "Notification of OCVT notification"
-	emailBody = "You are receiving this because you sent a notification for a" +
-		" trip you are the trip leader of."
-	if !stageEmail(w, memberIdStr, tripId, memberId, emailSubject, emailBody) {
+	if !stageEmail(w, email) {
 		return
 	}
 
 	respondJSON(w, http.StatusNoContent, nil)
 }
 
+// Send message to specific signup
 func PostTripsNotifySignup(w http.ResponseWriter, r *http.Request) {
 	sub, ok := checkLogin(w, r)
 	if !ok {
@@ -91,21 +70,19 @@ func PostTripsNotifySignup(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	signupId, ok := getURLIntParam(w, r, "signupId")
-	if !ok {
-		return
-	}
 
-	// Get email fields
+	// Get request body
 	decoder := json.NewDecoder(r.Body)
-	var jsonBody map[string]string
-	err := decoder.Decode(&jsonBody)
+	decoder.DisallowUnknownFields()
+	var email emailStruct
+	err := decoder.Decode(&email)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	emailBody := jsonBody["emailBody"]
-	emailSubject := jsonBody["emailSubject"]
+	email.NotificationTypeId = "TRIP_ALERT"
+	email.ReplyToId = memberId
+	email.TripId = tripId
 
 	// Permissions
 	if !dbEnsurePublishedTrip(w, tripId) ||
@@ -113,9 +90,7 @@ func PostTripsNotifySignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Notify signup
-	signupIdStr := strconv.Itoa(signupId)
-	if !stageEmail(w, signupIdStr, tripId, memberId, emailSubject, emailBody) {
+	if !stageEmail(w, email) {
 		return
 	}
 

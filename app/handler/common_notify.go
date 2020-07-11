@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	//	"net/smtp"
-	"strconv"
-	"strings"
 )
 
 var SMTP_PASSWORD string
@@ -15,6 +13,22 @@ var SMTP_PORT string
 var SMTP_FROM_FIRST_NAME_DEFAULT string
 var SMTP_FROM_LAST_NAME_DEFAULT string
 var SMTP_FROM_EMAIL_DEFAULT string
+
+type emailStruct struct {
+	/* Only used to GET already sent emails */
+	SentDatetime string `json:"sentDatetime,omitempty"`
+	/* Managed server side */
+	Id                 int    `json:"id,omitempty"`
+	CreateDatetime     string `json:"createDatetime,omitempty"`
+	Sent               bool   `json:"sent,omitempty"`
+	NotificationTypeId string `json:"notificationTypeId,omitempty"`
+	TripId             int    `json:"tripId,omitempty"`
+	ReplyToId          int    `json:"replyTo,omitempty"`
+	ToId               int    `json:"toId,omitempty"` // 0 if not direct message
+	/* Required fields for creating announcements */
+	Subject string `json:"subject"`
+	Body    string `json:"body"`
+}
 
 /*
  * Actually send an email
@@ -65,42 +79,33 @@ func processAndSendEmail(w http.ResponseWriter, emailId int) bool {
  * - TRIP_ALERT_* are special types to indicate direct trip alerts
  * - tripId field is used ONLY with TRIP_ALERT_* types
  *	 otherwise it is purely for logging the relevant trip
+ *   or not all for a non trip related email
  */
-func stageEmail(w http.ResponseWriter, notificationType string, tripId int,
-	replyToId int, subject string, body string) bool {
+func stageEmail(w http.ResponseWriter, email emailStruct) bool {
 
 	// fromId should always member id of default Websystem account
-	fromId := 0
-	subject = "[OCVT] " + subject
-
-	isTripAlert := strings.HasPrefix(notificationType, "TRIP_ALERT_")
-	_, err := strconv.Atoi(notificationType)
-	if !isTripAlert && err != nil {
-		body = body +
-			"=========================================\n" +
-			"You received this message because you\n" +
-			"are on the OCVT email list. <Unsubscribe>"
-	}
+	email.Subject = "[OCVT] " + email.Subject
 
 	stmt := `
 		INSERT INTO email (
 			create_datetime,
+			sent_datetime,
 			sent,
 			notification_type_id,
 			trip_id,
-			from_id,
+			to_id,
 			reply_to_id,
 			subject,
 			body)
-		VALUES (datetime('now'), false, ?, ?, ?, ?, ?, ?)`
-	_, err = db.Exec(
+		VALUES (datetime('now'), datetime(0, 'unixepoch'), false, ?, ?, ?, ?, ?, ?)`
+	_, err := db.Exec(
 		stmt,
-		notificationType,
-		tripId,
-		fromId,
-		replyToId,
-		subject,
-		body)
+		email.NotificationTypeId,
+		email.TripId,
+		email.ToId,
+		email.ReplyToId,
+		email.Subject,
+		email.Body)
 	if !checkError(w, err) {
 		return false
 	}

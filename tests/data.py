@@ -46,8 +46,6 @@ member_on_trip_json = {
 
 notifications_json = {
   'GENERAL_ANNOUNCEMENTS': True,
-  'GENERAL_MEETINGS': True,
-  'TRIP_ALERTS': True,
   'TRIP_BACKPACKING': True,
   'TRIP_BIKING': True,
   'TRIP_CAMPING': True,
@@ -126,104 +124,149 @@ trip_signup_json = {
 }
 
 trips_types_json = {
-  'GENERAL_ANNOUNCEMENTS': {
-    'description': 'Important Club Announcements',
-    'id': 'GENERAL_ANNOUNCEMENTS',
-    'name': 'Club Updates / News / Events'
+  "GENERAL_ANNOUNCEMENTS": {
+    "description": "Important Club Announcements",
+    "id": "GENERAL_ANNOUNCEMENTS",
+    "name": "Club Meetings / News / Events"
   },
-  'GENERAL_MEETINGS': {
-    'description': 'Announcements about Club Meetings',
-    'id': 'GENERAL_MEETINGS',
-    'name': 'Official Meetings'
+  "TRIP_ALERT_ATTEND": {
+    "description": "Trip status changed to attending",
+    "id": "TRIP_ALERT_ATTEND",
+    "name": "Trip status changed to attending"
   },
-  'TRIP_ALERTS': {
-    'description': 'Important alerts about your status on trips',
-    'id': 'TRIP_ALERTS',
-    'name': 'Trip Status Alerts'
+  "TRIP_ALERT_BOOT": {
+    "description": "Trip status changed to booted",
+    "id": "TRIP_ALERT_BOOT",
+    "name": "Trip status changed to booted"
   },
-  'TRIP_BACKPACKING': {
-    'description': 'Multi day hikes.',
-    'id': 'TRIP_BACKPACKING',
-    'name': 'Backpacking'
+  "TRIP_ALERT_FORCE": {
+    "description": "Trip status changed to force-added",
+    "id": "TRIP_ALERT_FORCE",
+    "name": "Trip status changed to force-added"
   },
-  'TRIP_BIKING': {
-    'description': 'Road or mountain biking.',
-    'id': 'TRIP_BIKING',
-    'name': 'Biking'
+  "TRIP_ALERT_LEADER": {
+    "description": "Trip status changed to trip leader",
+    "id": "TRIP_ALERT_LEADER",
+    "name": "Trip status changed to trip leader"
   },
-  'TRIP_CAMPING': {
-    'description': 'Single overnight trips.',
-    'id': 'TRIP_CAMPING',
-    'name': 'Camping'
+  "TRIP_ALERT_WAIT": {
+    "description": "Trip status changed to waitlisted",
+    "id": "TRIP_ALERT_WAIT",
+    "name": "Trip status changed to waitlisted"
   },
-  'TRIP_CLIMBING': {
-    'description': 'Rock climbing or bouldering.',
-    'id': 'TRIP_CLIMBING',
-    'name': 'Climbing'
+  "TRIP_APPROVAL": {
+    "description": "Alert asking member (probably officer) to approve a trip",
+    "id": "TRIP_APPROVAL",
+    "name": "Trip Approval Alert"
   },
-  'TRIP_DAYHIKE': {
-    'description': 'In and out on the same day.',
-    'id': 'TRIP_DAYHIKE',
-    'name': 'Dayhike'
+  "TRIP_BACKPACKING": {
+    "description": "Multi day hikes.",
+    "id": "TRIP_BACKPACKING",
+    "name": "Backpacking"
   },
-  'TRIP_LASER_TAG': {
-    'description': 'Laser Tag with LCAT',
-    'id': 'TRIP_LASER_TAG',
-    'name': 'Laser Tag'
+  "TRIP_BIKING": {
+    "description": "Road or mountain biking.",
+    "id": "TRIP_BIKING",
+    "name": "Biking"
   },
-  'TRIP_OFFICIAL_MEETING': {
-    'description': 'An official OCVT meeting',
-    'id': 'TRIP_OFFICIAL_MEETING',
-    'name': 'Official Meeting'
+  "TRIP_CAMPING": {
+    "description": "Single overnight trips.",
+    "id": "TRIP_CAMPING",
+    "name": "Camping"
   },
-  'TRIP_OTHER': {
-    'description': 'Anything else not covered. ',
-    'id': 'TRIP_OTHER',
-    'name': 'Other'
+  "TRIP_CLIMBING": {
+    "description": "Rock climbing or bouldering.",
+    "id": "TRIP_CLIMBING",
+    "name": "Climbing"
   },
-  'TRIP_RAFTING_CANOEING_KAYAKING': {
-    'description': 'Rafting / Canoeing / Kayaking',
-    'id': 'TRIP_RAFTING_CANOEING_KAYAKING',
-    'name': 'Rafting / Canoeing / Kayaking'
+  "TRIP_DAYHIKE": {
+    "description": "In and out on the same day.",
+    "id": "TRIP_DAYHIKE",
+    "name": "Dayhike"
   },
-  'TRIP_ROAD_TRIP': {
-    'description': 'Just getting out and about, Ex a trip to Busch Gardens or DC etc',
-    'id': 'TRIP_ROAD_TRIP',
-    'name': 'Road Trip'
+  "TRIP_LASER_TAG": {
+    "description": "Laser Tag with LCAT",
+    "id": "TRIP_LASER_TAG",
+    "name": "Laser Tag"
   },
-  'TRIP_SKIING_SNOWBOARDING': {
-    'description': 'Skiing / Snowboarding',
-    'id': 'TRIP_SKIING_SNOWBOARDING',
-    'name': 'Skiing / Snowboarding'
+  "TRIP_MESSAGE_ALL": {
+    "description": "Trip message to attendees and waitlist",
+    "id": "TRIP_MESSAGE_ALL",
+    "name": "Trip message to attendees and waitlist"
   },
-  'TRIP_SNOW_OTHER': {
-    'description': 'Sledding snowshoeing etc',
-    'id': 'TRIP_SNOW_OTHER',
-    'name': 'Snow / Other'
+  "TRIP_MESSAGE_ATTEND": {
+    "description": "Trip message to attendees",
+    "id": "TRIP_MESSAGE_ATTEND",
+    "name": "Trip message to attendees"
   },
-  'TRIP_SOCIAL': {
-    'description': 'Strictly social, potluck, movie nights, games or other casual gatherings',
-    'id': 'TRIP_SOCIAL',
-    'name': 'Social'
+  "TRIP_MESSAGE_DIRECT": {
+    "description": "Direct message related to trip",
+    "id": "TRIP_MESSAGE_DIRECT",
+    "name": "Direct message related to trip"
   },
-  'TRIP_SPECIAL_EVENT': {
-    'description': 'A special event.',
-    'id': 'TRIP_SPECIAL_EVENT',
-    'name': 'Special Event'
+  "TRIP_MESSAGE_NOTIFY": {
+    "description": "Trip reminder for attendees and waitlist",
+    "id": "TRIP_MESSAGE_NOTIFY",
+    "name": "Trip reminder for attendees and waitlist"
   },
-  'TRIP_TEAM_SPORTS_MISC': {
-    'description': 'Football, basketball ultimate Frisbee etc.',
-    'id': 'TRIP_TEAM_SPORTS_MISC',
-    'name': 'Team Sports / Misc.'
+  "TRIP_MESSAGE_WAIT": {
+    "description": "Trip message to waitlist",
+    "id": "TRIP_MESSAGE_WAIT",
+    "name": "Trip message to waitlist"
   },
-  'TRIP_WATER_OTHER': {
-    'description': 'Swimming, tubing anything else in the water.',
-    'id': 'TRIP_WATER_OTHER',
-    'name': 'Water / Other'
+  "TRIP_OFFICIAL_MEETING": {
+    "description": "An official OCVT meeting",
+    "id": "TRIP_OFFICIAL_MEETING",
+    "name": "Official Meeting"
   },
-  'TRIP_WORK_TRIP': {
-    'description': 'Trail work or other maintenance.',
-    'id': 'TRIP_WORK_TRIP',
-    'name': 'Worktrip'
+  "TRIP_OTHER": {
+    "description": "Anything else not covered. ",
+    "id": "TRIP_OTHER",
+    "name": "Other"
+  },
+  "TRIP_RAFTING_CANOEING_KAYAKING": {
+    "description": "Rafting / Canoeing / Kayaking",
+    "id": "TRIP_RAFTING_CANOEING_KAYAKING",
+    "name": "Rafting / Canoeing / Kayaking"
+  },
+  "TRIP_ROAD_TRIP": {
+    "description": "Just getting out and about, Ex a trip to Busch Gardens or DC etc",
+    "id": "TRIP_ROAD_TRIP",
+    "name": "Road Trip"
+  },
+  "TRIP_SKIING_SNOWBOARDING": {
+    "description": "Skiing / Snowboarding",
+    "id": "TRIP_SKIING_SNOWBOARDING",
+    "name": "Skiing / Snowboarding"
+  },
+  "TRIP_SNOW_OTHER": {
+    "description": "Sledding snowshoeing etc",
+    "id": "TRIP_SNOW_OTHER",
+    "name": "Snow / Other"
+  },
+  "TRIP_SOCIAL": {
+    "description": "Strictly social, potluck, movie nights, games or other casual gatherings",
+    "id": "TRIP_SOCIAL",
+    "name": "Social"
+  },
+  "TRIP_SPECIAL_EVENT": {
+    "description": "A special event.",
+    "id": "TRIP_SPECIAL_EVENT",
+    "name": "Special Event"
+  },
+  "TRIP_TEAM_SPORTS_MISC": {
+    "description": "Football, basketball ultimate Frisbee etc.",
+    "id": "TRIP_TEAM_SPORTS_MISC",
+    "name": "Team Sports / Misc."
+  },
+  "TRIP_WATER_OTHER": {
+    "description": "Swimming, tubing anything else in the water.",
+    "id": "TRIP_WATER_OTHER",
+    "name": "Water / Other"
+  },
+  "TRIP_WORK_TRIP": {
+    "description": "Trail work or other maintenance.",
+    "id": "TRIP_WORK_TRIP",
+    "name": "Worktrip"
   }
 }

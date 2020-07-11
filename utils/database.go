@@ -37,9 +37,18 @@ func insertData(db *sql.DB) {
 	execHelper(db, `
     INSERT OR REPLACE INTO notification_type (id, name, description)
     VALUES
-      ('GENERAL_ANNOUNCEMENTS', 'Club Updates / News / Events', 'Important Club Announcements'),
-      ('GENERAL_MEETINGS', 'Official Meetings', 'Announcements about Club Meetings'),
-      ('TRIP_ALERTS', 'Trip Status Alerts', 'Important alerts about your status on trips'),
+      ('GENERAL_ANNOUNCEMENTS', 'Club Meetings / News / Events', 'Important Club Announcements'),
+			('TRIP_APPROVAL', 'Trip Approval Alert', 'Alert asking member (probably officer) to approve a trip'),
+      ('TRIP_MESSAGE_DIRECT', 'Direct message related to trip', 'Direct message related to trip'),
+			('TRIP_MESSAGE_NOTIFY', 'Trip reminder for attendees and waitlist', 'Trip reminder for attendees and waitlist'),
+			('TRIP_MESSAGE_ALL', 'Trip message to attendees and waitlist', 'Trip message to attendees and waitlist'),
+			('TRIP_MESSAGE_ATTEND', 'Trip message to attendees', 'Trip message to attendees'),
+			('TRIP_MESSAGE_WAIT', 'Trip message to waitlist', 'Trip message to waitlist'),
+			('TRIP_ALERT_ATTEND', 'Trip status changed to attending', 'Trip status changed to attending'),
+			('TRIP_ALERT_BOOT', 'Trip status changed to booted', 'Trip status changed to booted'),
+			('TRIP_ALERT_FORCE', 'Trip status changed to force-added', 'Trip status changed to force-added'),
+			('TRIP_ALERT_LEADER', 'Trip status changed to trip leader', 'Trip status changed to trip leader'),
+			('TRIP_ALERT_WAIT', 'Trip status changed to waitlisted', 'Trip status changed to waitlisted'),
       ('TRIP_BACKPACKING', 'Backpacking', 'Multi day hikes.'),
       ('TRIP_BIKING', 'Biking', 'Road or mountain biking.'),
       ('TRIP_CAMPING', 'Camping', 'Single overnight trips.'),

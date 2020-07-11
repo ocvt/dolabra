@@ -20,7 +20,7 @@ def TestNews():
   assert len(json.loads(r.text)['news']) == 0
 
 def TestNewsArchive():
-  url = HOST + '/newsArchive'
+  url = HOST + '/news/archive'
   r = req.get(url)
   assert r.status_code == 200
   assert len(json.loads(r.text)['news']) == 0

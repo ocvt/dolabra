@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 )
 
 func GetTripMyStatus(w http.ResponseWriter, r *http.Request) {
@@ -195,18 +194,21 @@ func PatchTripsSignupBoot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Notify signup
-	signupIdStr := strconv.Itoa(signupId)
 	tripName, ok := dbGetTripName(w, tripId)
 	if !ok {
 		return
 	}
-	emailSubject :=
-		"You have been Booted from the trip " + tripName
-	emailBody :=
+
+	email := emailStruct{
+		NotificationTypeId: "TRIP_ALERT_BOOT",
+		ReplyToId:          memberId,
+		ToId:               signupId,
+		Subject:            "You have been Booted from the trip " + tripName,
+	}
+	email.Body =
 		"This email is a notification that you have been Booted from the trip " +
 			tripName + " with the message " + tripSignupBoot.BootReason
-	if !stageEmail(w, signupIdStr, tripId, memberId, emailSubject, emailBody) {
+	if !stageEmail(w, email) {
 		return
 	}
 
@@ -309,18 +311,21 @@ func PatchTripsSignupForceadd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Notify signup
-	signupIdStr := strconv.Itoa(signupId)
 	tripName, ok := dbGetTripName(w, tripId)
 	if !ok {
 		return
 	}
-	emailSubject :=
-		"You have been Force Added to the trip " + tripName
-	emailBody :=
+
+	email := emailStruct{
+		NotificationTypeId: "TRIP_ALERT_FORCE",
+		ReplyToId:          memberId,
+		ToId:               signupId,
+		Subject:            "You have been Force Added to the trip " + tripName,
+	}
+	email.Body =
 		"This email is a notification that you have been Force Added to the " +
 			"trip " + tripName + "."
-	if !stageEmail(w, signupIdStr, tripId, memberId, emailSubject, emailBody) {
+	if !stageEmail(w, email) {
 		return
 	}
 
@@ -377,13 +382,16 @@ func PatchTripsSignupTripLeaderPromote(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	signupIdStr := strconv.Itoa(signupId)
-	emailSubject :=
-		"You have been promoted to Trip Leader for the trip " + tripName
-	emailBody :=
+	email := emailStruct{
+		NotificationTypeId: "TRIP_ALERT_LEADER",
+		ReplyToId:          memberId,
+		ToId:               signupId,
+		Subject:            "You have been promoted to Trip Leader for the trip " + tripName,
+	}
+	email.Body =
 		"This email is a notification that you have been promoted to Trip " +
 			"Leader for the trip " + tripName + "."
-	if !stageEmail(w, signupIdStr, tripId, memberId, emailSubject, emailBody) {
+	if !stageEmail(w, email) {
 		return
 	}
 

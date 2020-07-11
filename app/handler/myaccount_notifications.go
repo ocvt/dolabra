@@ -7,8 +7,6 @@ import (
 
 type notificationsStruct struct {
 	GeneralAnnouncements        bool `json:"GENERAL_ANNOUNCEMENTS"`
-	GeneralMeetings             bool `json:"GENERAL_MEETINGS"`
-	TripAlerts                  bool `json:"TRIP_ALERTS"`
 	TripBackpacking             bool `json:"TRIP_BACKPACKING"`
 	TripBiking                  bool `json:"TRIP_BIKING"`
 	TripCamping                 bool `json:"TRIP_CAMPING"`
@@ -31,8 +29,6 @@ type notificationsStruct struct {
 func setAllPreferences() *notificationsStruct {
 	return &notificationsStruct{
 		GeneralAnnouncements:        true,
-		GeneralMeetings:             true,
-		TripAlerts:                  true,
 		TripBackpacking:             true,
 		TripBiking:                  true,
 		TripCamping:                 true,
@@ -95,7 +91,6 @@ func PatchMyAccountNotifications(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	notifications.TripAlerts = true
 
 	notificationsArr, err := json.Marshal(notifications)
 	if !checkError(w, err) {

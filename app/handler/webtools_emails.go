@@ -5,21 +5,6 @@ import (
 	"net/http"
 )
 
-type emailStruct struct {
-	/* Managed server side */
-	Id             int    `json:"id,omitempty"`
-	CreateDatetime string `json:"createDatetime,omitempty"`
-	SentDatetime   string `json:"sentDatetime,omitempty"`
-	Sent           bool   `json:"sent,omitempty"`
-	TripId         int    `json:"tripId,omitempty"`
-	FromId         string `json:"fromId,omitempty"`
-	ReplyToId      string `json:"replyTo"`
-	/* Required fields for creating announcements */
-	NotificationTypeId string `json:"notificationTypeId"`
-	Subject            string `json:"subject"`
-	Body               string `json:"body"`
-}
-
 func GetWebtoolsEmails(w http.ResponseWriter, r *http.Request) {
 	stmt := `
 		SELECT *
@@ -42,7 +27,7 @@ func GetWebtoolsEmails(w http.ResponseWriter, r *http.Request) {
 			&emails[i].Sent,
 			&emails[i].NotificationTypeId,
 			&emails[i].TripId,
-			&emails[i].FromId,
+			&emails[i].ToId,
 			&emails[i].ReplyToId,
 			&emails[i].Subject,
 			&emails[i].Body)
@@ -60,22 +45,22 @@ func GetWebtoolsEmails(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string][]*emailStruct{"emails": emails})
 }
 
-func PostWebtoolsAnnouncements(w http.ResponseWriter, r *http.Request) {
+func PostWebtoolsEmails(w http.ResponseWriter, r *http.Request) {
 	// Get request body
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
-	var announcement emailStruct
-	err := decoder.Decode(&announcement)
+	var email emailStruct
+	err := decoder.Decode(&email)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	// Notify members
-	if !stageEmail(w,
-		announcement.NotificationTypeId, 0, 0,
-		announcement.Subject,
-		announcement.Body) {
+	email.NotificationTypeId = "GENERAL_ANNOUNCEMENTS"
+	email.TripId = 0
+	email.ReplyToId = 0
+
+	if !stageEmail(w, email) {
 		return
 	}
 

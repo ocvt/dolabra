@@ -18,17 +18,17 @@ CREATE TABLE IF NOT EXISTS auth (
 CREATE TABLE IF NOT EXISTS email (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
       create_datetime DATETIME NOT NULL,
-      sent_datetime DATETIME,
+      sent_datetime DATETIME NOT NULL,
       sent BOOLEAN NOT NULL,
       notification_type_id TEXT NOT NULL,
       trip_id INTEGER NOT NULL,
-      from_id INTEGER  NOT NULL,
+      to_id INTEGER  NOT NULL,
       reply_to_id INTEGER  NOT NULL,
       subject TEXT NOT NULL,
       body TEXT NOT NULL,
       FOREIGN KEY(notification_type_id) REFERENCES notification_type(id),
       FOREIGN KEY(trip_id) REFERENCES trip(id),
-      FOREIGN KEY(from_id) REFERENCES member(id),
+      FOREIGN KEY(to_id) REFERENCES member(id),
       FOREIGN KEY(reply_to_id) REFERENCES member(id)
 );
 
