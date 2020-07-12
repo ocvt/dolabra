@@ -3,9 +3,11 @@ FROM golang:1.13-buster
 LABEL maintainer="Paul Walko <paul@seaturtle.pw>"
 
 WORKDIR /go/src/app
-COPY . .
 
+COPY go.mod go.sum ./
 RUN go mod download
+
+COPY . .
 RUN go build -o dolabra -v .
 
 EXPOSE 3000

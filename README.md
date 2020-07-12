@@ -46,6 +46,8 @@ proper idp.
 
 Create `dolabra.env` (copy `dolabra.env.sample`) with the following variables
 defined:
+* `AWS_ACCESS_KEY_ID`: AWS access key (for SES)
+* `AWS_SECRET_ACCESS_KEY`: AWS secret key (for SES)
 * `GOOGLE_CLIENT_SECRET`: Client Secret for Google Sign-in
 * `GOOGLE_CLIENT_ID`: Client Id for Google Sign-in
 * `GOOGLE_APPLICATION_CREDENTIALS`: Path to json file with GCP system account
@@ -54,10 +56,6 @@ defined:
 * `GDRIVE_TRIPS_FOLDER_ID`: Gdrive folder containing trips (for Photos)
 * `GDRIVE_HOME_PHOTOS_FOLDER_ID`: Gdrive folder containing homephotos
   (for Photos)
-* `SMTP_USERNAME`: SMTP username
-* `SMTP_PASSWORD`: SMTP password
-* `SMTP_HOSTNAME`: SMTP hostname
-* `SMTP_PORT`: SMTP port
 * `SMTP_FROM_FIRST_NAME_DEFAULT`: Firstname of person in the `From` field
 * `SMTP_FROM_LAST_NAME_DEFAULT`: Lastname of person in the `From` field
 * `SMTP_FROM_EMAIL_DEFAULT`: Email put in the `From` field

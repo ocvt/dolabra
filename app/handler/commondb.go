@@ -79,7 +79,7 @@ func dbCreateSystemMember() error {
 	stmt := `
 		INSERT OR REPLACE INTO member
 		VALUES (0, ?, ?, ?, datetime('now'), '555-555-5555', 'Prefer not to say',
-						1990, true, 'Robot', 'Require frequent oiling',
+						1990, false, 'Robot', 'Require frequent oiling',
 						datetime('now', '+100 years'), ?)`
 	_, err = db.Exec(
 		stmt,

@@ -1,15 +1,14 @@
 package handler
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
-	//	"net/smtp"
+
+	"github.com/aws/aws-sdk-go/service/ses"
+	"gopkg.in/mail.v2"
 )
 
-var SMTP_PASSWORD string
-var SMTP_USERNAME string
-var SMTP_HOSTNAME string
-var SMTP_PORT string
 var SMTP_FROM_FIRST_NAME_DEFAULT string
 var SMTP_FROM_LAST_NAME_DEFAULT string
 var SMTP_FROM_EMAIL_DEFAULT string
@@ -44,43 +43,24 @@ type rawEmailStruct struct {
 /*
  * Actually send an email
  */
-func sendEmail(email rawEmailStruct) {
-	message := fmt.Sprintf(
-		"From: %s <%s>\n"+
-			"Reply-To: %s <%s>\n"+
-			"To: %s <%s>\n"+
-			"Subject: %s\n\n"+
-			"%s",
-		email.FromName,
-		email.FromEmail,
-		email.ReplyToName,
-		email.ReplyToEmail,
-		email.ToName,
-		email.ToEmail,
-		email.Subject,
-		email.Body)
+func sendEmail(sesService *ses.SES, email rawEmailStruct) (*ses.SendRawEmailOutput, error) {
+	msg := mail.NewMessage()
+	msg.SetHeader("From", fmt.Sprintf("%s <%s>", email.FromName, email.FromEmail))
+	msg.SetHeader("To", fmt.Sprintf("%s <%s>", email.ToName, email.ToEmail))
+	msg.SetHeader("Subject", email.Subject)
+	msg.SetBody("text/html", email.Body)
 
-	//	auth := smtp.PlainAuth("", SMTP_USERNAME, SMTP_PASSWORD, SMTP_HOSTNAME)
-	fmt.Printf("MESSAGE: %s\n", message)
-	//	err := smtp.SendMail(fmt.Sprintf("%s:%s", SMTP_HOSTNAME, SMTP_PORT), auth,
-	//			SMTP_FROM_EMAIL_DEFAULT, []string{toEmail}, []byte(message))
-	//	if err != nil {
-	//		log.Fatal(err)
-	//	}
-}
+	var rawMsg bytes.Buffer
+	msg.WriteTo(&rawMsg)
 
-/*
- * Process db fields and send email(s)
- * - Ratelimits according SES TODO
- * - MAY take a long time
- * - Should be called from separate thread checking for emails every 5 minutes
- */
-func processAndSendEmail(w http.ResponseWriter, emailId int) bool {
-	// Lookup + process all email FIELDS TODO
-	// Send emails
-	// If type is starts with TRIP_ALERT, send separate email to fromId TODO
-	//emailBody = fmt.Sprintf("You are receiving this message because you sent it:\n\n%s", emailBody)
-	return true
+	input := &ses.SendRawEmailInput{
+		RawMessage: &ses.RawMessage{
+			Data: rawMsg.Bytes(),
+		},
+	}
+
+	output, err := sesService.SendRawEmail(input)
+	return output, err
 }
 
 /*

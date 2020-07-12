@@ -5,6 +5,11 @@ import (
 	"database/sql"
 	"log"
 	"strings"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ses"
 )
 
 func DoTasks() {
@@ -199,12 +204,24 @@ func DoTasks() {
 	/***************************/
 
 	/* Send emails from queue */
+	sesSession, err := session.NewSession(&aws.Config{
+		Region: aws.String("us-east-1"),
+	})
+	sesService := ses.New(sesSession)
+
 	var next *list.Element
 	for e := emailQueue.Front(); e != nil; e = next {
 		next = e.Next()
 		email := e.Value.(rawEmailStruct)
-		sendEmail(email)
-		emailQueue.Remove(e)
+		_, err = sendEmail(sesService, email)
+		if err == nil {
+			emailQueue.Remove(e)
+		} else if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == ses.ErrCodeMessageRejected {
+			log.Print(ses.ErrCodeMessageRejected, awsErr.Error())
+			break
+		} else {
+			log.Print(err.Error())
+		}
 	}
 	/**************************/
 }
