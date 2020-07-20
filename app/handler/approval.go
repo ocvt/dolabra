@@ -24,26 +24,31 @@ func approveNewTrip(w http.ResponseWriter, tripId int) bool {
 	}
 
 	guidCode := generateCode(GUID_LENGTH)
-	title, date, description, ok := dbGetTripApprovalSummary(w, tripId)
+	trip, ok := dbGetTrip(w, tripId)
 	if !ok {
 		return false
 	}
 	email.Subject = fmt.Sprintf(
-		"[Trip Approval] ID: %d, Title: %s", tripId, title)
+		"[OCVT Trip Approval] - ID: %d, Title: %s", tripId, trip.Name)
 	email.Body = fmt.Sprintf(
 		"The following trip needs approval:\n"+
 			"\n"+
-			"%s\n"+
+			"Title: %s\n"+
 			"\n"+
 			"Scheduled for: %s\n"+
+			"\n"+
+			"Summary: %s\n"+
+			"\n"+
 			"Description: %s\n"+
 			"\n"+
-			"To View this trip go <here>\n"+
-			"To Administer or cancel this trip go <here>\n"+
 			"\n"+
-			"<Approve Trip%s>\n"+
+			"To View this trip go <a href=\"???/trips/%d\">here</a>\n"+
+			"To Administer or cancel this trip go <a href=\"???/trips/%d/admin\">here</a>\n"+
 			"\n"+
-			"<Deny Trip%s>\n", tripId, title, date, description, guidCode, guidCode)
+			"<a href=\"???/tripapproval/%d/APPROVE\">Approve Trip</a>\n"+
+			"\n"+
+			"<a href=\"???/tripapproval/%d/DENY\">Deny Trip</a>\n",
+		tripId, trip.Name, trip.CreateDatetime, trip.Summary, trip.Description, tripId, tripId, guidCode, guidCode)
 
 	if !stageEmail(w, email) {
 		return false

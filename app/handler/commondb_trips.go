@@ -180,40 +180,46 @@ func dbEnsureValidSignup(w http.ResponseWriter, tripId int, memberId int,
 	return true
 }
 
-func dbGetTripApprovalSummary(w http.ResponseWriter, tripId int) (string,
-	string, string, bool) {
+func dbGetTrip(w http.ResponseWriter, tripId int) (*tripStruct, bool) {
 	stmt := `
-		SELECT
-			create_datetime,
-			name,
-			description
+		SELECT *
 		FROM trip
-		WHERE id = ?`
-	row, err := db.Query(stmt, tripId)
+		WHERE
+			id = ?`
+	var trip tripStruct
+	err := db.QueryRow(stmt, tripId).Scan(
+		&trip.Id,
+		&trip.CreateDatetime,
+		&trip.Cancel,
+		&trip.Publish,
+		&trip.ReminderSent,
+		&trip.MemberId,
+		&trip.MembersOnly,
+		&trip.AllowLateSignups,
+		&trip.DrivingRequired,
+		&trip.HasCost,
+		&trip.CostDescription,
+		&trip.MaxPeople,
+		&trip.Name,
+		&trip.NotificationTypeId,
+		&trip.StartDatetime,
+		&trip.EndDatetime,
+		&trip.Summary,
+		&trip.Description,
+		&trip.Location,
+		&trip.LocationDirections,
+		&trip.MeetupLocation,
+		&trip.Distance,
+		&trip.Difficulty,
+		&trip.DifficultyDescription,
+		&trip.Instructions,
+		&trip.PetsAllowed,
+		&trip.PetsDescription)
 	if !checkError(w, err) {
-		return "", "", "", false
-	}
-	defer row.Close()
-
-	for row.Next() {
-		var createDatetime, name, description string
-		err = row.Scan(
-			&createDatetime,
-			&name,
-			&description)
-		if !checkError(w, err) {
-			return "", "", "", false
-		}
-
-		return createDatetime, name, description, true
+		return nil, false
 	}
 
-	err = row.Err()
-	if !checkError(w, err) {
-		return "", "", "", false
-	}
-
-	return "", "", "", false
+	return &trip, true
 }
 
 func dbGetTripName(w http.ResponseWriter, tripId int) (string, bool) {

@@ -20,6 +20,7 @@ type tripStruct struct {
 	Cancel         bool   `json:"cancel,omitempty"`
 	Publish        bool   `json:"publish,omitempty"`
 	ReminderSent   bool   `json:"reminderSent,omitempty"`
+	MemberId       int    `json:"memberId,omitempty"`
 	MemberName     string `json:"memberName,omitempty"`
 	/* Required fields for creating a trip, used for both methods */
 	MembersOnly           bool    `json:"membersOnly"`
@@ -110,7 +111,6 @@ func GetMyAttendance(w http.ResponseWriter, r *http.Request) {
 	var tripSignups = []*tripSignupStruct{}
 	i := 0
 	for rows.Next() {
-		var creatorMemberId int
 		trips = append(trips, &tripStruct{})
 		tripSignups = append(tripSignups, &tripSignupStruct{})
 		err = rows.Scan(
@@ -134,7 +134,7 @@ func GetMyAttendance(w http.ResponseWriter, r *http.Request) {
 			&trips[i].Cancel,
 			&trips[i].Publish,
 			&trips[i].ReminderSent,
-			&creatorMemberId,
+			&trips[i].MemberId,
 			&trips[i].MembersOnly,
 			&trips[i].AllowLateSignups,
 			&trips[i].DrivingRequired,
@@ -161,7 +161,7 @@ func GetMyAttendance(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var ok bool
-		trips[i].MemberName, ok = dbGetMemberName(w, creatorMemberId)
+		trips[i].MemberName, ok = dbGetMemberName(w, trips[i].MemberId)
 		if !ok {
 			return
 		}
@@ -207,45 +207,12 @@ func GetTrip(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stmt := `
-		SELECT *
-		FROM trip
-		WHERE id = ?`
-	var creatorMemberId int
-	var trip tripStruct
-	err = db.QueryRow(stmt, tripId).Scan(
-		&trip.Id,
-		&trip.CreateDatetime,
-		&trip.Cancel,
-		&trip.Publish,
-		&trip.ReminderSent,
-		&creatorMemberId,
-		&trip.MembersOnly,
-		&trip.AllowLateSignups,
-		&trip.DrivingRequired,
-		&trip.HasCost,
-		&trip.CostDescription,
-		&trip.MaxPeople,
-		&trip.Name,
-		&trip.NotificationTypeId,
-		&trip.StartDatetime,
-		&trip.EndDatetime,
-		&trip.Summary,
-		&trip.Description,
-		&trip.Location,
-		&trip.LocationDirections,
-		&trip.MeetupLocation,
-		&trip.Distance,
-		&trip.Difficulty,
-		&trip.DifficultyDescription,
-		&trip.Instructions,
-		&trip.PetsAllowed,
-		&trip.PetsDescription)
-	if !checkError(w, err) {
+	trip, ok := dbGetTrip(w, tripId)
+	if !ok {
 		return
 	}
 
-	trip.MemberName, ok = dbGetMemberName(w, creatorMemberId)
+	trip.MemberName, ok = dbGetMemberName(w, trip.MemberId)
 	if !ok {
 		return
 	}
@@ -263,49 +230,15 @@ func GetTripSummary(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stmt := `
-		SELECT *
-		FROM trip
-		WHERE
-			id = ?`
-	var creatorMemberId int
-	var trip tripStruct
-	err := db.QueryRow(stmt, tripId).Scan(
-		&trip.Id,
-		&trip.CreateDatetime,
-		&trip.Cancel,
-		&trip.Publish,
-		&trip.ReminderSent,
-		&creatorMemberId,
-		&trip.MembersOnly,
-		&trip.AllowLateSignups,
-		&trip.DrivingRequired,
-		&trip.HasCost,
-		&trip.CostDescription,
-		&trip.MaxPeople,
-		&trip.Name,
-		&trip.NotificationTypeId,
-		&trip.StartDatetime,
-		&trip.EndDatetime,
-		&trip.Summary,
-		&trip.Description,
-		&trip.Location,
-		&trip.LocationDirections,
-		&trip.MeetupLocation,
-		&trip.Distance,
-		&trip.Difficulty,
-		&trip.DifficultyDescription,
-		&trip.Instructions,
-		&trip.PetsAllowed,
-		&trip.PetsDescription)
-	if !checkError(w, err) {
+	trip, ok := dbGetTrip(w, tripId)
+	if !ok {
 		return
 	}
 
 	// Hide location to public
 	trip.MeetupLocation = ""
 
-	trip.MemberName, ok = dbGetMemberName(w, creatorMemberId)
+	trip.MemberName, ok = dbGetMemberName(w, trip.MemberId)
 	if !ok {
 		return
 	}
@@ -428,7 +361,7 @@ func GetTripsArchive(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-		SELECT *
+		SELECT id
 		FROM trip
 		WHERE id > 0 AND id <= ? AND publish = true
 		ORDER BY datetime(end_datetime) DESC
@@ -442,42 +375,20 @@ func GetTripsArchive(w http.ResponseWriter, r *http.Request) {
 	var trips = []*tripStruct{}
 	i := 0
 	for rows.Next() {
-		var memberId int
+		var tripId int
 		trips = append(trips, &tripStruct{})
-		err = rows.Scan(
-			&trips[i].Id,
-			&trips[i].CreateDatetime,
-			&trips[i].Cancel,
-			&trips[i].Publish,
-			&trips[i].ReminderSent,
-			&memberId,
-			&trips[i].MembersOnly,
-			&trips[i].AllowLateSignups,
-			&trips[i].DrivingRequired,
-			&trips[i].HasCost,
-			&trips[i].CostDescription,
-			&trips[i].MaxPeople,
-			&trips[i].Name,
-			&trips[i].NotificationTypeId,
-			&trips[i].StartDatetime,
-			&trips[i].EndDatetime,
-			&trips[i].Summary,
-			&trips[i].Description,
-			&trips[i].Location,
-			&trips[i].LocationDirections,
-			&trips[i].MeetupLocation,
-			&trips[i].Distance,
-			&trips[i].Difficulty,
-			&trips[i].DifficultyDescription,
-			&trips[i].Instructions,
-			&trips[i].PetsAllowed,
-			&trips[i].PetsDescription)
+		err = rows.Scan(&tripId)
 		if !checkError(w, err) {
 			return
 		}
 
-		var ok bool
-		trips[i].MemberName, ok = dbGetMemberName(w, memberId)
+		trip, ok := dbGetTrip(w, tripId)
+		if !ok {
+			return
+		}
+		trips[i] = trip
+
+		trips[i].MemberName, ok = dbGetMemberName(w, trips[i].MemberId)
 		if !ok {
 			return
 		}
@@ -509,7 +420,7 @@ func GetTripsMyTrips(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-		SELECT *
+		SELECT id
 		FROM trip
 		WHERE
 			member_id = ?`
@@ -522,42 +433,20 @@ func GetTripsMyTrips(w http.ResponseWriter, r *http.Request) {
 	var trips = []*tripStruct{}
 	i := 0
 	for rows.Next() {
-		var creatorMemberId int
+		var tripId int
 		trips = append(trips, &tripStruct{})
-		err = rows.Scan(
-			&trips[i].Id,
-			&trips[i].CreateDatetime,
-			&trips[i].Cancel,
-			&trips[i].Publish,
-			&trips[i].ReminderSent,
-			&creatorMemberId,
-			&trips[i].MembersOnly,
-			&trips[i].AllowLateSignups,
-			&trips[i].DrivingRequired,
-			&trips[i].HasCost,
-			&trips[i].CostDescription,
-			&trips[i].MaxPeople,
-			&trips[i].Name,
-			&trips[i].NotificationTypeId,
-			&trips[i].StartDatetime,
-			&trips[i].EndDatetime,
-			&trips[i].Summary,
-			&trips[i].Description,
-			&trips[i].Location,
-			&trips[i].LocationDirections,
-			&trips[i].MeetupLocation,
-			&trips[i].Distance,
-			&trips[i].Difficulty,
-			&trips[i].DifficultyDescription,
-			&trips[i].Instructions,
-			&trips[i].PetsAllowed,
-			&trips[i].PetsDescription)
+		err = rows.Scan(&tripId)
 		if !checkError(w, err) {
 			return
 		}
 
-		var ok bool
-		trips[i].MemberName, ok = dbGetMemberName(w, creatorMemberId)
+		trip, ok := dbGetTrip(w, tripId)
+		if !ok {
+			return
+		}
+		trips[i] = trip
+
+		trips[i].MemberName, ok = dbGetMemberName(w, trips[i].MemberId)
 		if !ok {
 			return
 		}
@@ -574,7 +463,7 @@ func GetTripsMyTrips(w http.ResponseWriter, r *http.Request) {
 
 func GetTripsSummary(w http.ResponseWriter, r *http.Request) {
 	stmt := `
-		SELECT *
+		SELECT id
 		FROM trip
 		WHERE
 			cancel = false
@@ -590,45 +479,23 @@ func GetTripsSummary(w http.ResponseWriter, r *http.Request) {
 	var trips = []*tripStruct{}
 	i := 0
 	for rows.Next() {
-		var creatorMemberId int
+		var tripId int
 		trips = append(trips, &tripStruct{})
-		err = rows.Scan(
-			&trips[i].Id,
-			&trips[i].CreateDatetime,
-			&trips[i].Cancel,
-			&trips[i].Publish,
-			&trips[i].ReminderSent,
-			&creatorMemberId,
-			&trips[i].MembersOnly,
-			&trips[i].AllowLateSignups,
-			&trips[i].DrivingRequired,
-			&trips[i].HasCost,
-			&trips[i].CostDescription,
-			&trips[i].MaxPeople,
-			&trips[i].Name,
-			&trips[i].NotificationTypeId,
-			&trips[i].StartDatetime,
-			&trips[i].EndDatetime,
-			&trips[i].Summary,
-			&trips[i].Description,
-			&trips[i].Location,
-			&trips[i].LocationDirections,
-			&trips[i].MeetupLocation,
-			&trips[i].Distance,
-			&trips[i].Difficulty,
-			&trips[i].DifficultyDescription,
-			&trips[i].Instructions,
-			&trips[i].PetsAllowed,
-			&trips[i].PetsDescription)
+		err = rows.Scan(&tripId)
 		if !checkError(w, err) {
 			return
 		}
 
+		trip, ok := dbGetTrip(w, tripId)
+		if !ok {
+			return
+		}
+		trips[i] = trip
+
 		// Hide location to public
 		trips[i].MeetupLocation = ""
 
-		var ok bool
-		trips[i].MemberName, ok = dbGetMemberName(w, creatorMemberId)
+		trips[i].MemberName, ok = dbGetMemberName(w, trips[i].MemberId)
 		if !ok {
 			return
 		}
