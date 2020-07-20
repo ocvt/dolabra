@@ -37,13 +37,22 @@ func DoTasks() {
 	}
 	defer rows.Close()
 
+	tripIds := list.New()
 	for rows.Next() {
 		var tripId int
 		err = rows.Scan(&tripId)
 		if err != nil {
 			log.Fatal(err)
 		}
+		tripIds.PushBack(tripId)
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
 
+	for t := tripIds.Front(); t != nil; t = t.Next() {
+		tripId := t.Value.(int)
 		// Stage email
 		err = stageEmailTripReminder(tripId)
 		if err != nil {
