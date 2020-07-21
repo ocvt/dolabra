@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"net/http"
-	"os"
 
 	"github.com/go-chi/chi"
 	"golang.org/x/oauth2"
@@ -15,8 +14,8 @@ import (
 )
 
 var googleOAuthConfig = &oauth2.Config{
-	ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
-	ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+	ClientID:     utils.GetConfig().GoogleClientId,
+	ClientSecret: utils.GetConfig().GoogleClientSecret,
 	RedirectURL:  utils.GetConfig().ApiUrl + "/auth/google/callback",
 	Scopes:       []string{oidcgoogle.UserinfoProfileScope},
 	Endpoint:     google.Endpoint,

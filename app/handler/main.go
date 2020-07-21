@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -43,15 +42,6 @@ func Initialize() {
 
 	// Initialize email queue
 	emailQueue = list.New()
-
-	// Load envs
-	TRIPS_FOLDER_ID = os.Getenv("GDRIVE_TRIPS_FOLDER_ID")
-	HOME_PHOTOS_FOLDER_ID = os.Getenv("GDRIVE_HOME_PHOTOS_FOLDER_ID")
-	SMTP_FROM_FIRST_NAME_DEFAULT = os.Getenv("SMTP_FROM_FIRST_NAME_DEFAULT")
-	SMTP_FROM_LAST_NAME_DEFAULT = os.Getenv("SMTP_FROM_LAST_NAME_DEFAULT")
-	SMTP_FROM_EMAIL_DEFAULT = os.Getenv("SMTP_FROM_EMAIL_DEFAULT")
-	STRIPE_SECRET_KEY = os.Getenv("STRIPE_SECRET_KEY")
-	STRIPE_WEBHOOK_SECRET = os.Getenv("STRIPE_WEBHOOK_SECRET")
 
 	err = dbCreateSystemMember()
 	if err != nil {

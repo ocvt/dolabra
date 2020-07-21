@@ -10,10 +10,9 @@ import (
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/paymentintent"
 	"github.com/stripe/stripe-go/webhook"
-)
 
-var STRIPE_SECRET_KEY string
-var STRIPE_WEBHOOK_SECRET string
+	"gitlab.com/ocvt/dolabra/utils"
+)
 
 /* Only for redeeming codes */
 type simpleStoreCodeStruct struct {
@@ -64,7 +63,7 @@ func GetPayment(w http.ResponseWriter, r *http.Request) {
 
 	// Create paymentIntent and send to client
 	stripe.LogLevel = 1
-	stripe.Key = STRIPE_SECRET_KEY
+	stripe.Key = utils.GetConfig().StripeSecretKey
 	params := &stripe.PaymentIntentParams{
 		Amount:      stripe.Int64(int64(amount)),
 		Currency:    stripe.String(string(stripe.CurrencyUSD)),
@@ -210,7 +209,7 @@ func PostPaymentSucceeded(w http.ResponseWriter, r *http.Request) {
 
 	// Verify event
 	event, err := webhook.ConstructEvent(body,
-		r.Header.Get("Stripe-Signature"), STRIPE_WEBHOOK_SECRET)
+		r.Header.Get("Stripe-Signature"), utils.GetConfig().StripeWebhookSecret)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return

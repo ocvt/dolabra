@@ -9,10 +9,6 @@ import (
 	"gopkg.in/mail.v2"
 )
 
-var SMTP_FROM_FIRST_NAME_DEFAULT string
-var SMTP_FROM_LAST_NAME_DEFAULT string
-var SMTP_FROM_EMAIL_DEFAULT string
-
 type emailStruct struct {
 	/* Only used to GET already sent emails */
 	SentDatetime string `json:"sentDatetime,omitempty"`

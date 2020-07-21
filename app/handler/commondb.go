@@ -8,6 +8,8 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi"
+
+	"gitlab.com/ocvt/dolabra/utils"
 )
 
 /* Contains:
@@ -83,9 +85,9 @@ func dbCreateSystemMember() error {
 						datetime('now', '+100 years'), ?)`
 	_, err = db.Exec(
 		stmt,
-		SMTP_FROM_EMAIL_DEFAULT,
-		SMTP_FROM_FIRST_NAME_DEFAULT,
-		SMTP_FROM_LAST_NAME_DEFAULT,
+		utils.GetConfig().SmtpFromEmailDefault,
+		utils.GetConfig().SmtpFromFirstNameDefault,
+		utils.GetConfig().SmtpFromLastNameDefault,
 		notificationsStr) // sqlvet: ignore
 
 	return err

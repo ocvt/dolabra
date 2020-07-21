@@ -7,10 +7,9 @@ import (
 	"strconv"
 
 	"google.golang.org/api/drive/v3"
-)
 
-var HOME_PHOTOS_FOLDER_ID string
-var TRIPS_FOLDER_ID string
+	"gitlab.com/ocvt/dolabra/utils"
+)
 
 /* HELPERS */
 func getPhotos(w http.ResponseWriter, tripFolderId string) ([]map[string]string, bool) {
@@ -52,7 +51,7 @@ func getTripFolderId(w http.ResponseWriter, tripId string) (string, bool) {
 	query := fmt.Sprintf("mimeType = 'application/vnd.google-apps.folder' and "+
 		"'%s' in parents and "+
 		"name = '%s'",
-		TRIPS_FOLDER_ID, tripId)
+		utils.GetConfig().GDriveTripsFolderId, tripId)
 	folderListStruct, err := service.Files.List().Q(query).Fields("files/id").Do()
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
@@ -65,7 +64,7 @@ func getTripFolderId(w http.ResponseWriter, tripId string) (string, bool) {
 	// Create new trip folder if it doesn't exist
 	newFolder := &drive.File{
 		Name:     tripId,
-		Parents:  []string{TRIPS_FOLDER_ID},
+		Parents:  []string{utils.GetConfig().GDriveTripsFolderId},
 		MimeType: "application/vnd.google-apps.folder",
 	}
 	newFolder, err = service.Files.Create(newFolder).Do()
@@ -134,7 +133,7 @@ func GetAllTripsPhotos(w http.ResponseWriter, r *http.Request) {
 
 	// Get trip photos
 	query := fmt.Sprintf("mimeType = 'application/vnd.google-apps.folder' and "+
-		"'%s' in parents", TRIPS_FOLDER_ID)
+		"'%s' in parents", utils.GetConfig().GDriveTripsFolderId)
 	fileListStruct, err := service.Files.List().Q(query).Fields("files(id, name)").Do()
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
@@ -158,7 +157,7 @@ func GetAllTripsPhotos(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetHomePhotos(w http.ResponseWriter, r *http.Request) {
-	imageList, ok := getPhotos(w, HOME_PHOTOS_FOLDER_ID)
+	imageList, ok := getPhotos(w, utils.GetConfig().GDriveHomePhotosFolderId)
 	if !ok {
 		return
 	}

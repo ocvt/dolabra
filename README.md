@@ -90,7 +90,7 @@ production.
 
 ## TODO
 
-* Put all env vars in config
+* gitlab.com -> github.com in imports
 * Ensure email errors from bad email addresses are dequeued instead of infinitely trying
 * Add check in tasks to ensure officers or approvers are removed after expiration
 * Ensure errors after row db queries are checked
