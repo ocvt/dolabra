@@ -203,7 +203,9 @@ func DoTasks() {
 		// Mark email as sent
 		stmt = `
 			UPDATE email
-			SET sent = true
+			SET
+				sent_datetime = datetime('now'),
+				sent = true
 			WHERE id = ?`
 		_, err = db.Exec(stmt, email.Id)
 		if err != nil {

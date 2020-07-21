@@ -118,8 +118,10 @@ func setRouters() {
 	r.Route("/webtools", func(r chi.Router) {
 		r.Use(handler.ProcessClientAuth)
 		r.Use(handler.EnsureOfficer)
+		r.Delete("/approvers/{memberId}", handler.DeleteWebtoolsApprovers)
 		r.Delete("/news/{newsId}", handler.DeleteWebtoolsNews)
 		r.Delete("/officers/{memberId}", handler.DeleteWebtoolsOfficers)
+		r.Get("/approvers", handler.GetWebtoolsApprovers)
 		r.Get("/codes", handler.GetWebtoolsCodes)
 		r.Get("/emails", handler.GetWebtoolsEmails)
 		r.Get("/equipment", handler.GetWebtoolsEquipment)
@@ -127,6 +129,7 @@ func setRouters() {
 		r.Get("/payments", handler.GetWebtoolsPayments)
 		r.Patch("/equipment/{equipmentId}/{count}", handler.PatchWebtoolsEquipment)
 		r.Patch("/payments/{paymentRowId}/completed", handler.PatchWebtoolsPaymentsCompleted)
+		r.Post("/approvers", handler.PostWebtoolsApprovers)
 		r.Post("/emails", handler.PostWebtoolsEmails)
 		r.Post("/equipment", handler.PostWebtoolsEquipment)
 		r.Post("/payments", handler.PostWebtoolsPayments)

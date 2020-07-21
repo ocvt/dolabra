@@ -153,6 +153,18 @@ func dbEnsureMemberIdExists(w http.ResponseWriter, memberId int) bool {
 	return true
 }
 
+func dbEnsureNotApprover(w http.ResponseWriter, memberId int) bool {
+	isApprover, err := dbIsApprover(w, memberId)
+	if err != nil {
+		return false
+	}
+	if isApprover {
+		respondError(w, http.StatusBadRequest, "Must not be approver.")
+		return false
+	}
+	return true
+}
+
 func dbEnsureNotOfficer(w http.ResponseWriter, memberId int) bool {
 	isOfficer, err := dbIsOfficer(w, memberId)
 	if err != nil {
@@ -373,6 +385,18 @@ func dbIsActiveMember(w http.ResponseWriter, memberId int) (bool, error) {
 	return exists, err
 }
 
+func dbIsApprover(w http.ResponseWriter, memberId int) (bool, error) {
+	stmt := `
+		SELECT EXISTS (
+			SELECT 1
+			FROM trip_approver
+			WHERE member_id = ?)`
+	var exists bool
+	err := db.QueryRow(stmt, memberId).Scan(&exists)
+	checkError(w, err)
+	return exists, err
+}
+
 func dbIsMemberWithIdp(w http.ResponseWriter, idp string, idpSub string) (bool, error) {
 	stmt := `
 		SELECT EXISTS (
@@ -414,7 +438,7 @@ func dbIsOfficer(w http.ResponseWriter, memberId int) (bool, error) {
 		SELECT EXISTS (
 			SELECT 1
 			FROM officer
-			WHERE member_id = ? AND date(expire_datetime) > datetime('now'))`
+			WHERE member_id = ?)`
 	var exists bool
 	err := db.QueryRow(stmt, memberId).Scan(&exists)
 	checkError(w, err)

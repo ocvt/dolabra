@@ -46,6 +46,8 @@ proper idp.
 
 Create `dolabra.env` (copy `dolabra.env.sample`) with the following variables
 defined:
+* `COOKIE_DOMAIN`: Domain to use for cookies (should be shared between api & frontend)
+* `FRONTEND_URL`: Frontend url (for linking from emails)
 * `AWS_ACCESS_KEY_ID`: AWS access key (for SES)
 * `AWS_SECRET_ACCESS_KEY`: AWS secret key (for SES)
 * `GOOGLE_CLIENT_SECRET`: Client Secret for Google Sign-in
@@ -88,6 +90,9 @@ production.
 
 ## TODO
 
+* Put all env vars in config
+* Ensure email errors from bad email addresses are dequeued instead of infinitely trying
+* Add check in tasks to ensure officers or approvers are removed after expiration
 * Ensure errors after row db queries are checked
 * Test /trips/myattendance
 * Validate trip input data
