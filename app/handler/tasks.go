@@ -13,11 +13,31 @@ import (
 )
 
 func DoTasks() {
-	/* Remove expired quick signups */
+	/* Remove expired trip approvers */
 	stmt := `
-		DELETE FROM quick_signup
+		DELETE FROM trip_approver
 		WHERE datetime(expire_datetime) < datetime('now')`
 	_, err := db.Exec(stmt)
+	if err != nil {
+		log.Fatal(err)
+	}
+	/*********************************/
+
+	/* Remove expired officers */
+	stmt = `
+		DELETE FROM officer
+		WHERE datetime(expire_datetime) < datetime('now')`
+	_, err = db.Exec(stmt)
+	if err != nil {
+		log.Fatal(err)
+	}
+	/***************************/
+
+	/* Remove expired quick signups */
+	stmt = `
+		DELETE FROM quick_signup
+		WHERE datetime(expire_datetime) < datetime('now')`
+	_, err = db.Exec(stmt)
 	if err != nil {
 		log.Fatal(err)
 	}
