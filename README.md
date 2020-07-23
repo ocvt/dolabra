@@ -90,6 +90,8 @@ production.
 
 ## TODO
 
+* Make date human readable
+* Move email draft functions to common_notify.go
 * gitlab.com -> github.com in imports
 * Ensure email errors from bad email addresses are dequeued instead of infinitely trying
 * Add check in tasks to ensure officers or approvers are removed after expiration

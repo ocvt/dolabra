@@ -7,6 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/ses"
 	"gopkg.in/mail.v2"
+
+	"gitlab.com/ocvt/dolabra/utils"
 )
 
 type emailStruct struct {
@@ -67,8 +69,6 @@ func sendEmail(sesService *ses.SES, email rawEmailStruct) (*ses.SendRawEmailOutp
  *   or not all for a non trip related email
  */
 func stageEmail(w http.ResponseWriter, email emailStruct) bool {
-	email.Subject = "[OCVT] " + email.Subject
-
 	stmt := `
 		INSERT INTO email (
 			create_datetime,
@@ -98,7 +98,43 @@ func stageEmail(w http.ResponseWriter, email emailStruct) bool {
 
 /* HELPERS */
 func stageEmailNewTrip(w http.ResponseWriter, tripId int) bool {
-	return true
+	url := utils.GetConfig().FrontendUrl
+	trip, ok := dbGetTrip(w, tripId)
+	if !ok {
+		return false
+	}
+
+	email := emailStruct{
+		NotificationTypeId: trip.NotificationTypeId,
+		ReplyToId:          0,
+		ToId:               0,
+		TripId:             tripId,
+	}
+	email.Subject = fmt.Sprintf("[OCVT] New Trip: %s", trip.Name)
+	email.Body = fmt.Sprintf(
+		"A new trip has been posted to the OCVT scheduled for %s:<br>"+
+			"<h3>%s</h3>"+
+			"<br>"+
+			"Trip Summary: %s<br>"+
+			"<br>"+
+			"Location Directions: %s<br>"+
+			"<br>"+
+			"<br>"+
+			"Full details and the signup form can be found at "+
+			"<a href=\"%s/trips/%d\">%s/trips/%d</a><br>"+
+			"<br>"+
+			"<br>"+
+			"<br>"+
+			"<hr>"+
+			"This message has been sent via the OCVT Websystem.<br>"+
+			"You can modify your notification and account settings "+
+			"<a href=\"%s/myocvt\">here</a>.<br> You can also click "+
+			"<a href=\"%s/unsubscribe\">here</a> to unsubscribe.<br>"+
+			"<hr>",
+		trip.StartDatetime, trip.Name, trip.Summary, trip.LocationDirections,
+		url, tripId, url, tripId, url, url)
+
+	return stageEmail(w, email)
 }
 
 func stageEmailTripReminder(tripId int) error {

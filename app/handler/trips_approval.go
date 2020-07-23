@@ -85,7 +85,7 @@ func approveNewTrip(w http.ResponseWriter, tripId int) bool {
 			TripId:             tripId,
 		}
 		email.Subject = fmt.Sprintf(
-			"[Trip Approval] - ID: %d, Title: %s", tripId, trip.Name)
+			"[OCVT] Trip Approval - ID: %d, Title: %s", tripId, trip.Name)
 		email.Body = fmt.Sprintf(
 			"The following trip needs approval:<br>"+
 				"<br>"+
@@ -170,6 +170,18 @@ func PatchTripApproval(w http.ResponseWriter, r *http.Request) {
 		approval.Reason = fmt.Sprintf("Trip already has status %s by %s",
 			approval.Status, memberName)
 	} else {
+		// Set response
+		if action == "approve" {
+			if !stageEmailNewTrip(w, tripId) {
+				return
+			}
+			approval.Reason = "Successfully approved trip"
+			approval.Status = action
+		} else if action == "deny" {
+			approval.Reason = "Successfully denied trip"
+			approval.Status = action
+		}
+
 		// Update db
 		stmt = `
 			UPDATE trip_approval_guid
@@ -178,15 +190,6 @@ func PatchTripApproval(w http.ResponseWriter, r *http.Request) {
 		_, err := db.Exec(stmt, action, guidCode)
 		if !checkError(w, err) {
 			return
-		}
-
-		// Set response
-		if action == "approve" {
-			approval.Reason = "Successfully approved trip"
-			approval.Status = action
-		} else if action == "deny" {
-			approval.Reason = "Successfully denied trip"
-			approval.Status = action
 		}
 	}
 
