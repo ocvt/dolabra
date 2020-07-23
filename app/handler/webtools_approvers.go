@@ -2,76 +2,8 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-
-	"gitlab.com/ocvt/dolabra/utils"
 )
-
-// guid table -> id, guid, memberId, tripId, status -> {default to 'NONE', change to 'APPROVE', 'DECLINE'
-// for i in approved_people -> create guid, send emails (TODO create PATCH /tripApproval/{approvalGuid}/{status}, status must be APPROVE|DECLINE
-// in PatchWebtoolsApproval:
-// - if !dbEnsureTripNoApproval(w, tripId) -> ensure not exists with
-//	 tripId AND status != NONE, otherwise return bad request
-//		- DECLINE -> return no conent
-//		- APPROVE -> stageEmailNewTrip(w, tripId)
-const GUID_LENGTH = 64
-
-type approverStruct struct {
-	/* Managed server side */
-	// from member table
-	CellNumber string `json:"cellNumber,omitempty"`
-	Email      string `json:"email,omitempty"`
-	FirstName  string `json:"firstName,omitempty"`
-	LastName   string `json:"lastName,omitempty"`
-	/* Required fields for creating a trip */
-	MemberId       int    `json:"memberId"`
-	ExpireDatetime string `json:"expireDatetime"`
-}
-
-/* HELPERS */
-func approveNewTrip(w http.ResponseWriter, tripId int) bool {
-	email := emailStruct{
-		NotificationTypeId: "TRIP_APPROVAL",
-		ReplyToId:          0,
-		ToId:               0,
-		TripId:             tripId,
-	}
-
-	url := utils.GetConfig().FrontendUrl
-	guidCode := generateCode(GUID_LENGTH)
-	trip, ok := dbGetTrip(w, tripId)
-	if !ok {
-		return false
-	}
-	email.Subject = fmt.Sprintf(
-		"[Trip Approval] - ID: %d, Title: %s", tripId, trip.Name)
-	email.Body = fmt.Sprintf(
-		"The following trip needs approval:<br>"+
-			"<br>"+
-			"Title: %s<br>"+
-			"<br>"+
-			"Scheduled for: %s<br>"+
-			"<br>"+
-			"Summary: %s<br>"+
-			"<br>"+
-			"Description: %s<br>"+
-			"<br>"+
-			"<br>"+
-			"To View this trip go <a href=\"%s/trips/%d\">here</a><br>"+
-			"To Administer or cancel this trip go <a href=\"%s/trips/%d/admin\">here</a><br>"+
-			"<br>"+
-			"<a href=\"%s/tripapproval/%s/approve\">Approve Trip</a><br>"+
-			"<br>"+
-			"<a href=\"%s/tripapproval/%s/deny\">Deny Trip</a><br>",
-		trip.Name, trip.CreateDatetime, trip.Summary, trip.Description, url, tripId, url, tripId, url, guidCode, url, guidCode)
-
-	if !stageEmail(w, email) {
-		return false
-	}
-
-	return true
-}
 
 /* MAIN FUNCTIONS */
 func DeleteWebtoolsApprovers(w http.ResponseWriter, r *http.Request) {

@@ -100,7 +100,6 @@ production.
 * Test /trips/{tripId}/mystatus
 * Ensure all input is sanitized (signup notes, other free text fields)
 * Test GetTripMyStatus
-* Make tasks work (db locking issue and no error check after rows.Next())
 * Use db transactions
 * Use proper 1/0 instead of true/false for sqlite
 * Add NotFound & MethodNotAllowed handlers

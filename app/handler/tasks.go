@@ -117,8 +117,9 @@ func DoTasks() {
 		if email.NotificationTypeId == "TRIP_APPROVAL" {
 			stmt := `
 				SELECT member_id
-				FROM trip_approver`
-			rows, err = db.Query(stmt)
+				FROM trip_approver
+				WHERE member_id = ?`
+			rows, err = db.Query(stmt, email.ToId)
 		} else if email.NotificationTypeId == "TRIP_MESSAGE_DIRECT" {
 			stmt := `
 				SELECT member_id

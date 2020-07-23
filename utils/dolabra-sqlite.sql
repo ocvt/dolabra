@@ -50,8 +50,8 @@ CREATE TABLE IF NOT EXISTS equipment (
       count INTEGER NOT NULL
 );
 
--- Table: guid
-CREATE TABLE IF NOT EXISTS guid (
+-- Table: trip_approval_guid
+CREATE TABLE IF NOT EXISTS trip_approval_guid (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
       code TEXT COLLATE NOCASE NOT NULL,
       member_id INTEGER NOT NULL,
