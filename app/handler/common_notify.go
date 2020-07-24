@@ -141,10 +141,6 @@ func stageEmailNewTrip(w http.ResponseWriter, tripId int) bool {
 	return stageEmail(w, email)
 }
 
-func stageEmailTripReminder(tripId int) error {
-	return nil
-}
-
 func stageEmailTripApproval(w http.ResponseWriter, tripId int, memberId int, guidCode string) bool {
 	url := utils.GetConfig().FrontendUrl
 	trip, ok := dbGetTrip(w, tripId)
@@ -179,6 +175,35 @@ func stageEmailTripApproval(w http.ResponseWriter, tripId int, memberId int, gui
 			"<br>"+
 			"<a href=\"%s/tripapproval/%s/deny\">Deny Trip</a><br>",
 		trip.Name, trip.CreateDatetime, trip.Summary, trip.Description, url, tripId, url, tripId, url, guidCode, url, guidCode)
+
+	return stageEmail(w, email)
+}
+
+func stageEmailTripReminder(tripId int) error {
+	return nil
+}
+
+func stageEmailTripCancel(w http.ResponseWriter, tripId int) bool {
+	trip, ok := dbGetTrip(w, tripId)
+	if !ok {
+		return false
+	}
+
+	email := emailStruct{
+		NotificationTypeId: "TRIP_MESSAGE_NOTIFY",
+		ReplyToId:          0,
+		ToId:               0,
+		TripId:             tripId,
+	}
+	email.Subject = fmt.Sprintf(
+		"Trip CANCELED: %s", trip.Name)
+	email.Body = fmt.Sprintf(
+		"You are receiving this message becaused you are signed up for this trip<br>"+
+			"<br>"+
+			"This trip has been canceled:<br>"+
+			"<h3>%s</h3>"+
+			"<br>",
+		trip.Name)
 
 	return stageEmail(w, email)
 }

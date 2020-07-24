@@ -590,18 +590,9 @@ func PatchTripsCancel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//	// Notify signup, use signupId as notification type for direct alert
-	//	tripName, ok := dbGetTripName(w, tripId)
-	//	if !ok {
-	//		return
-	//	}
-	//	emailSubject := "Trip " + tripName + "has been canceled"
-	//	emailBody :=
-	//		"This email is a notification that the trip you were signed up for, " +
-	//			tripName + ", has been canceled"
-	//	if !stageEmail(w, "TRIP_ALERT_ALL", tripId, memberId, emailSubject, emailBody) {
-	//		return
-	//	}
+	if !stageEmailTripCancel(w, tripId) {
+		return
+	}
 
 	respondJSON(w, http.StatusNoContent, nil)
 }
