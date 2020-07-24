@@ -71,7 +71,7 @@ defined:
 ## Running it
 
 `launch.sh` starts a local instance for dev or testing purposes. Take a look at
-[our docker repo](https://gitlab.com/ocvt/docker) for examples running in
+[our docker repo](https://github.com/ocvt/docker) for examples running in
 production.
 
 
@@ -91,9 +91,7 @@ production.
 
 ## TODO
 
-* Remove OCVT references
 * Move email draft functions to common_notify.go
-* gitlab.com -> github.com in imports
 * Ensure email errors from bad email addresses are dequeued instead of infinitely trying
 * Ensure errors after row db queries are checked
 * Test /trips/myattendance

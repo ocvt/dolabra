@@ -5,12 +5,11 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
+	"github.com/ocvt/dolabra/utils"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	oidcgoogle "google.golang.org/api/oauth2/v2"
 	"google.golang.org/api/option"
-
-	"gitlab.com/ocvt/dolabra/utils"
 )
 
 var googleOAuthConfig = &oauth2.Config{

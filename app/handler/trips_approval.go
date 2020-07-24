@@ -6,8 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
-
-	"gitlab.com/ocvt/dolabra/utils"
+	"github.com/ocvt/dolabra/utils"
 )
 
 const GUID_LENGTH = 64

@@ -6,9 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/ocvt/dolabra/utils"
 	"google.golang.org/api/drive/v3"
-
-	"gitlab.com/ocvt/dolabra/utils"
 )
 
 /* HELPERS */

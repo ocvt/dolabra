@@ -6,9 +6,8 @@ import (
 	"net/http"
 
 	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/ocvt/dolabra/utils"
 	"gopkg.in/mail.v2"
-
-	"gitlab.com/ocvt/dolabra/utils"
 )
 
 type emailStruct struct {

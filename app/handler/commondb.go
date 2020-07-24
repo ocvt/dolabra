@@ -8,8 +8,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi"
-
-	"gitlab.com/ocvt/dolabra/utils"
+	"github.com/ocvt/dolabra/utils"
 )
 
 /* Contains:

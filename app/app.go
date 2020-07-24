@@ -12,7 +12,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/rs/cors"
 
-	"gitlab.com/ocvt/dolabra/app/handler"
+	"github.com/ocvt/dolabra/app/handler"
 )
 
 var r *chi.Mux

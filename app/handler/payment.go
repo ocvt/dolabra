@@ -7,11 +7,10 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
+	"github.com/ocvt/dolabra/utils"
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/paymentintent"
 	"github.com/stripe/stripe-go/webhook"
-
-	"gitlab.com/ocvt/dolabra/utils"
 )
 
 /* Only for redeeming codes */

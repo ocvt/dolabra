@@ -7,8 +7,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-
-	"gitlab.com/ocvt/dolabra/utils"
+	"github.com/ocvt/dolabra/utils"
 )
 
 /************************ COOKIES ************************/
