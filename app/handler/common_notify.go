@@ -144,3 +144,41 @@ func stageEmailNewTrip(w http.ResponseWriter, tripId int) bool {
 func stageEmailTripReminder(tripId int) error {
 	return nil
 }
+
+func stageEmailTripApproval(w http.ResponseWriter, tripId int, memberId int, guidCode string) bool {
+	url := utils.GetConfig().FrontendUrl
+	trip, ok := dbGetTrip(w, tripId)
+	if !ok {
+		return false
+	}
+
+	email := emailStruct{
+		NotificationTypeId: "TRIP_APPROVAL",
+		ReplyToId:          0,
+		ToId:               memberId,
+		TripId:             tripId,
+	}
+	email.Subject = fmt.Sprintf(
+		"Trip Approval - ID: %d, Title: %s", tripId, trip.Name)
+	email.Body = fmt.Sprintf(
+		"The following trip needs approval:<br>"+
+			"<br>"+
+			"Title: %s<br>"+
+			"<br>"+
+			"Scheduled for: %s<br>"+
+			"<br>"+
+			"Summary: %s<br>"+
+			"<br>"+
+			"Description: %s<br>"+
+			"<br>"+
+			"<br>"+
+			"To View this trip go <a href=\"%s/trips/%d\">here</a><br>"+
+			"To Administer or cancel this trip go <a href=\"%s/trips/%d/admin\">here</a><br>"+
+			"<br>"+
+			"<a href=\"%s/tripapproval/%s/approve\">Approve Trip</a><br>"+
+			"<br>"+
+			"<a href=\"%s/tripapproval/%s/deny\">Deny Trip</a><br>",
+		trip.Name, trip.CreateDatetime, trip.Summary, trip.Description, url, tripId, url, tripId, url, guidCode, url, guidCode)
+
+	return stageEmail(w, email)
+}

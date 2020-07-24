@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
-	"github.com/ocvt/dolabra/utils"
 )
 
 const GUID_LENGTH = 64
@@ -31,12 +30,6 @@ type approverStruct struct {
 
 /* HELPERS */
 func approveNewTrip(w http.ResponseWriter, tripId int) bool {
-	url := utils.GetConfig().FrontendUrl
-	trip, ok := dbGetTrip(w, tripId)
-	if !ok {
-		return false
-	}
-
 	/* Get trip approver member ids */
 	stmt := `
 		SELECT member_id
@@ -76,36 +69,7 @@ func approveNewTrip(w http.ResponseWriter, tripId int) bool {
 			return false
 		}
 
-		// Create email
-		email := emailStruct{
-			NotificationTypeId: "TRIP_APPROVAL",
-			ReplyToId:          0,
-			ToId:               memberId,
-			TripId:             tripId,
-		}
-		email.Subject = fmt.Sprintf(
-			"Trip Approval - ID: %d, Title: %s", tripId, trip.Name)
-		email.Body = fmt.Sprintf(
-			"The following trip needs approval:<br>"+
-				"<br>"+
-				"Title: %s<br>"+
-				"<br>"+
-				"Scheduled for: %s<br>"+
-				"<br>"+
-				"Summary: %s<br>"+
-				"<br>"+
-				"Description: %s<br>"+
-				"<br>"+
-				"<br>"+
-				"To View this trip go <a href=\"%s/trips/%d\">here</a><br>"+
-				"To Administer or cancel this trip go <a href=\"%s/trips/%d/admin\">here</a><br>"+
-				"<br>"+
-				"<a href=\"%s/tripapproval/%s/approve\">Approve Trip</a><br>"+
-				"<br>"+
-				"<a href=\"%s/tripapproval/%s/deny\">Deny Trip</a><br>",
-			trip.Name, trip.CreateDatetime, trip.Summary, trip.Description, url, tripId, url, tripId, url, guidCode, url, guidCode)
-
-		if !stageEmail(w, email) {
+		if !stageEmailTripApproval(w, tripId, memberId, guidCode) {
 			return false
 		}
 	}
