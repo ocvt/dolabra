@@ -54,7 +54,7 @@ func insertData(db *sql.DB) {
 			('TRIP_CLIMBING', 'Climbing', 'Rock climbing or bouldering.'),
 			('TRIP_DAYHIKE', 'Dayhike', 'In and out on the same day.'),
 			('TRIP_LASER_TAG', 'Laser Tag', 'Laser Tag with LCAT'),
-			('TRIP_OFFICIAL_MEETING', 'Official Meeting', 'An official OCVT meeting'),
+			('TRIP_OFFICIAL_MEETING', 'Official Meeting', 'An official meeting'),
 			('TRIP_OTHER', 'Other', 'Anything else not covered. '),
 			('TRIP_RAFTING_CANOEING_KAYAKING', 'Rafting / Canoeing / Kayaking', 'Rafting / Canoeing / Kayaking'),
 			('TRIP_ROAD_TRIP', 'Road Trip', 'Just getting out and about, Ex a trip to Busch Gardens or DC etc'),

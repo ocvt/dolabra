@@ -8,6 +8,7 @@ type Config struct {
 	DBName                   string
 	ApiUrl                   string
 	CookieDomain             string
+	EmailLabel               string
 	FrontendUrl              string
 	GoogleClientSecret       string
 	GoogleClientId           string
@@ -26,6 +27,7 @@ func GetConfig() *Config {
 		DBName:                   "dolabra-sqlite",
 		ApiUrl:                   os.Getenv("API_URL"),
 		CookieDomain:             os.Getenv("COOKIE_DOMAIN"),
+		EmailLabel:               os.Getenv("EMAIL_LABEL"),
 		FrontendUrl:              os.Getenv("FRONTEND_URL"),
 		GoogleClientSecret:       os.Getenv("GOOGLE_CLIENT_SECRET"),
 		GoogleClientId:           os.Getenv("GOOGLE_CLIENT_ID"),

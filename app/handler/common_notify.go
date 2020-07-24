@@ -69,6 +69,9 @@ func sendEmail(sesService *ses.SES, email rawEmailStruct) (*ses.SendRawEmailOutp
  *   or not all for a non trip related email
  */
 func stageEmail(w http.ResponseWriter, email emailStruct) bool {
+	label := utils.GetConfig().EmailLabel
+	email.Subject = "[" + label + "] " + email.Subject
+
 	stmt := `
 		INSERT INTO email (
 			create_datetime,
@@ -98,6 +101,7 @@ func stageEmail(w http.ResponseWriter, email emailStruct) bool {
 
 /* HELPERS */
 func stageEmailNewTrip(w http.ResponseWriter, tripId int) bool {
+	label := utils.GetConfig().EmailLabel
 	url := utils.GetConfig().FrontendUrl
 	trip, ok := dbGetTrip(w, tripId)
 	if !ok {
@@ -111,9 +115,9 @@ func stageEmailNewTrip(w http.ResponseWriter, tripId int) bool {
 		ToId:               0,
 		TripId:             tripId,
 	}
-	email.Subject = fmt.Sprintf("[OCVT] New Trip: %s", trip.Name)
+	email.Subject = fmt.Sprintf("New Trip: %s", trip.Name)
 	email.Body = fmt.Sprintf(
-		"A new trip has been posted to the OCVT scheduled for %s:<br>"+
+		"A new trip has been posted to the %s scheduled for %s:<br>"+
 			"<h3>%s</h3>"+
 			"<br>"+
 			"Trip Summary: %s<br>"+
@@ -127,13 +131,13 @@ func stageEmailNewTrip(w http.ResponseWriter, tripId int) bool {
 			"<br>"+
 			"<br>"+
 			"<hr>"+
-			"This message has been sent via the OCVT Websystem.<br>"+
+			"This message has been sent via the %s Websystem.<br>"+
 			"You can modify your notification and account settings "+
 			"<a href=\"%s/myocvt\">here</a>.<br> You can also click "+
 			"<a href=\"%s/unsubscribe\">here</a> to unsubscribe.<br>"+
 			"<hr>",
-		date, trip.Name, trip.Summary, trip.LocationDirections,
-		url, tripId, url, tripId, url, url)
+		label, date, trip.Name, trip.Summary, trip.LocationDirections,
+		url, tripId, url, tripId, label, url, url)
 
 	return stageEmail(w, email)
 }

@@ -47,6 +47,7 @@ proper idp.
 Create `dolabra.env` (copy `dolabra.env.sample`) with the following variables
 defined:
 * `COOKIE_DOMAIN`: Domain to use for cookies (should be shared between api & frontend)
+* `EMAIL_LABEL`: Label used in email subjects, ie '[MY CLUB] New notification'
 * `FRONTEND_URL`: Frontend url (for linking from emails)
 * `AWS_ACCESS_KEY_ID`: AWS access key (for SES)
 * `AWS_SECRET_ACCESS_KEY`: AWS secret key (for SES)

@@ -210,7 +210,7 @@ trips_types_json = {
     "name": "Trip message to waitlist"
   },
   "TRIP_OFFICIAL_MEETING": {
-    "description": "An official OCVT meeting",
+    "description": "An official meeting",
     "id": "TRIP_OFFICIAL_MEETING",
     "name": "Official Meeting"
   },

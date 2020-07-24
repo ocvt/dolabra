@@ -85,7 +85,7 @@ func approveNewTrip(w http.ResponseWriter, tripId int) bool {
 			TripId:             tripId,
 		}
 		email.Subject = fmt.Sprintf(
-			"[OCVT] Trip Approval - ID: %d, Title: %s", tripId, trip.Name)
+			"Trip Approval - ID: %d, Title: %s", tripId, trip.Name)
 		email.Body = fmt.Sprintf(
 			"The following trip needs approval:<br>"+
 				"<br>"+
