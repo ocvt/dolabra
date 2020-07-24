@@ -94,6 +94,31 @@ func PatchTripApproval(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if canceled
+	stmt = `
+		SELECT cancel
+		FROM trip
+		WHERE id = ?`
+	var canceled bool
+	err = db.QueryRow(stmt, tripId).Scan(&canceled)
+	if !checkError(w, err) {
+		return
+	}
+
+	if canceled {
+		stmt = `
+			INSERT INTO trip_approval_guid (
+				code,
+				member_id,
+				trip_id,
+				status)
+			VALUES ('0', '0', ?, 'cancel')`
+		_, err = db.Exec(stmt, tripId)
+		if !checkError(w, err) {
+			return
+		}
+	}
+
 	// Check for approval already exists
 	stmt = `
 		SELECT EXISTS (
