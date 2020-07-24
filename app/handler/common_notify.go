@@ -104,6 +104,7 @@ func stageEmailNewTrip(w http.ResponseWriter, tripId int) bool {
 		return false
 	}
 
+	date := prettyPrintDate(trip.StartDatetime)
 	email := emailStruct{
 		NotificationTypeId: trip.NotificationTypeId,
 		ReplyToId:          0,
@@ -131,7 +132,7 @@ func stageEmailNewTrip(w http.ResponseWriter, tripId int) bool {
 			"<a href=\"%s/myocvt\">here</a>.<br> You can also click "+
 			"<a href=\"%s/unsubscribe\">here</a> to unsubscribe.<br>"+
 			"<hr>",
-		trip.StartDatetime, trip.Name, trip.Summary, trip.LocationDirections,
+		date, trip.Name, trip.Summary, trip.LocationDirections,
 		url, tripId, url, tripId, url, url)
 
 	return stageEmail(w, email)

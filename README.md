@@ -90,7 +90,7 @@ production.
 
 ## TODO
 
-* Make date human readable
+* Remove OCVT references
 * Move email draft functions to common_notify.go
 * gitlab.com -> github.com in imports
 * Ensure email errors from bad email addresses are dequeued instead of infinitely trying

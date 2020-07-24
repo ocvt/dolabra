@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"log"
 	"net/http"
+	"time"
 )
 
 /* Contains Trip (including signups) specific functions:
@@ -9,6 +11,15 @@ import (
 - "Ensure" helpers to guarantee a specific result
 - EXISTS helpers
 */
+
+/* Non-DB Helpers */
+func prettyPrintDate(date string) string {
+	t, err := time.Parse(time.RFC3339, date)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	return t.Format("Monday, Jan 2, 2006")
+}
 
 /* General helpers */
 func dbEnsureActiveTrip(w http.ResponseWriter, tripId int) bool {
