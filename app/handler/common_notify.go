@@ -20,7 +20,7 @@ type emailStruct struct {
 	Sent               bool   `json:"sent,omitempty"`
 	NotificationTypeId string `json:"notificationTypeId,omitempty"`
 	TripId             int    `json:"tripId,omitempty"`
-	ReplyToId          int    `json:"replyTo,omitempty"`
+	ReplyToId          int    `json:"replyToId,omitempty"`
 	ToId               int    `json:"toId,omitempty"` // 0 if not direct message
 	/* Required fields for creating announcements */
 	Subject string `json:"subject"`
@@ -44,6 +44,7 @@ type rawEmailStruct struct {
 func sendEmail(sesService *ses.SES, email rawEmailStruct) (*ses.SendRawEmailOutput, error) {
 	msg := mail.NewMessage()
 	msg.SetHeader("From", fmt.Sprintf("%s <%s>", email.FromName, email.FromEmail))
+	msg.SetHeader("Reply-To", fmt.Sprintf("%s <%s>", email.ReplyToName, email.ReplyToEmail))
 	msg.SetHeader("To", fmt.Sprintf("%s <%s>", email.ToName, email.ToEmail))
 	msg.SetHeader("Subject", email.Subject)
 	msg.SetBody("text/html", email.Body)
@@ -182,7 +183,7 @@ func stageEmailTripApproval(w http.ResponseWriter, tripId int, memberId int, gui
 	return stageEmail(w, email)
 }
 
-func stageEmailTripReminder(tripId int) {
+func stageEmailTripReminder(tripId int) error {
 	url := utils.GetConfig().FrontendUrl
 	trip, err := dbGetTripPlain(tripId)
 	if err != nil {
@@ -197,7 +198,7 @@ func stageEmailTripReminder(tripId int) {
 	}
 	email.Subject = "Trip Reminder: " + trip.Name
 	email.Body = fmt.Sprintf(
-		"This is a reminder for the trip scheduled tomorrow:<br"+
+		"This is a reminder for the trip scheduled tomorrow:<br>"+
 			"<h3>%s</h3>"+
 			"<br>"+
 			"Full trip details can be found at "+
@@ -212,6 +213,7 @@ func stageEmailTripReminder(tripId int) {
 	if err != nil {
 		log.Print(err)
 	}
+	return err
 }
 
 func stageEmailTripCancel(w http.ResponseWriter, tripId int) bool {

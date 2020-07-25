@@ -113,6 +113,7 @@ func setRouters() {
 			r.Post("/mainphoto", handler.PatchTripsMainphoto)
 			r.Post("/notify/signup", handler.PostTripsNotifySignup)
 			r.Post("/notify", handler.PostTripsNotifyGroup)
+			r.Post("/reminder", handler.PostTripsReminder)
 		})
 	})
 

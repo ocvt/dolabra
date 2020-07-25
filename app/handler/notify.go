@@ -96,3 +96,35 @@ func PostTripsNotifySignup(w http.ResponseWriter, r *http.Request) {
 
 	respondJSON(w, http.StatusNoContent, nil)
 }
+
+func PostTripsReminder(w http.ResponseWriter, r *http.Request) {
+	sub, ok := checkLogin(w, r)
+	if !ok {
+		return
+	}
+
+	// Get member id, trip id
+	memberId, ok := dbGetActiveMemberId(w, sub)
+	if !ok {
+		return
+	}
+	tripId, ok := getURLIntParam(w, r, "tripId")
+	if !ok {
+		return
+	}
+
+	if !dbEnsureTripExists(w, tripId) {
+		return
+	}
+
+	if !dbEnsureTripLeader(w, tripId, memberId) {
+		return
+	}
+
+	err := stageEmailTripReminder(tripId)
+	if !checkError(w, err) {
+		return
+	}
+
+	respondJSON(w, http.StatusNoContent, nil)
+}
