@@ -3,6 +3,7 @@ package handler
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -60,6 +61,11 @@ func sendEmail(sesService *ses.SES, email rawEmailStruct) (*ses.SendRawEmailOutp
 	return output, err
 }
 
+func stageEmail(w http.ResponseWriter, email emailStruct) bool {
+	err := stageEmailPlain(email)
+	return checkError(w, err)
+}
+
 /*
  * Insert entry into email table to eventually send
  * - TRIP_ALERT_* are special types to indicate direct trip alerts
@@ -67,7 +73,7 @@ func sendEmail(sesService *ses.SES, email rawEmailStruct) (*ses.SendRawEmailOutp
  *	 otherwise it is purely for logging the relevant trip
  *   or not all for a non trip related email
  */
-func stageEmail(w http.ResponseWriter, email emailStruct) bool {
+func stageEmailPlain(email emailStruct) error {
 	label := utils.GetConfig().EmailLabel
 	email.Subject = "[" + label + "] " + email.Subject
 
@@ -91,11 +97,8 @@ func stageEmail(w http.ResponseWriter, email emailStruct) bool {
 		email.ReplyToId,
 		email.Subject,
 		email.Body)
-	if !checkError(w, err) {
-		return false
-	}
 
-	return true
+	return err
 }
 
 /* HELPERS */
@@ -179,8 +182,36 @@ func stageEmailTripApproval(w http.ResponseWriter, tripId int, memberId int, gui
 	return stageEmail(w, email)
 }
 
-func stageEmailTripReminder(tripId int) error {
-	return nil
+func stageEmailTripReminder(tripId int) {
+	url := utils.GetConfig().FrontendUrl
+	trip, err := dbGetTripPlain(tripId)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	email := emailStruct{
+		NotificationTypeId: "TRIP_MESSAGE_NOTIFY",
+		ReplyToId:          trip.MemberId,
+		ToId:               0,
+		TripId:             tripId,
+	}
+	email.Subject = "Trip Reminder: " + trip.Name
+	email.Body = fmt.Sprintf(
+		"This is a reminder for the trip scheduled tomorrow:<br"+
+			"<h3>%s</h3>"+
+			"<br>"+
+			"Full trip details can be found at "+
+			"<a href=\"%s/trips/%d\">%s/trips/%d</a><br>"+
+			"<br>"+
+			"If you're not planning on attending please log in and cancel your "+
+			"attendance so someone else can take your spot.<br>"+
+			"<br>",
+		trip.Name, url, tripId, url, tripId)
+
+	err = stageEmailPlain(email)
+	if err != nil {
+		log.Print(err)
+	}
 }
 
 func stageEmailTripCancel(w http.ResponseWriter, tripId int) bool {

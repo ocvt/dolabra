@@ -44,10 +44,14 @@ func DoTasks() {
 	/********************************/
 
 	/* Stage trip reminder email */
+	// Sends 1 day before trip as long as trip was created >= 3 days before start
 	stmt = `
 		SELECT id
 		FROM trip
-		WHERE datetime(create_datetime) < datetime(start_datetime, '+3 days') AND
+		WHERE
+			datetime(create_datetime) < datetime(start_datetime, '-3 days') AND
+			datetime(start_datetime, '-1 day') < datetime('now') AND
+			datetime('now') < datetime(start_datetime) AND
 			cancel = false AND
 			publish = true AND
 			reminder_sent = false`
@@ -74,10 +78,7 @@ func DoTasks() {
 	for t := tripIds.Front(); t != nil; t = t.Next() {
 		tripId := t.Value.(int)
 		// Stage email
-		err = stageEmailTripReminder(tripId)
-		if err != nil {
-			log.Fatal(err)
-		}
+		stageEmailTripReminder(tripId)
 
 		// Mark as sent
 		stmt = `
