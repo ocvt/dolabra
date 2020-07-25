@@ -194,9 +194,9 @@ func dbEnsureValidSignup(w http.ResponseWriter, tripId int, memberId int,
 func dbGetTrip(w http.ResponseWriter, tripId int) (*tripStruct, bool) {
 	trip, err := dbGetTripPlain(tripId)
 	if !checkError(w, err) {
-		return trip, true
+		return nil, false
 	}
-	return nil, false
+	return trip, true
 }
 
 func dbGetTripPlain(tripId int) (*tripStruct, error) {
