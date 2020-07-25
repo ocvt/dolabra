@@ -119,7 +119,7 @@ func stageEmailNewTrip(w http.ResponseWriter, tripId int) bool {
 	}
 	email.Subject = fmt.Sprintf("New Trip: %s", trip.Name)
 	email.Body = fmt.Sprintf(
-		"A new trip has been posted to the %s scheduled for %s:<br>"+
+		"A new trip has been posted to %s scheduled for %s:<br>"+
 			"<h3>%s</h3>"+
 			"<br>"+
 			"Trip Summary: %s<br>"+
@@ -226,8 +226,7 @@ func stageEmailTripCancel(w http.ResponseWriter, tripId int) bool {
 		ToId:               0,
 		TripId:             tripId,
 	}
-	email.Subject = fmt.Sprintf(
-		"Trip CANCELED: %s", trip.Name)
+	email.Subject = "Trip CANCELED: " + trip.Name
 	email.Body = fmt.Sprintf(
 		"You are receiving this message becaused you are signed up for this trip<br>"+
 			"<br>"+
