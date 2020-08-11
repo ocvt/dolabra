@@ -40,9 +40,9 @@ func PostTripsNotifyGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if email.NotificationTypeId != "TRIP_ALERT_ALL" &&
-		email.NotificationTypeId != "TRIP_ALERT_WAIT" &&
-		email.NotificationTypeId != "TRIP_ALERT_ATTEND" {
+	if email.NotificationTypeId != "TRIP_MESSAGE_NOTIFY" &&
+		email.NotificationTypeId != "TRIP_MESSAGE_ATTEND" &&
+		email.NotificationTypeId != "TRIP_MESSAGE_WAIT" {
 		respondError(w, http.StatusBadRequest, "Invalid notification type id")
 		return
 	}
