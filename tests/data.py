@@ -130,29 +130,34 @@ trips_types_json = {
     "name": "Club Meetings / News / Events"
   },
   "TRIP_ALERT_ATTEND": {
-    "description": "Trip status changed to attending",
+    "description": "Signup status changed to attending",
     "id": "TRIP_ALERT_ATTEND",
-    "name": "Trip status changed to attending"
+    "name": "Signup status changed to attending"
   },
   "TRIP_ALERT_BOOT": {
-    "description": "Trip status changed to booted",
+    "description": "Signup status changed to booted",
     "id": "TRIP_ALERT_BOOT",
-    "name": "Trip status changed to booted"
+    "name": "Signup status changed to booted"
+  },
+  "TRIP_ALERT_CANCEL": {
+    "description": "Signup status changed to cancel",
+    "id": "TRIP_ALERT_CANCEL",
+    "name": "Signup status changed to cancel"
   },
   "TRIP_ALERT_FORCE": {
-    "description": "Trip status changed to force-added",
+    "description": "Signup status changed to force-added",
     "id": "TRIP_ALERT_FORCE",
-    "name": "Trip status changed to force-added"
+    "name": "Signup status changed to force-added"
   },
   "TRIP_ALERT_LEADER": {
-    "description": "Trip status changed to trip leader",
+    "description": "Signup status changed to trip leader",
     "id": "TRIP_ALERT_LEADER",
-    "name": "Trip status changed to trip leader"
+    "name": "Signup status changed to trip leader"
   },
   "TRIP_ALERT_WAIT": {
-    "description": "Trip status changed to waitlisted",
+    "description": "Signup status changed to waitlisted",
     "id": "TRIP_ALERT_WAIT",
-    "name": "Trip status changed to waitlisted"
+    "name": "Signup status changed to waitlisted"
   },
   "TRIP_APPROVAL": {
     "description": "Alert asking member (probably officer) to approve a trip",

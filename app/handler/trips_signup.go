@@ -203,6 +203,7 @@ func PatchTripsSignupBoot(w http.ResponseWriter, r *http.Request) {
 		NotificationTypeId: "TRIP_ALERT_BOOT",
 		ReplyToId:          memberId,
 		ToId:               signupId,
+		TripId:             tripId,
 		Subject:            "You have been Booted from the trip " + tripName,
 	}
 	email.Body =
@@ -252,21 +253,26 @@ func PatchTripsSignupCancel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Notify member
-	//	memberIdStr := strconv.Itoa(memberId)
-	//	tripName, ok := dbGetTripName(w, tripId)
-	//	if !ok {
-	//		return
-	//	}
-	//	emailSubject :=
-	//		"You have canceled your signup for trip " + tripName
-	//	emailBody :=
-	//		"This email is a notification that you have canceled your signup on " +
-	//			"trip " + tripName + ". Note, you cannot signup again after you have " +
-	//			"canceled."
-	//	if !stageEmail(w, memberIdStr, tripId, 0, emailSubject, emailBody) {
-	//		return
-	//	}
+	tripName, ok := dbGetTripName(w, tripId)
+	if !ok {
+		return
+	}
+
+	email := emailStruct{
+		NotificationTypeId: "TRIP_ALERT_CANCEL",
+		ReplyToId:          0,
+		ToId:               memberId,
+		TripId:             tripId,
+		Subject:            "You have canceled your signup for trip " + tripName + ".",
+	}
+	email.Body =
+		"This email is a notification that you have canceled your signup on " +
+			"trip " + tripName + ". Note, you cannot signup again after you have " +
+			"canceled."
+
+	if !stageEmail(w, email) {
+		return
+	}
 
 	respondJSON(w, http.StatusNoContent, nil)
 }
@@ -320,6 +326,7 @@ func PatchTripsSignupForceadd(w http.ResponseWriter, r *http.Request) {
 		NotificationTypeId: "TRIP_ALERT_FORCE",
 		ReplyToId:          memberId,
 		ToId:               signupId,
+		TripId:             tripId,
 		Subject:            "You have been Force Added to the trip " + tripName,
 	}
 	email.Body =
@@ -386,8 +393,9 @@ func PatchTripsSignupTripLeaderPromote(w http.ResponseWriter, r *http.Request) {
 		NotificationTypeId: "TRIP_ALERT_LEADER",
 		ReplyToId:          memberId,
 		ToId:               signupId,
-		Subject:            "You have been promoted to Trip Leader for the trip " + tripName,
+		TripId:             tripId,
 	}
+	email.Subject = "You have been promoted to Trip Leader for the trip " + tripName
 	email.Body =
 		"This email is a notification that you have been promoted to Trip " +
 			"Leader for the trip " + tripName + "."
@@ -488,6 +496,25 @@ func PostTripsSignup(w http.ResponseWriter, r *http.Request) {
 		tripSignup.Pet,
 		attended)
 	if !checkError(w, err) {
+		return
+	}
+
+	tripName, ok := dbGetTripName(w, tripId)
+	if !ok {
+		return
+	}
+
+	email := emailStruct{
+		NotificationTypeId: "TRIP_ALERT_ATTEND",
+		ReplyToId:          0,
+		ToId:               memberId,
+		TripId:             tripId,
+		Subject:            "You have been added to the trip " + tripName,
+	}
+	email.Body =
+		"This email is a notification that you have been added to the roster " +
+			"for the trip " + tripName + "."
+	if !stageEmail(w, email) {
 		return
 	}
 

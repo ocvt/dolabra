@@ -230,7 +230,7 @@ func stageEmailTripCancel(w http.ResponseWriter, tripId int) bool {
 	}
 	email.Subject = "Trip CANCELED: " + trip.Name
 	email.Body = fmt.Sprintf(
-		"You are receiving this message becaused you are signed up for this trip<br>"+
+		"You are receiving this message because you are signed up for this trip<br>"+
 			"<br>"+
 			"This trip has been canceled:<br>"+
 			"<h3>%s</h3>"+

@@ -141,7 +141,8 @@ func DoTasks() {
 				FROM trip_approver
 				WHERE member_id = ?`
 			rows, err = db.Query(stmt, email.ToId)
-		} else if email.NotificationTypeId == "TRIP_MESSAGE_DIRECT" {
+		} else if strings.HasPrefix(email.NotificationTypeId, "TRIP_ALERT") ||
+			email.NotificationTypeId == "TRIP_MESSAGE_DIRECT" {
 			stmt := `
 				SELECT member_id
 				FROM trip_signup
