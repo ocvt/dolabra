@@ -61,7 +61,7 @@ func PostTripsNotifySignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get memberId, tripId, signupId
+	// Get memberId, tripId
 	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return

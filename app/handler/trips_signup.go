@@ -104,7 +104,7 @@ func PatchTripsSignupAbsent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get memberId, tripId, signupId
+	// Get memberId, tripId, signupMemberId
 	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return
@@ -113,15 +113,14 @@ func PatchTripsSignupAbsent(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	signupId, ok := getURLIntParam(w, r, "signupId")
+	signupMemberId, ok := getURLIntParam(w, r, "memberId")
 	if !ok {
 		return
 	}
 
 	// Permissions
 	if !dbEnsureIsTrip(w, tripId) ||
-		!dbEnsureMemberIsOnTrip(w, tripId, signupId) ||
-		!dbEnsureNotTripCreator(w, tripId, signupId) ||
+		!dbEnsureMemberIsOnTrip(w, tripId, signupMemberId) ||
 		!dbEnsureOfficerOrTripLeader(w, tripId, memberId) {
 		return
 	}
@@ -130,7 +129,7 @@ func PatchTripsSignupAbsent(w http.ResponseWriter, r *http.Request) {
 		UPDATE trip_signup
 		SET attended = false
 		WHERE trip_id = ? and member_id = ?`
-	_, err := db.Exec(stmt, tripId, signupId)
+	_, err := db.Exec(stmt, tripId, signupMemberId)
 	if !checkError(w, err) {
 		return
 	}
@@ -144,7 +143,7 @@ func PatchTripsSignupBoot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get memberId, tripId, signupId
+	// Get memberId, tripId, signupMemberId
 	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return
@@ -153,7 +152,7 @@ func PatchTripsSignupBoot(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	signupId, ok := getURLIntParam(w, r, "signupId")
+	signupMemberId, ok := getURLIntParam(w, r, "memberId")
 	if !ok {
 		return
 	}
@@ -173,11 +172,10 @@ func PatchTripsSignupBoot(w http.ResponseWriter, r *http.Request) {
 
 	// Permissions
 	if !dbEnsurePublishedTrip(w, tripId) ||
-		!dbEnsureMemberIsOnTrip(w, tripId, signupId) ||
-		!dbEnsureNotTripCreator(w, tripId, signupId) ||
+		!dbEnsureMemberIsOnTrip(w, tripId, signupMemberId) ||
+		!dbEnsureNotTripCreator(w, tripId, signupMemberId) ||
 		!dbEnsureOfficerOrTripLeader(w, tripId, memberId) ||
-		!dbEnsureNotSignupCode(w, tripId, signupId, "CANCEL") ||
-		!dbEnsureNotSignupCode(w, tripId, signupId, "BOOT") {
+		!dbEnsureNotSignupCode(w, tripId, signupMemberId, "CANCEL") {
 		return
 	}
 
@@ -189,7 +187,7 @@ func PatchTripsSignupBoot(w http.ResponseWriter, r *http.Request) {
 			boot_reason = ?,
 			attended = false
 		WHERE trip_id = ? AND member_id = ?`
-	_, err = db.Exec(stmt, tripSignupBoot.BootReason, tripId, signupId)
+	_, err = db.Exec(stmt, tripSignupBoot.BootReason, tripId, signupMemberId)
 	if !checkError(w, err) {
 		return
 	}
@@ -202,7 +200,7 @@ func PatchTripsSignupBoot(w http.ResponseWriter, r *http.Request) {
 	email := emailStruct{
 		NotificationTypeId: "TRIP_ALERT_BOOT",
 		ReplyToId:          memberId,
-		ToId:               signupId,
+		ToId:               signupMemberId,
 		TripId:             tripId,
 		Subject:            "You have been Booted from the trip " + tripName,
 	}
@@ -283,7 +281,7 @@ func PatchTripsSignupForceadd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get memberId, tripid, signupId
+	// Get memberId, tripid, signupMemberId
 	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return
@@ -292,18 +290,15 @@ func PatchTripsSignupForceadd(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	signupId, ok := getURLIntParam(w, r, "signupId")
+	signupMemberId, ok := getURLIntParam(w, r, "memberId")
 	if !ok {
 		return
 	}
 
 	// Permissions
 	if !dbEnsurePublishedTrip(w, tripId) ||
-		!dbEnsureMemberIsOnTrip(w, tripId, signupId) ||
-		!dbEnsureOfficerOrTripLeader(w, tripId, memberId) ||
-		!dbEnsureNotTripCreator(w, tripId, signupId) ||
-		!dbEnsureNotSignupCode(w, tripId, memberId, "CANCEL") ||
-		!dbEnsureNotSignupCode(w, tripId, memberId, "FORCE") {
+		!dbEnsureMemberIsOnTrip(w, tripId, signupMemberId) ||
+		!dbEnsureOfficerOrTripLeader(w, tripId, memberId) {
 		return
 	}
 
@@ -312,7 +307,7 @@ func PatchTripsSignupForceadd(w http.ResponseWriter, r *http.Request) {
 		UPDATE trip_signup
 		SET attending_code = 'FORCE'
 		WHERE trip_id = ? AND member_id = ?`
-	_, err := db.Exec(stmt, tripId, signupId)
+	_, err := db.Exec(stmt, tripId, signupMemberId)
 	if !checkError(w, err) {
 		return
 	}
@@ -325,7 +320,7 @@ func PatchTripsSignupForceadd(w http.ResponseWriter, r *http.Request) {
 	email := emailStruct{
 		NotificationTypeId: "TRIP_ALERT_FORCE",
 		ReplyToId:          memberId,
-		ToId:               signupId,
+		ToId:               signupMemberId,
 		TripId:             tripId,
 		Subject:            "You have been Force Added to the trip " + tripName,
 	}
@@ -345,7 +340,7 @@ func PatchTripsSignupTripLeaderPromote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get memberId, tripId, signupId, promote
+	// Get memberId, tripId, signupMemberId, promote
 	memberId, ok := dbGetActiveMemberId(w, sub)
 	if !ok {
 		return
@@ -354,7 +349,7 @@ func PatchTripsSignupTripLeaderPromote(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	signupId, ok := getURLIntParam(w, r, "signupId")
+	signupMemberId, ok := getURLIntParam(w, r, "memberId")
 	if !ok {
 		return
 	}
@@ -366,10 +361,10 @@ func PatchTripsSignupTripLeaderPromote(w http.ResponseWriter, r *http.Request) {
 	// Permissions
 	if !dbEnsurePublishedTrip(w, tripId) ||
 		!dbEnsureOfficerOrTripLeader(w, tripId, memberId) ||
-		!dbEnsureMemberIsOnTrip(w, tripId, signupId) ||
-		!dbEnsureNotTripCreator(w, tripId, signupId) ||
-		!dbEnsureNotSignupCode(w, tripId, signupId, "CANCEL") ||
-		!dbEnsureNotSignupCode(w, tripId, signupId, "BOOT") {
+		!dbEnsureMemberIsOnTrip(w, tripId, signupMemberId) ||
+		!dbEnsureNotTripCreator(w, tripId, signupMemberId) ||
+		!dbEnsureNotSignupCode(w, tripId, signupMemberId, "CANCEL") ||
+		!dbEnsureNotSignupCode(w, tripId, signupMemberId, "BOOT") {
 		return
 	}
 
@@ -379,7 +374,7 @@ func PatchTripsSignupTripLeaderPromote(w http.ResponseWriter, r *http.Request) {
 			leader = ?,
 			attending_code = 'FORCE'
 		WHERE trip_id = ? AND member_id = ?`
-	_, err := db.Exec(stmt, promote, tripId, signupId)
+	_, err := db.Exec(stmt, promote, tripId, signupMemberId)
 	if !checkError(w, err) {
 		return
 	}
@@ -392,7 +387,7 @@ func PatchTripsSignupTripLeaderPromote(w http.ResponseWriter, r *http.Request) {
 	email := emailStruct{
 		NotificationTypeId: "TRIP_ALERT_LEADER",
 		ReplyToId:          memberId,
-		ToId:               signupId,
+		ToId:               signupMemberId,
 		TripId:             tripId,
 	}
 	email.Subject = "You have been promoted to Trip Leader for the trip " + tripName
