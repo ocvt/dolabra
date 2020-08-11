@@ -3,6 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
+
+	"github.com/go-chi/chi"
 )
 
 func GetTripMyStatus(w http.ResponseWriter, r *http.Request) {
@@ -353,9 +356,9 @@ func PatchTripsSignupTripLeaderPromote(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	promote, ok := getURLIntParam(w, r, "promote")
-	if !ok {
-		return
+	promote, err := strconv.ParseBool(chi.URLParam(r, "promote"))
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
 	}
 
 	// Permissions
@@ -374,7 +377,7 @@ func PatchTripsSignupTripLeaderPromote(w http.ResponseWriter, r *http.Request) {
 			leader = ?,
 			attending_code = 'FORCE'
 		WHERE trip_id = ? AND member_id = ?`
-	_, err := db.Exec(stmt, promote, tripId, signupMemberId)
+	_, err = db.Exec(stmt, promote, tripId, signupMemberId)
 	if !checkError(w, err) {
 		return
 	}
