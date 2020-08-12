@@ -250,11 +250,15 @@ func dbGetNextWaitlist(w http.ResponseWriter, tripId int) (int, bool) {
 	// id 0 is internal systems account and guaranteed to not be signed up
 	memberId := 0
 
+	// Get waitlisted signups then sort by paid -> not paid then take the first result
 	stmt := `
 		SELECT
+			datetime('now') < date(member.paid_expire_datetime) AS paid,
 			trip_signup.member_id
 		FROM trip_signup
-		WHERE attending_code = 'WAIT'
+		INNER JOIN member ON member.id = trip_signup.member_id
+		WHERE trip_signup.trip_id = ? AND trip_signup.attending_code = 'WAIT'
+		ORDER BY paid DESC
 		LIMIT 1`
 	rows, err := db.Query(stmt, tripId)
 	if err != nil && err == sql.ErrNoRows {
@@ -265,13 +269,16 @@ func dbGetNextWaitlist(w http.ResponseWriter, tripId int) (int, bool) {
 	}
 	defer rows.Close()
 
-	err = rows.Scan(&memberId)
-	if !checkError(w, err) {
-		return memberId, false
-	}
-	err = rows.Err()
-	if !checkError(w, err) {
-		return memberId, false
+	for rows.Next() {
+		var isPaidOnlyUsedInSqlQuery bool
+		err = rows.Scan(&isPaidOnlyUsedInSqlQuery, &memberId)
+		if !checkError(w, err) {
+			return memberId, false
+		}
+		err = rows.Err()
+		if !checkError(w, err) {
+			return memberId, false
+		}
 	}
 
 	return memberId, true
@@ -580,6 +587,19 @@ func dbSetSignupStatus(w http.ResponseWriter, tripId int, memberId int, status s
 		return false
 	}
 
-	// TODO EMAIL MEMBER
-	return true
+	tripName, ok := dbGetTripName(w, tripId)
+	if !ok {
+		return false
+	}
+	if status == "ATTEND" {
+		return stageEmailSignupAttend(w, tripId, tripName, memberId)
+	}
+	if status == "BOOT" || status == "CANCEL" {
+		// Do nothing; should never happen
+	}
+	if status == "FORCE" {
+		return stageEmailSignupForce(w, tripId, tripName, memberId)
+	}
+	// WAIT
+	return stageEmailSignupWait(w, tripId, tripName, memberId)
 }

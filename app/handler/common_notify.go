@@ -102,7 +102,7 @@ func stageEmailPlain(email emailStruct) error {
 	return err
 }
 
-/* HELPERS */
+/* TRIP HELPERS */
 func stageEmailNewTrip(w http.ResponseWriter, tripId int) bool {
 	label := utils.GetConfig().EmailLabel
 	url := utils.GetConfig().FrontendUrl
@@ -237,5 +237,77 @@ func stageEmailTripCancel(w http.ResponseWriter, tripId int) bool {
 			"<br>",
 		trip.Name)
 
+	return stageEmail(w, email)
+}
+
+/* TRIP SIGNUP HELPERS */
+func stageEmailSignupAttend(w http.ResponseWriter, tripId int, tripName string, memberId int) bool {
+	email := emailStruct{
+		NotificationTypeId: "TRIP_ALERT_ATTEND",
+		ReplyToId:          0,
+		ToId:               memberId,
+		TripId:             tripId,
+		Subject:            "You have been added to the trip " + tripName,
+	}
+	email.Body =
+		"This email is a notification that you have been added to the roster " +
+			"for the trip " + tripName + "."
+	return stageEmail(w, email)
+}
+
+func stageEmailSignupBoot(w http.ResponseWriter, tripId int, tripName string, bootReason string, memberId int) bool {
+	email := emailStruct{
+		NotificationTypeId: "TRIP_ALERT_BOOT",
+		ReplyToId:          0,
+		ToId:               memberId,
+		TripId:             tripId,
+		Subject:            "You have been Booted from the trip " + tripName,
+	}
+	email.Body =
+		"This email is a notification that you have been Booted from the trip " +
+			tripName + " with the message " + bootReason
+	return stageEmail(w, email)
+}
+
+func stageEmailSignupCancel(w http.ResponseWriter, tripId int, tripName string, memberId int) bool {
+	email := emailStruct{
+		NotificationTypeId: "TRIP_ALERT_CANCEL",
+		ReplyToId:          0,
+		ToId:               memberId,
+		TripId:             tripId,
+		Subject:            "You have canceled your signup for trip " + tripName + ".",
+	}
+	email.Body =
+		"This email is a notification that you have canceled your signup on " +
+			"trip " + tripName + ". Note, you cannot signup again after you have " +
+			"canceled."
+	return stageEmail(w, email)
+}
+
+func stageEmailSignupForce(w http.ResponseWriter, tripId int, tripName string, memberId int) bool {
+	email := emailStruct{
+		NotificationTypeId: "TRIP_ALERT_FORCE",
+		ReplyToId:          0,
+		ToId:               memberId,
+		TripId:             tripId,
+		Subject:            "You have been Force Added to the trip " + tripName,
+	}
+	email.Body =
+		"This email is a notification that you have been Force Added to the " +
+			"trip " + tripName + "."
+	return stageEmail(w, email)
+}
+
+func stageEmailSignupWait(w http.ResponseWriter, tripId int, tripName string, memberId int) bool {
+	email := emailStruct{
+		NotificationTypeId: "TRIP_ALERT_WAIT",
+		ReplyToId:          0,
+		ToId:               memberId,
+		TripId:             tripId,
+		Subject:            "You have been Force Added to the trip " + tripName,
+	}
+	email.Body =
+		"This email is a notification that you have been added to the waitlist " +
+			"for the trip " + tripName + "."
 	return stageEmail(w, email)
 }

@@ -223,18 +223,7 @@ func PatchTripsSignupBoot(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-
-	email := emailStruct{
-		NotificationTypeId: "TRIP_ALERT_BOOT",
-		ReplyToId:          memberId,
-		ToId:               signupMemberId,
-		TripId:             tripId,
-		Subject:            "You have been Booted from the trip " + tripName,
-	}
-	email.Body =
-		"This email is a notification that you have been Booted from the trip " +
-			tripName + " with the message " + tripSignupBoot.BootReason
-	if !stageEmail(w, email) {
+	if !stageEmailSignupBoot(w, tripId, tripName, tripSignupBoot.BootReason, signupMemberId) {
 		return
 	}
 
@@ -266,27 +255,19 @@ func PatchTripsSignupCancel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tripFull, ok := dbIsTripFull(w, tripId)
-	if !ok {
+	currentStatus, err := dbGetTripSignupStatus(w, tripId, memberId)
+	if err != nil {
 		return
 	}
-
-	if tripFull {
-		currentStatus, err := dbGetTripSignupStatus(w, tripId, memberId)
-		if err != nil {
+	if currentStatus == "ATTEND" {
+		// Full trip + attending member changes to cancel
+		memberIdToChange, ok := dbGetNextWaitlist(w, tripId)
+		if !ok {
 			return
 		}
 
-		if currentStatus == "ATTEND" {
-			// Full trip + attending member changes to cancel
-			memberIdToChange, ok := dbGetNextWaitlist(w, tripId)
-			if !ok {
-				return
-			}
-
-			if memberIdToChange > 0 && !dbSetSignupStatus(w, tripId, memberIdToChange, "ATTEND") {
-				return
-			}
+		if memberIdToChange > 0 && !dbSetSignupStatus(w, tripId, memberIdToChange, "ATTEND") {
+			return
 		}
 	}
 
@@ -297,7 +278,7 @@ func PatchTripsSignupCancel(w http.ResponseWriter, r *http.Request) {
 			attending_code = 'CANCEL',
 			attended = false
 		WHERE trip_id = ? AND member_id = ?`
-	_, err := db.Exec(stmt, tripId, memberId)
+	_, err = db.Exec(stmt, tripId, memberId)
 	if !checkError(w, err) {
 		return
 	}
@@ -306,20 +287,7 @@ func PatchTripsSignupCancel(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-
-	email := emailStruct{
-		NotificationTypeId: "TRIP_ALERT_CANCEL",
-		ReplyToId:          0,
-		ToId:               memberId,
-		TripId:             tripId,
-		Subject:            "You have canceled your signup for trip " + tripName + ".",
-	}
-	email.Body =
-		"This email is a notification that you have canceled your signup on " +
-			"trip " + tripName + ". Note, you cannot signup again after you have " +
-			"canceled."
-
-	if !stageEmail(w, email) {
+	if !stageEmailSignupCancel(w, tripId, tripName, memberId) {
 		return
 	}
 
@@ -353,32 +321,23 @@ func PatchTripsSignupForceadd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Change to FORCE code
-	stmt := `
-		UPDATE trip_signup
-		SET attending_code = 'FORCE'
-		WHERE trip_id = ? AND member_id = ?`
-	_, err := db.Exec(stmt, tripId, signupMemberId)
-	if !checkError(w, err) {
+	// Change next person from WAIT to ATTEND if possible
+	currentStatus, err := dbGetTripSignupStatus(w, tripId, memberId)
+	if err != nil {
 		return
 	}
+	if currentStatus == "ATTEND" {
+		memberIdToChange, ok := dbGetNextWaitlist(w, tripId)
+		if !ok {
+			return
+		}
 
-	tripName, ok := dbGetTripName(w, tripId)
-	if !ok {
-		return
+		if memberIdToChange > 0 && !dbSetSignupStatus(w, tripId, memberIdToChange, "ATTEND") {
+			return
+		}
 	}
 
-	email := emailStruct{
-		NotificationTypeId: "TRIP_ALERT_FORCE",
-		ReplyToId:          memberId,
-		ToId:               signupMemberId,
-		TripId:             tripId,
-		Subject:            "You have been Force Added to the trip " + tripName,
-	}
-	email.Body =
-		"This email is a notification that you have been Force Added to the " +
-			"trip " + tripName + "."
-	if !stageEmail(w, email) {
+	if !dbSetSignupStatus(w, tripId, memberId, "FORCE") {
 		return
 	}
 
@@ -417,6 +376,22 @@ func PatchTripsSignupTripLeaderPromote(w http.ResponseWriter, r *http.Request) {
 		!dbEnsureNotSignupCode(w, tripId, signupMemberId, "CANCEL") ||
 		!dbEnsureNotSignupCode(w, tripId, signupMemberId, "BOOT") {
 		return
+	}
+
+	// Change next person from WAIT to ATTEND if possible
+	currentStatus, err := dbGetTripSignupStatus(w, tripId, memberId)
+	if err != nil {
+		return
+	}
+	if currentStatus == "ATTEND" {
+		memberIdToChange, ok := dbGetNextWaitlist(w, tripId)
+		if !ok {
+			return
+		}
+
+		if memberIdToChange > 0 && !dbSetSignupStatus(w, tripId, memberIdToChange, "ATTEND") {
+			return
+		}
 	}
 
 	stmt := `
@@ -575,20 +550,18 @@ func PostTripsSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO EMAIL FOR FOR ATTEND OR WAIT
-
-	email := emailStruct{
-		NotificationTypeId: "TRIP_ALERT_ATTEND",
-		ReplyToId:          0,
-		ToId:               memberId,
-		TripId:             tripId,
-		Subject:            "You have been added to the trip " + tripName,
-	}
-	email.Body =
-		"This email is a notification that you have been added to the roster " +
-			"for the trip " + tripName + "."
-	if !stageEmail(w, email) {
-		return
+	if attendingCode == "ATTEND" {
+		if !stageEmailSignupAttend(w, tripId, tripName, memberId) {
+			return
+		}
+	} else if attendingCode == "FORCE" {
+		if !stageEmailSignupForce(w, tripId, tripName, memberId) {
+			return
+		}
+	} else if attendingCode == "WAIT" {
+		if !stageEmailSignupWait(w, tripId, tripName, memberId) {
+			return
+		}
 	}
 
 	respondJSON(w, http.StatusNoContent, nil)
