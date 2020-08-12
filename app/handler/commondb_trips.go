@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"container/list"
+	"database/sql"
 	"log"
 	"net/http"
 	"time"
@@ -22,6 +24,59 @@ func prettyPrintDate(date string) string {
 }
 
 /* General helpers */
+func dbBumpMemberFromWaitlists(w http.ResponseWriter, memberId int) bool {
+	// Get trips where member is on waitlist and eligible to be bumped up
+	stmt := `
+		SELECT trip_signup.trip_id
+		FROM trip_signup
+		INNER JOIN trip ON trip.id = trip_signup.trip_id
+		WHERE trip_signup.member_id = ?
+			AND trip_signup.attending_code = 'WAIT'
+			AND datetime('now', '+ 1 day') < date(trip.start_datetime)`
+	rows, err := db.Query(stmt, memberId)
+	if err != nil && err == sql.ErrNoRows {
+		return true
+	}
+	if !checkError(w, err) {
+		return false
+	}
+	defer rows.Close()
+
+	tripIds := list.New()
+	for rows.Next() {
+		var tripId int
+		err = rows.Scan(&tripId)
+		if !checkError(w, err) {
+			return false
+		}
+		tripIds.PushBack(tripId)
+	}
+	err = rows.Err()
+	if !checkError(w, err) {
+		return false
+	}
+
+	// Check each upcoming trip to see if member can be bumped up
+	for t := tripIds.Front(); t != nil; t = t.Next() {
+		tripId := t.Value.(int)
+		// Get most recent unpaid signup
+		memberIdToChange, ok := dbGetRecentUnpaidSignup(w, tripId)
+		if !ok {
+			return false
+		}
+
+		// id 0 is internal systems account and guaranteed to not be signed up
+		if memberIdToChange > 0 {
+			if !dbSetSignupStatus(w, tripId, memberIdToChange, "WAIT") ||
+				!dbSetSignupStatus(w, tripId, memberId, "ATTEND") {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
 func dbEnsureActiveTrip(w http.ResponseWriter, tripId int) bool {
 	if !dbEnsureIsTrip(w, tripId) {
 		return false
@@ -189,6 +244,67 @@ func dbEnsureValidSignup(w http.ResponseWriter, tripId int, memberId int,
 	}
 
 	return true
+}
+
+func dbGetNextWaitlist(w http.ResponseWriter, tripId int) (int, bool) {
+	// id 0 is internal systems account and guaranteed to not be signed up
+	memberId := 0
+
+	stmt := `
+		SELECT
+			trip_signup.member_id
+		FROM trip_signup
+		WHERE attending_code = 'WAIT'
+		LIMIT 1`
+	rows, err := db.Query(stmt, tripId)
+	if err != nil && err == sql.ErrNoRows {
+		return memberId, true
+	}
+	if !checkError(w, err) {
+		return memberId, false
+	}
+	defer rows.Close()
+
+	err = rows.Scan(&memberId)
+	if !checkError(w, err) {
+		return memberId, false
+	}
+	err = rows.Err()
+	if !checkError(w, err) {
+		return memberId, false
+	}
+
+	return memberId, true
+}
+
+func dbGetRecentUnpaidSignup(w http.ResponseWriter, tripId int) (int, bool) {
+	// id 0 is internal systems account and guaranteed to not be signed up
+	memberId := 0
+
+	stmt := `
+		SELECT trip_signup.member_id
+		FROM trip_signup
+		INNER JOIN member ON member.id = trip_signup.member_id
+		WHERE trip_signup.trip_id = ?
+			AND trip_signup.attending_code = 'ATTEND'
+			AND date(member.paid_expire_datetime) < datetime('now')`
+	rows, err := db.Query(stmt, tripId)
+	if err != nil && err == sql.ErrNoRows {
+		return memberId, true
+	}
+	if !checkError(w, err) {
+		return memberId, false
+	}
+	defer rows.Close()
+
+	// Last member id in rows is most recently signed up unpaid signup
+	for rows.Next() {
+		err = rows.Scan(&memberId)
+		if !checkError(w, err) {
+			return memberId, false
+		}
+	}
+	return memberId, true
 }
 
 func dbGetTrip(w http.ResponseWriter, tripId int) (*tripStruct, bool) {
@@ -379,6 +495,33 @@ func dbIsTripCreator(w http.ResponseWriter, tripId int, memberId int) (bool, err
 	return exists, err
 }
 
+func dbIsTripFull(w http.ResponseWriter, tripId int) (bool, bool) {
+	stmt := `
+		SELECT max_people
+		FROM trip
+		WHERE id = ?`
+	var maxPeople int
+	err := db.QueryRow(stmt, tripId).Scan(&maxPeople)
+	if !checkError(w, err) {
+		return false, false
+	}
+
+	stmt = `
+		SELECT COUNT(*)
+		FROM trip_signup
+		WHERE trip_id = ? AND attending_code = 'ATTEND'`
+	var count int
+	err = db.QueryRow(stmt, tripId).Scan(&count)
+	if !checkError(w, err) {
+		return false, false
+	}
+
+	if count == maxPeople {
+		return true, true
+	}
+	return false, true
+}
+
 func dbIsTripInFuture(w http.ResponseWriter, tripId int) (bool, error) {
 	stmt := `
 		SELECT EXISTS (
@@ -425,4 +568,18 @@ func dbIsTripPublished(w http.ResponseWriter, tripId int) (bool, error) {
 	err := db.QueryRow(stmt, tripId).Scan(&exists)
 	checkError(w, err)
 	return exists, err
+}
+
+func dbSetSignupStatus(w http.ResponseWriter, tripId int, memberId int, status string) bool {
+	stmt := `
+		UPDATE trip_signup
+		SET attending_code = ?
+		WHERE trip_id = ? and member_id = ?`
+	_, err := db.Exec(stmt, status, tripId, memberId)
+	if !checkError(w, err) {
+		return false
+	}
+
+	// TODO EMAIL MEMBER
+	return true
 }

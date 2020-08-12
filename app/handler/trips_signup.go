@@ -182,6 +182,30 @@ func PatchTripsSignupBoot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tripFull, ok := dbIsTripFull(w, tripId)
+	if !ok {
+		return
+	}
+
+	if tripFull {
+		currentStatus, err := dbGetTripSignupStatus(w, tripId, memberId)
+		if err != nil {
+			return
+		}
+
+		if currentStatus == "ATTEND" {
+			// Full trip + attending member changes to boot
+			memberIdToChange, ok := dbGetNextWaitlist(w, tripId)
+			if !ok {
+				return
+			}
+
+			if memberIdToChange > 0 && !dbSetSignupStatus(w, tripId, memberIdToChange, "ATTEND") {
+				return
+			}
+		}
+	}
+
 	stmt := `
 		UPDATE trip_signup
 		SET
@@ -240,6 +264,30 @@ func PatchTripsSignupCancel(w http.ResponseWriter, r *http.Request) {
 		!dbEnsureNotSignupCode(w, tripId, memberId, "CANCEL") ||
 		!dbEnsureNotSignupCode(w, tripId, memberId, "BOOT") {
 		return
+	}
+
+	tripFull, ok := dbIsTripFull(w, tripId)
+	if !ok {
+		return
+	}
+
+	if tripFull {
+		currentStatus, err := dbGetTripSignupStatus(w, tripId, memberId)
+		if err != nil {
+			return
+		}
+
+		if currentStatus == "ATTEND" {
+			// Full trip + attending member changes to cancel
+			memberIdToChange, ok := dbGetNextWaitlist(w, tripId)
+			if !ok {
+				return
+			}
+
+			if memberIdToChange > 0 && !dbSetSignupStatus(w, tripId, memberIdToChange, "ATTEND") {
+				return
+			}
+		}
 	}
 
 	stmt := `
@@ -448,8 +496,6 @@ func PostTripsSignup(w http.ResponseWriter, r *http.Request) {
 	attendingCode := "FORCE"
 	attended := true
 	if !isCreator {
-		attendingCode = "ATTEND"
-
 		if !dbEnsureActiveTrip(w, tripId) {
 			return
 		}
@@ -459,7 +505,34 @@ func PostTripsSignup(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// TODO check for waitlist, member_only, max people
+		tripFull, ok := dbIsTripFull(w, tripId)
+		if !ok {
+			return
+		}
+
+		if !tripFull {
+			// Not full trip
+			attendingCode = "ATTEND"
+		} else if !isPaid {
+			// Full trip + not paid member
+			attendingCode = "WAIT"
+		} else {
+			// Full trip + is paid member
+			memberIdToChange, ok := dbGetRecentUnpaidSignup(w, tripId)
+			if !ok {
+				return
+			}
+
+			// id 0 is internal systems account and guaranteed to not be signed up
+			if memberIdToChange > 0 {
+				if !dbSetSignupStatus(w, tripId, memberIdToChange, "WAIT") {
+					return
+				}
+				attendingCode = "ATTEND"
+			} else {
+				attendingCode = "WAIT"
+			}
+		}
 	}
 
 	stmt := `
@@ -501,6 +574,8 @@ func PostTripsSignup(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+
+	// TODO EMAIL FOR FOR ATTEND OR WAIT
 
 	email := emailStruct{
 		NotificationTypeId: "TRIP_ALERT_ATTEND",

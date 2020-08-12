@@ -91,6 +91,9 @@ production.
 
 ## TODO
 
+* Change trip signup functions that check status code to be consistent
+* Remove paid_member field in trip_signup
+* In db helper funcs, ensure only error is returned if required, otherwise return bool if error + http repsonse is handled
 * Move email draft functions to common_notify.go
 * Ensure email errors from bad email addresses are dequeued instead of infinitely trying
 * Ensure errors after row db queries are checked

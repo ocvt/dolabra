@@ -205,6 +205,11 @@ func dbEnsureTripExists(w http.ResponseWriter, tripId int) bool {
 }
 
 func dbExtendMembership(w http.ResponseWriter, memberId int, years int) bool {
+	isPaidMember, err := dbIsPaidMember(w, memberId)
+	if err != nil {
+		return false
+	}
+
 	for i := 0; i < years; i++ {
 		stmt := `
 			UPDATE member
@@ -214,6 +219,11 @@ func dbExtendMembership(w http.ResponseWriter, memberId int, years int) bool {
 		if !checkError(w, err) {
 			return false
 		}
+	}
+
+	// Bump from waitlist if applicable
+	if !isPaidMember && years > 0 && !dbBumpMemberFromWaitlists(w, memberId) {
+		return false
 	}
 	return true
 }
