@@ -24,13 +24,12 @@ const SUB_LENGTH = 16
 
 /* HELPERS */
 func processIdp(w http.ResponseWriter, idp string, idpSub string) bool {
-	exists, err := dbIsMemberWithIdp(w, idp, idpSub)
-	if err != nil {
+	exists, ok := dbIsMemberWithIdp(w, idp, idpSub)
+	if !ok {
 		return false
 	}
 
 	var sub string
-	var ok bool
 	if exists {
 		sub, ok = dbGetMemberSubWithIdp(w, idp, idpSub)
 		if !ok {
@@ -40,8 +39,8 @@ func processIdp(w http.ResponseWriter, idp string, idpSub string) bool {
 		exists := true
 		for exists {
 			sub = generateCode(SUB_LENGTH)
-			exists, err = dbIsMemberWithSub(w, sub)
-			if err != nil {
+			exists, ok = dbIsMemberWithSub(w, sub)
+			if !ok {
 				return false
 			}
 		}
@@ -53,7 +52,7 @@ func processIdp(w http.ResponseWriter, idp string, idpSub string) bool {
 				idp,
 				idp_sub)
 			VALUES (0, ?, ?, ?)`
-		_, err = db.Exec(stmt, sub, idp, idpSub)
+		_, err := db.Exec(stmt, sub, idp, idpSub)
 		if !checkError(w, err) {
 			return false
 		}

@@ -197,8 +197,8 @@ func GetMyAccountName(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	isOfficer, err := dbIsOfficer(w, memberId)
-	if err != nil {
+	isOfficer, ok := dbIsOfficer(w, memberId)
+	if !ok {
 		return
 	}
 
@@ -207,7 +207,7 @@ func GetMyAccountName(w http.ResponseWriter, r *http.Request) {
 		FROM member
 		WHERE id = ?`
 	var firstName string
-	err = db.QueryRow(stmt, memberId).Scan(&firstName)
+	err := db.QueryRow(stmt, memberId).Scan(&firstName)
 	if !checkError(w, err) {
 		return
 	}

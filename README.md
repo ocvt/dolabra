@@ -93,8 +93,6 @@ production.
 
 ## TODO
 
-* Change trip signup functions that check status code to be consistent (check actual status vs using a helper func)
-* In db helper funcs, ensure only error is returned if required, otherwise return bool if error + http repsonse is handled
 * Move email draft functions to common_notify.go
 * Ensure errors after row db queries are checked
 * Test /trips/myattendance

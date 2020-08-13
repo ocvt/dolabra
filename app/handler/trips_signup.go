@@ -29,22 +29,22 @@ func GetTripMyStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Statuses
-	signedUp, err := dbIsMemberOnTrip(w, tripId, memberId)
-	if err != nil {
+	signedUp, ok := dbIsMemberOnTrip(w, tripId, memberId)
+	if !ok {
 		return
 	}
-	tripCreator, err := dbIsTripCreator(w, tripId, memberId)
-	if err != nil {
+	tripCreator, ok := dbIsTripCreator(w, tripId, memberId)
+	if !ok {
 		return
 	}
-	tripLeader, err := dbIsTripLeader(w, tripId, memberId)
-	if err != nil {
+	tripLeader, ok := dbIsTripLeader(w, tripId, memberId)
+	if !ok {
 		return
 	}
 	attendingCode := ""
 	if signedUp {
-		attendingCode, err = dbGetTripSignupStatus(w, tripId, memberId)
-		if err != nil {
+		attendingCode, ok = dbGetTripSignupStatus(w, tripId, memberId)
+		if !ok {
 			return
 		}
 	}
@@ -188,8 +188,8 @@ func PatchTripsSignupBoot(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if tripFull {
-		currentStatus, err := dbGetTripSignupStatus(w, tripId, signupMemberId)
-		if err != nil {
+		currentStatus, ok := dbGetTripSignupStatus(w, tripId, signupMemberId)
+		if !ok {
 			return
 		}
 
@@ -255,8 +255,8 @@ func PatchTripsSignupCancel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	currentStatus, err := dbGetTripSignupStatus(w, tripId, memberId)
-	if err != nil {
+	currentStatus, ok := dbGetTripSignupStatus(w, tripId, memberId)
+	if !ok {
 		return
 	}
 	if currentStatus == "ATTEND" {
@@ -278,7 +278,7 @@ func PatchTripsSignupCancel(w http.ResponseWriter, r *http.Request) {
 			attending_code = 'CANCEL',
 			attended = false
 		WHERE trip_id = ? AND member_id = ?`
-	_, err = db.Exec(stmt, tripId, memberId)
+	_, err := db.Exec(stmt, tripId, memberId)
 	if !checkError(w, err) {
 		return
 	}
@@ -322,8 +322,8 @@ func PatchTripsSignupForceadd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Change next person from WAIT to ATTEND if possible
-	currentStatus, err := dbGetTripSignupStatus(w, tripId, signupMemberId)
-	if err != nil {
+	currentStatus, ok := dbGetTripSignupStatus(w, tripId, signupMemberId)
+	if !ok {
 		return
 	}
 	if currentStatus == "ATTEND" {
@@ -379,8 +379,8 @@ func PatchTripsSignupTripLeaderPromote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Change next person from WAIT to ATTEND if possible
-	currentStatus, err := dbGetTripSignupStatus(w, tripId, signupMemberId)
-	if err != nil {
+	currentStatus, ok := dbGetTripSignupStatus(w, tripId, signupMemberId)
+	if !ok {
 		return
 	}
 	if currentStatus == "ATTEND" {
@@ -453,12 +453,12 @@ func PostTripsSignup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Booleans for insertion
-	isCreator, err := dbIsTripCreator(w, tripId, memberId)
-	if err != nil {
+	isCreator, ok := dbIsTripCreator(w, tripId, memberId)
+	if !ok {
 		return
 	}
-	isPaid, err := dbIsPaidMember(w, memberId)
-	if err != nil {
+	isPaid, ok := dbIsPaidMember(w, memberId)
+	if !ok {
 		return
 	}
 

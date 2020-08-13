@@ -193,12 +193,12 @@ func GetTrip(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Permissions
-	isOfficer, err := dbIsOfficer(w, memberId)
-	if err != nil {
+	isOfficer, ok := dbIsOfficer(w, memberId)
+	if !ok {
 		return
 	}
-	onTrip, err := dbIsMemberOnTrip(w, tripId, memberId)
-	if err != nil {
+	onTrip, ok := dbIsMemberOnTrip(w, tripId, memberId)
+	if !ok {
 		return
 	}
 

@@ -92,121 +92,9 @@ func dbCreateSystemMember() error {
 	return err
 }
 
-/* "Ensure" helpers */
-func dbCheckMemberWantsNotification(memberId int, notificationType string) bool {
-	stmt := `
-		SELECT notification_preference
-		FROM member
-		WHERE id = ?`
-	var notificationsStr string
-	err := db.QueryRow(stmt, memberId).Scan(&notificationsStr)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	notifications := map[string]bool{}
-	err = json.Unmarshal([]byte(notificationsStr), &notifications)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return notifications[notificationType]
-}
-
-func dbEnsureMemberDoesNotExist(w http.ResponseWriter, sub string) bool {
-	exists, err := dbIsMemberWithSub(w, sub)
-	if err != nil {
-		return false
-	}
-
-	if exists {
-		respondError(w, http.StatusBadRequest, "Member is already registered.")
-		return false
-	}
-
-	return true
-}
-
-func dbEnsureMemberExists(w http.ResponseWriter, sub string) bool {
-	exists, err := dbIsMemberWithSub(w, sub)
-	if err != nil {
-		return false
-	}
-
-	if !exists {
-		respondError(w, http.StatusNotFound, "Member is not registered.")
-		return false
-	}
-
-	return true
-}
-
-func dbEnsureMemberIdExists(w http.ResponseWriter, memberId int) bool {
-	exists, err := dbIsMemberWithMemberId(w, memberId)
-	if err != nil {
-		return false
-	}
-
-	if !exists {
-		respondError(w, http.StatusNotFound, "Member is not registered.")
-		return false
-	}
-
-	return true
-}
-
-func dbEnsureNotApprover(w http.ResponseWriter, memberId int) bool {
-	isApprover, err := dbIsApprover(w, memberId)
-	if err != nil {
-		return false
-	}
-	if isApprover {
-		respondError(w, http.StatusBadRequest, "Must not be approver.")
-		return false
-	}
-	return true
-}
-
-func dbEnsureNotOfficer(w http.ResponseWriter, memberId int) bool {
-	isOfficer, err := dbIsOfficer(w, memberId)
-	if err != nil {
-		return false
-	}
-	if isOfficer {
-		respondError(w, http.StatusBadRequest, "Must not be officer.")
-		return false
-	}
-	return true
-}
-
-func dbEnsureOfficer(w http.ResponseWriter, memberId int) bool {
-	isOfficer, err := dbIsOfficer(w, memberId)
-	if err != nil {
-		return false
-	}
-	if !isOfficer {
-		respondError(w, http.StatusBadRequest, "Must be officer.")
-		return false
-	}
-	return true
-}
-
-func dbEnsureTripExists(w http.ResponseWriter, tripId int) bool {
-	exists, err := dbIsTrip(w, tripId)
-	if err != nil {
-		return false
-	}
-
-	if !exists {
-		respondError(w, http.StatusNotFound, "Trip does not exist.")
-		return false
-	}
-
-	return true
-}
-
 func dbExtendMembership(w http.ResponseWriter, memberId int, years int) bool {
-	isPaidMember, err := dbIsPaidMember(w, memberId)
-	if err != nil {
+	isPaidMember, ok := dbIsPaidMember(w, memberId)
+	if !ok {
 		return false
 	}
 
@@ -231,7 +119,7 @@ func dbExtendMembership(w http.ResponseWriter, memberId int, years int) bool {
 				FROM trip
 				WHERE id = trip_signup.trip_id AND datetime('now') < datetime(start_datetime)
 			)`
-		_, err = db.Exec(stmt, memberId)
+		_, err := db.Exec(stmt, memberId)
 		if !checkError(w, err) {
 			return false
 		}
@@ -250,8 +138,8 @@ func dbGetActiveMemberId(w http.ResponseWriter, sub string) (int, bool) {
 		return 0, false
 	}
 
-	isActive, err := dbIsActiveMember(w, memberId)
-	if err != nil {
+	isActive, ok := dbIsActiveMember(w, memberId)
+	if !ok {
 		return 0, false
 	}
 	if !isActive {
@@ -399,8 +287,120 @@ func dbInsertPayment(w http.ResponseWriter, enteredById int, note string,
 	return checkError(w, err)
 }
 
+func dbCheckMemberWantsNotification(memberId int, notificationType string) bool {
+	stmt := `
+		SELECT notification_preference
+		FROM member
+		WHERE id = ?`
+	var notificationsStr string
+	err := db.QueryRow(stmt, memberId).Scan(&notificationsStr)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	notifications := map[string]bool{}
+	err = json.Unmarshal([]byte(notificationsStr), &notifications)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return notifications[notificationType]
+}
+
+/* "Ensure" helpers */
+func dbEnsureMemberDoesNotExist(w http.ResponseWriter, sub string) bool {
+	exists, ok := dbIsMemberWithSub(w, sub)
+	if !ok {
+		return false
+	}
+
+	if exists {
+		respondError(w, http.StatusBadRequest, "Member is already registered.")
+		return false
+	}
+
+	return true
+}
+
+func dbEnsureMemberExists(w http.ResponseWriter, sub string) bool {
+	exists, ok := dbIsMemberWithSub(w, sub)
+	if !ok {
+		return false
+	}
+
+	if !exists {
+		respondError(w, http.StatusNotFound, "Member is not registered.")
+		return false
+	}
+
+	return true
+}
+
+func dbEnsureMemberIdExists(w http.ResponseWriter, memberId int) bool {
+	exists, ok := dbIsMemberWithMemberId(w, memberId)
+	if !ok {
+		return false
+	}
+
+	if !exists {
+		respondError(w, http.StatusNotFound, "Member is not registered.")
+		return false
+	}
+
+	return true
+}
+
+func dbEnsureNotApprover(w http.ResponseWriter, memberId int) bool {
+	isApprover, ok := dbIsApprover(w, memberId)
+	if !ok {
+		return false
+	}
+	if isApprover {
+		respondError(w, http.StatusBadRequest, "Must not be approver.")
+		return false
+	}
+	return true
+}
+
+func dbEnsureNotOfficer(w http.ResponseWriter, memberId int) bool {
+	isOfficer, ok := dbIsOfficer(w, memberId)
+	if !ok {
+		return false
+	}
+	if isOfficer {
+		respondError(w, http.StatusBadRequest, "Must not be officer.")
+		return false
+	}
+	return true
+}
+
+func dbEnsureOfficer(w http.ResponseWriter, memberId int) bool {
+	isOfficer, ok := dbIsOfficer(w, memberId)
+	if !ok {
+		return false
+	}
+	if !isOfficer {
+		respondError(w, http.StatusBadRequest, "Must be officer.")
+		return false
+	}
+	return true
+}
+
+func dbEnsureTripExists(w http.ResponseWriter, tripId int) bool {
+	exists, ok := dbIsTrip(w, tripId)
+	if !ok {
+		return false
+	}
+
+	if !exists {
+		respondError(w, http.StatusNotFound, "Trip does not exist.")
+		return false
+	}
+
+	return true
+}
+
 /* EXISTS helpers */
-func dbIsActiveMember(w http.ResponseWriter, memberId int) (bool, error) {
+func dbIsActiveMember(w http.ResponseWriter, memberId int) (bool, bool) {
 	stmt := `
 		SELECT EXISTS (
 			SELECT 1
@@ -408,11 +408,10 @@ func dbIsActiveMember(w http.ResponseWriter, memberId int) (bool, error) {
 			WHERE id = ? AND active = true)`
 	var exists bool
 	err := db.QueryRow(stmt, memberId).Scan(&exists)
-	checkError(w, err)
-	return exists, err
+	return exists, checkError(w, err)
 }
 
-func dbIsApprover(w http.ResponseWriter, memberId int) (bool, error) {
+func dbIsApprover(w http.ResponseWriter, memberId int) (bool, bool) {
 	stmt := `
 		SELECT EXISTS (
 			SELECT 1
@@ -420,11 +419,10 @@ func dbIsApprover(w http.ResponseWriter, memberId int) (bool, error) {
 			WHERE member_id = ?)`
 	var exists bool
 	err := db.QueryRow(stmt, memberId).Scan(&exists)
-	checkError(w, err)
-	return exists, err
+	return exists, checkError(w, err)
 }
 
-func dbIsMemberWithIdp(w http.ResponseWriter, idp string, idpSub string) (bool, error) {
+func dbIsMemberWithIdp(w http.ResponseWriter, idp string, idpSub string) (bool, bool) {
 	stmt := `
 		SELECT EXISTS (
 			SELECT 1
@@ -432,11 +430,10 @@ func dbIsMemberWithIdp(w http.ResponseWriter, idp string, idpSub string) (bool, 
 			WHERE idp = ? AND idp_sub = ?)`
 	var exists bool
 	err := db.QueryRow(stmt, idp, idpSub).Scan(&exists)
-	checkError(w, err)
-	return exists, err
+	return exists, checkError(w, err)
 }
 
-func dbIsMemberWithMemberId(w http.ResponseWriter, memberId int) (bool, error) {
+func dbIsMemberWithMemberId(w http.ResponseWriter, memberId int) (bool, bool) {
 	stmt := `
 		SELECT EXISTS (
 			SELECT 1
@@ -444,11 +441,10 @@ func dbIsMemberWithMemberId(w http.ResponseWriter, memberId int) (bool, error) {
 			WHERE member_id > 0 AND member_id = ?)`
 	var exists bool
 	err := db.QueryRow(stmt, memberId).Scan(&exists)
-	checkError(w, err)
-	return exists, err
+	return exists, checkError(w, err)
 }
 
-func dbIsMemberWithSub(w http.ResponseWriter, sub string) (bool, error) {
+func dbIsMemberWithSub(w http.ResponseWriter, sub string) (bool, bool) {
 	stmt := `
 		SELECT EXISTS (
 			SELECT 1
@@ -456,11 +452,10 @@ func dbIsMemberWithSub(w http.ResponseWriter, sub string) (bool, error) {
 			WHERE member_id > 0 AND sub = ?)`
 	var exists bool
 	err := db.QueryRow(stmt, sub).Scan(&exists)
-	checkError(w, err)
-	return exists, err
+	return exists, checkError(w, err)
 }
 
-func dbIsOfficer(w http.ResponseWriter, memberId int) (bool, error) {
+func dbIsOfficer(w http.ResponseWriter, memberId int) (bool, bool) {
 	stmt := `
 		SELECT EXISTS (
 			SELECT 1
@@ -468,11 +463,10 @@ func dbIsOfficer(w http.ResponseWriter, memberId int) (bool, error) {
 			WHERE member_id = ?)`
 	var exists bool
 	err := db.QueryRow(stmt, memberId).Scan(&exists)
-	checkError(w, err)
-	return exists, err
+	return exists, checkError(w, err)
 }
 
-func dbIsPaidMember(w http.ResponseWriter, memberId int) (bool, error) {
+func dbIsPaidMember(w http.ResponseWriter, memberId int) (bool, bool) {
 	stmt := `
 		SELECT EXISTS (
 			SELECT 1
@@ -480,6 +474,5 @@ func dbIsPaidMember(w http.ResponseWriter, memberId int) (bool, error) {
 			WHERE id = ? AND datetime(paid_expire_datetime) > datetime('now'))`
 	var exists bool
 	err := db.QueryRow(stmt, memberId).Scan(&exists)
-	checkError(w, err)
-	return exists, err
+	return exists, checkError(w, err)
 }
