@@ -93,13 +93,10 @@ production.
 
 ## TODO
 
-* Ensure errors after row db queries are checked
-* Test /trips/myattendance
 * Validate trip input data
 * organize functions A-Z (approval & notify related files: TODO)
 * Test /trips/{tripId}/mystatus
 * Ensure all input is sanitized (signup notes, other free text fields)
 * Test GetTripMyStatus
 * Use db transactions
-* Use proper 1/0 instead of true/false for sqlite
 * Add NotFound & MethodNotAllowed handlers

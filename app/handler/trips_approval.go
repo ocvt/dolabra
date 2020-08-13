@@ -49,6 +49,12 @@ func approveNewTrip(w http.ResponseWriter, tripId int) bool {
 		}
 		memberIds.PushBack(memberId)
 	}
+
+	err = rows.Err()
+	if !checkError(w, err) {
+		return false
+	}
+
 	/********************************/
 
 	/* Create email for each trip approver */

@@ -106,10 +106,11 @@ func dbGetNextWaitlist(w http.ResponseWriter, tripId int) (int, bool) {
 		if !checkError(w, err) {
 			return memberId, false
 		}
-		err = rows.Err()
-		if !checkError(w, err) {
-			return memberId, false
-		}
+	}
+
+	err = rows.Err()
+	if !checkError(w, err) {
+		return memberId, false
 	}
 
 	return memberId, true
@@ -142,6 +143,12 @@ func dbGetRecentUnpaidSignup(w http.ResponseWriter, tripId int) (int, bool) {
 			return memberId, false
 		}
 	}
+
+	err = rows.Err()
+	if !checkError(w, err) {
+		return memberId, false
+	}
+
 	return memberId, true
 }
 
