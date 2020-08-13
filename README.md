@@ -88,6 +88,8 @@ production.
 * 403 is returned if the error is related to permissions or user input (ie trying to signup with a
   pet on a trip that does not allow pets), otherwise 400 is used for generic errors or whenever we
   don't 100% know the cause of the issue
+* trip signups include a `short_notice` option indicating if they're ok with changing from waitlist
+  to attend close to when the trip starts. It is not currently used.
 
 ## TODO
 
