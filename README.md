@@ -93,7 +93,6 @@ production.
 
 ## TODO
 
-* Move email draft functions to common_notify.go
 * Ensure errors after row db queries are checked
 * Test /trips/myattendance
 * Validate trip input data
