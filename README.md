@@ -93,7 +93,6 @@ production.
 
 ## TODO
 
-* Ensure waitlist order show is by signup time (for next in line it's paid -> next in line)
 * Change trip signup functions that check status code to be consistent (check actual status vs using a helper func)
 * Remove paid_member field in trip_signup
 * In db helper funcs, ensure only error is returned if required, otherwise return bool if error + http repsonse is handled

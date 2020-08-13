@@ -271,7 +271,7 @@ func GetTripsAdmin(w http.ResponseWriter, r *http.Request) {
 		SELECT *
 		FROM trip_signup
 		WHERE trip_id = ?
-		ORDER BY datetime(signup_datetime) DESC`
+		ORDER BY datetime(signup_datetime) ASC`
 	rows, err := db.Query(stmt, tripId)
 	if !checkError(w, err) {
 		return
