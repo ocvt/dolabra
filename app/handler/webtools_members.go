@@ -154,12 +154,7 @@ func PostWebtoolsDuesGrant(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stmt := `
-		UPDATE member
-		SET paid_expire_datetime = datetime(paid_expire_datetime, '+1 year')
-		WHERE id = ?`
-	_, err := db.Exec(stmt, memberId)
-	if !checkError(w, err) {
+	if !dbExtendMembership(w, memberId, 1) {
 		return
 	}
 

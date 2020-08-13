@@ -93,6 +93,7 @@ production.
 
 ## TODO
 
+* Ensure datetime() instead of date() is used in SQL statements
 * Change trip signup functions that check status code to be consistent (check actual status vs using a helper func)
 * Remove paid_member field in trip_signup
 * In db helper funcs, ensure only error is returned if required, otherwise return bool if error + http repsonse is handled

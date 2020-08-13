@@ -221,9 +221,25 @@ func dbExtendMembership(w http.ResponseWriter, memberId int, years int) bool {
 		}
 	}
 
-	// Bump from waitlist if applicable
-	if !isPaidMember && years > 0 && !dbBumpMemberFromWaitlists(w, memberId) {
-		return false
+	if !isPaidMember && years > 0 {
+		// Mark as paid on any upcoming trips
+		stmt := `
+			UPDATE trip_signup
+			SET paid_member = true
+			WHERE member_id = ? AND EXISTS(
+				SELECT id
+				FROM trip
+				WHERE id = trip_signup.trip_id AND datetime('now') < datetime(start_datetime)
+			)`
+		_, err = db.Exec(stmt, memberId)
+		if !checkError(w, err) {
+			return false
+		}
+
+		// Bump from waitlist if applicable
+		if !dbBumpMemberFromWaitlists(w, memberId) {
+			return false
+		}
 	}
 	return true
 }
