@@ -93,10 +93,20 @@ production.
 
 ## TODO
 
-* Validate trip input data
-* organize functions A-Z (approval & notify related files: TODO)
-* Test /trips/{tripId}/mystatus
-* Ensure all input is sanitized (signup notes, other free text fields)
-* Test GetTripMyStatus
+* Validate input data
+  * account
+    * name
+    * email
+    * any text (incl datetime) field
+  * trip
+    * name
+    * date + in future
+    * description
+    * any text (incl datetime) field
+  * trip signup
+    * notes
+    * boot reason
+    * any text (incl datetime) field
 * Use db transactions
 * Add NotFound & MethodNotAllowed handlers
+* Clean up CORS + turn of debug logging
