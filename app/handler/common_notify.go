@@ -30,8 +30,8 @@ type emailStruct struct {
 type rawEmailStruct struct {
 	FromName     string
 	FromEmail    string
-	ReplyToEmail string
 	ReplyToName  string
+	ReplyToEmail string
 	ToName       string
 	ToEmail      string
 	Subject      string

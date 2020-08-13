@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/ocvt/dolabra/utils"
 )
 
 func DoTasks() {
@@ -250,11 +251,28 @@ func DoTasks() {
 		_, err = sendEmail(sesService, email)
 		if err == nil {
 			emailQueue.Remove(e)
-		} else if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == ses.ErrCodeMessageRejected {
-			log.Print(ses.ErrCodeMessageRejected, awsErr.Error())
+		} else if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == ses.ErrCodeLimitExceededException {
+			// Rate limited, try again next time
 			break
 		} else {
-			log.Print(err.Error())
+			emailQueue.Remove(e)
+			// Attempt to send error to system email, otherwise log error
+			name := utils.GetConfig().SmtpFromFirstNameDefault + " " + utils.GetConfig().SmtpFromFirstNameDefault
+			email := utils.GetConfig().SmtpFromEmailDefault
+			rawEmail := rawEmailStruct{
+				FromName:     name,
+				FromEmail:    email,
+				ReplyToName:  name,
+				ReplyToEmail: email,
+				ToName:       name,
+				ToEmail:      email,
+				Subject:      "Error sending emails",
+				Body:         "Error occured sending emails: " + err.Error(),
+			}
+			_, err = sendEmail(sesService, rawEmail)
+			if err != nil {
+				log.Print("ERROR: " + err.Error())
+			}
 		}
 	}
 	/**************************/
