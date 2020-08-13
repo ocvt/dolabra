@@ -188,7 +188,7 @@ func PatchTripsSignupBoot(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if tripFull {
-		currentStatus, err := dbGetTripSignupStatus(w, tripId, memberId)
+		currentStatus, err := dbGetTripSignupStatus(w, tripId, signupMemberId)
 		if err != nil {
 			return
 		}
@@ -322,7 +322,7 @@ func PatchTripsSignupForceadd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Change next person from WAIT to ATTEND if possible
-	currentStatus, err := dbGetTripSignupStatus(w, tripId, memberId)
+	currentStatus, err := dbGetTripSignupStatus(w, tripId, signupMemberId)
 	if err != nil {
 		return
 	}
@@ -337,7 +337,7 @@ func PatchTripsSignupForceadd(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if !dbSetSignupStatus(w, tripId, memberId, "FORCE") {
+	if !dbSetSignupStatus(w, tripId, signupMemberId, "FORCE") {
 		return
 	}
 
@@ -379,7 +379,7 @@ func PatchTripsSignupTripLeaderPromote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Change next person from WAIT to ATTEND if possible
-	currentStatus, err := dbGetTripSignupStatus(w, tripId, memberId)
+	currentStatus, err := dbGetTripSignupStatus(w, tripId, signupMemberId)
 	if err != nil {
 		return
 	}
