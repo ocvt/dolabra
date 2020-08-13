@@ -32,7 +32,7 @@ func dbBumpMemberFromWaitlists(w http.ResponseWriter, memberId int) bool {
 		INNER JOIN trip ON trip.id = trip_signup.trip_id
 		WHERE trip_signup.member_id = ?
 			AND trip_signup.attending_code = 'WAIT'
-			AND datetime('now', '+ 1 day') < date(trip.start_datetime)`
+			AND datetime('now', '+ 1 day') < datetime(trip.start_datetime)`
 	rows, err := db.Query(stmt, memberId)
 	if err != nil && err == sql.ErrNoRows {
 		return true
@@ -253,7 +253,7 @@ func dbGetNextWaitlist(w http.ResponseWriter, tripId int) (int, bool) {
 	// Get waitlisted signups then sort by paid -> not paid then take the first result
 	stmt := `
 		SELECT
-			datetime('now') < date(member.paid_expire_datetime) AS paid,
+			datetime('now') < datetime(member.paid_expire_datetime) AS paid,
 			trip_signup.member_id
 		FROM trip_signup
 		INNER JOIN member ON member.id = trip_signup.member_id
@@ -294,7 +294,7 @@ func dbGetRecentUnpaidSignup(w http.ResponseWriter, tripId int) (int, bool) {
 		INNER JOIN member ON member.id = trip_signup.member_id
 		WHERE trip_signup.trip_id = ?
 			AND trip_signup.attending_code = 'ATTEND'
-			AND date(member.paid_expire_datetime) < datetime('now')`
+			AND datetime(member.paid_expire_datetime) < datetime('now')`
 	rows, err := db.Query(stmt, tripId)
 	if err != nil && err == sql.ErrNoRows {
 		return memberId, true

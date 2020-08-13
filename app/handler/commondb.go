@@ -477,7 +477,7 @@ func dbIsPaidMember(w http.ResponseWriter, memberId int) (bool, error) {
 		SELECT EXISTS (
 			SELECT 1
 			FROM member
-			WHERE id = ? AND date(paid_expire_datetime) > datetime('now'))`
+			WHERE id = ? AND datetime(paid_expire_datetime) > datetime('now'))`
 	var exists bool
 	err := db.QueryRow(stmt, memberId).Scan(&exists)
 	checkError(w, err)
