@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 )
@@ -22,11 +23,18 @@ func PostUnsubscribeAll(w http.ResponseWriter, r *http.Request) {
 	}
 	notificationsStr := string(notificationsArr)
 
+	ctx := context.Background()
+	tx, err := db.BeginTx(ctx, nil)
+	if !checkError(w, err) {
+		return
+	}
+
 	stmt := `
 		DELETE FROM quick_signup
 		WHERE email = ?`
-	_, err = db.Exec(stmt, email.Email)
+	_, err = tx.ExecContext(ctx, stmt, email.Email)
 	if !checkError(w, err) {
+		tx.Rollback()
 		return
 	}
 
@@ -34,7 +42,13 @@ func PostUnsubscribeAll(w http.ResponseWriter, r *http.Request) {
 		UPDATE member
 		SET notification_preference = ?
 		WHERE email = ?`
-	_, err = db.Exec(stmt, notificationsStr, email.Email)
+	_, err = tx.ExecContext(ctx, stmt, notificationsStr, email.Email)
+	if !checkError(w, err) {
+		tx.Rollback()
+		return
+	}
+
+	err = tx.Commit()
 	if !checkError(w, err) {
 		return
 	}
