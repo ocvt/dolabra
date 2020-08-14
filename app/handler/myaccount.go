@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"os"
@@ -53,6 +54,12 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
 	}
 	notificationsStr := string(notificationsArr)
 
+	ctx := context.Background()
+	tx, err := db.BeginTx(ctx, nil)
+	if !checkError(w, err) {
+		return
+	}
+
 	stmt := `
 		UPDATE member
 		SET
@@ -69,8 +76,9 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
 			paid_expire_datetime = 0,
 			notification_preference = ?
 		WHERE id = ?`
-	_, err = db.Exec(stmt, notificationsStr, memberId)
+	_, err = tx.ExecContext(ctx, stmt, notificationsStr, memberId)
 	if !checkError(w, err) {
+		tx.Rollback()
 		return
 	}
 
@@ -81,8 +89,9 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
 			number = '',
 			relationship = ''
 		WHERE member_id = ?`
-	_, err = db.Exec(stmt, memberId)
+	_, err = tx.ExecContext(ctx, stmt, memberId)
 	if !checkError(w, err) {
+		tx.Rollback()
 		return
 	}
 
@@ -93,8 +102,9 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
 			idp = '',
 			idp_sub = ''
 		WHERE member_id = ?`
-	_, err = db.Exec(stmt, memberId)
+	_, err = tx.ExecContext(ctx, stmt, memberId)
 	if !checkError(w, err) {
+		tx.Rollback()
 		return
 	}
 
@@ -115,7 +125,13 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
 			pet = false,
 			attended = false
 		WHERE member_id = ?`
-	_, err = db.Exec(stmt, memberId)
+	_, err = tx.ExecContext(ctx, stmt, memberId)
+	if !checkError(w, err) {
+		tx.Rollback()
+		return
+	}
+
+	err = tx.Commit()
 	if !checkError(w, err) {
 		return
 	}
@@ -385,6 +401,12 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 	}
 	notificationsStr := string(notificationsArr)
 
+	ctx := context.Background()
+	tx, err := db.BeginTx(ctx, nil)
+	if !checkError(w, err) {
+		return
+	}
+
 	stmt := `
 		INSERT INTO member (
 			email,
@@ -400,7 +422,8 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 			paid_expire_datetime,
 			notification_preference)
 		VALUES (?, ?, ?, datetime('now'), ?, ?, ?, 1, ?, ?, datetime('now'), ?)`
-	result, err := db.Exec(
+	result, err := tx.ExecContext(
+		ctx,
 		stmt,
 		member.Email,
 		member.FirstName,
@@ -412,12 +435,14 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 		member.MedicalCondDesc,
 		notificationsStr)
 	if !checkError(w, err) {
+		tx.Rollback()
 		return
 	}
 
 	// Get new member id
 	memberId, err := result.LastInsertId()
 	if !checkError(w, err) {
+		tx.Rollback()
 		return
 	}
 
@@ -429,10 +454,12 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 			number,
 			relationship)
 		VALUES (?, '', '', '')`
-	_, err = db.Exec(
+	_, err = tx.ExecContext(
+		ctx,
 		stmt,
 		memberId)
 	if !checkError(w, err) {
+		tx.Rollback()
 		return
 	}
 
@@ -441,8 +468,9 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 		UPDATE auth
 			SET member_id = ?
 		WHERE sub = ?`
-	_, err = db.Exec(stmt, memberId, sub)
+	_, err = tx.ExecContext(ctx, stmt, memberId, sub)
 	if !checkError(w, err) {
+		tx.Rollback()
 		return
 	}
 
@@ -450,8 +478,9 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 	stmt = `
 		DELETE FROM quick_signup
 		WHERE email = ?`
-	_, err = db.Exec(stmt, member.Email)
+	_, err = tx.ExecContext(ctx, stmt, member.Email)
 	if !checkError(w, err) {
+		tx.Rollback()
 		return
 	}
 
@@ -469,10 +498,16 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 				position,
 				security)
 			VALUES (?, datetime('now'), datetime('now', '+1000 years'), 'Super Admin', 100)`
-		_, err = db.Exec(stmt, memberId)
+		_, err = tx.ExecContext(ctx, stmt, memberId)
 		if !checkError(w, err) {
+			tx.Rollback()
 			return
 		}
+	}
+
+	err = tx.Commit()
+	if !checkError(w, err) {
+		return
 	}
 
 	respondJSON(w, http.StatusCreated, member)
