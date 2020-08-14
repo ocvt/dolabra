@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -148,6 +149,12 @@ func PostPaymentRedeem(w http.ResponseWriter, r *http.Request) {
 			completed = true
 		}
 
+		ctx := context.Background()
+		tx, err := db.BeginTx(ctx, nil)
+		if !checkError(w, err) {
+			return
+		}
+
 		// Transfer to be proper payment associated with member
 		stmt = `
 			INSERT INTO payment (
@@ -162,7 +169,9 @@ func PostPaymentRedeem(w http.ResponseWriter, r *http.Request) {
 				payment_id,
 				completed)
 			VALUES (?, ?, ?, ?, ?, ?, ?, 'MANUAL', ?, ?)`
-		_, err = db.Exec(stmt,
+		_, err = tx.ExecContext(
+			ctx,
+			stmt,
 			storeCode.CreateDatetime,
 			storeCode.GeneratedById,
 			storeCode.Note,
@@ -173,6 +182,7 @@ func PostPaymentRedeem(w http.ResponseWriter, r *http.Request) {
 			storeCode.Code,
 			completed)
 		if !checkError(w, err) {
+			tx.Rollback()
 			return
 		}
 
@@ -181,7 +191,13 @@ func PostPaymentRedeem(w http.ResponseWriter, r *http.Request) {
 			UPDATE store_code
 			SET redeemed = true
 			WHERE id = ?`
-		_, err = db.Exec(stmt, storeCode.Id)
+		_, err = tx.ExecContext(ctx, stmt, storeCode.Id)
+		if !checkError(w, err) {
+			tx.Rollback()
+			return
+		}
+
+		err = tx.Commit()
 		if !checkError(w, err) {
 			return
 		}
