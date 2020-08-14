@@ -13,6 +13,7 @@ import (
 	"github.com/rs/cors"
 
 	"github.com/ocvt/dolabra/app/handler"
+	"github.com/ocvt/dolabra/utils"
 )
 
 var r *chi.Mux
@@ -35,8 +36,7 @@ func setRouters() {
 	r.Use(cors.New(cors.Options{
 		AllowCredentials: true,
 		AllowedMethods:   []string{"DELETE", "GET", "PATCH", "POST"},
-		AllowedOrigins:   []string{"http://cabinet.seaturtle.pw:4000"},
-		Debug:            true,
+		AllowedOrigins:   []string{utils.GetConfig().FrontendUrl},
 	}).Handler)
 	//r.Use(c.Handler)
 	//r.Use(cors.Default().Handler)
