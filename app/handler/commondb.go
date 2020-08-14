@@ -167,19 +167,6 @@ func dbGetItemCount(w http.ResponseWriter, storeItemId string,
 	return memberId, storeItemCount, true
 }
 
-func dbGetMemberEmail(w http.ResponseWriter, memberId int) (string, bool) {
-	stmt := `
-		SELECT email
-		FROM member
-		WHERE id = ?`
-	var email string
-	err := db.QueryRow(stmt, memberId).Scan(&email)
-	if !checkError(w, err) {
-		return "", false
-	}
-	return email, true
-}
-
 func dbGetMemberId(w http.ResponseWriter, sub string) (int, bool) {
 	if !dbEnsureMemberExists(w, sub) {
 		return 0, false

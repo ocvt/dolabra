@@ -235,11 +235,7 @@ func dbGetTripSignupGroup(w http.ResponseWriter, tripId int, groupId string, sig
 	}
 
 	err = rows.Err()
-	if !checkError(w, err) {
-		return false
-	}
-
-	return true
+	return checkError(w, err)
 }
 
 func dbGetTripSignupStatus(w http.ResponseWriter, tripId int, memberId int) (string, bool) {
@@ -300,7 +296,8 @@ func dbSetSignupStatus(w http.ResponseWriter, tripId int, memberId int, status s
 		return stageEmailSignupAttend(w, tripId, tripName, memberId)
 	}
 	if status == "BOOT" || status == "CANCEL" {
-		// Do nothing; should never happen
+		respondError(w, http.StatusInternalServerError, "BOOT or CANCEL should not be able to be passed to this function.")
+		return false
 	}
 	if status == "FORCE" {
 		return stageEmailSignupForce(w, tripId, tripName, memberId)
@@ -554,16 +551,6 @@ func dbIsTripCreator(w http.ResponseWriter, tripId int, memberId int) (bool, boo
 			WHERE id = ? AND member_id = ?)`
 	var exists bool
 	err := db.QueryRow(stmt, tripId, memberId).Scan(&exists)
-	return exists, checkError(w, err)
-}
-func dbIsTripInFuture(w http.ResponseWriter, tripId int) (bool, bool) {
-	stmt := `
-		SELECT EXISTS (
-			SELECT 1
-			FROM trip
-			WHERE id = ? AND datetime('now') < datetime(start_datetime))`
-	var exists bool
-	err := db.QueryRow(stmt, tripId).Scan(&exists)
 	return exists, checkError(w, err)
 }
 

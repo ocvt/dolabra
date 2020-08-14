@@ -51,7 +51,7 @@ func ProcessClientAuth(next http.Handler) http.Handler {
 			// Parse JWT
 			token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-					return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+					return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 				}
 				return key, nil
 			})
@@ -123,7 +123,7 @@ func ValidateInput(next http.Handler) http.Handler {
 		}
 
 		// JSON, check each value
-		for k, _ := range input {
+		for k := range input {
 			if v, ok := input[k].(string); ok {
 				var newValue string
 				if specialPath {

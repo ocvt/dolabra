@@ -93,4 +93,4 @@ production.
 
 ## TODO
 
-* Use a better static checker (that catches unchecked errors for example)
+* ???

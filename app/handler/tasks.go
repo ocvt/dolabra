@@ -242,6 +242,9 @@ func DoTasks() {
 	sesSession, err := session.NewSession(&aws.Config{
 		Region: aws.String("us-east-1"),
 	})
+	if err != nil {
+		log.Printf("ERROR: " + err.Error())
+	}
 	sesService := ses.New(sesSession)
 
 	var next *list.Element
