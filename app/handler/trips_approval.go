@@ -2,7 +2,6 @@ package handler
 
 import (
 	"container/list"
-	"context"
 	"fmt"
 	"net/http"
 
@@ -112,12 +111,6 @@ func PatchTripApproval(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := context.Background()
-	tx, err := db.BeginTx(ctx, nil)
-	if !checkError(w, err) {
-		return
-	}
-
 	if canceled {
 		stmt = `
 			INSERT INTO trip_approval_guid (
@@ -126,9 +119,8 @@ func PatchTripApproval(w http.ResponseWriter, r *http.Request) {
 				trip_id,
 				status)
 			VALUES ('0', '0', ?, 'cancel')`
-		_, err = tx.ExecContext(ctx, stmt, tripId)
+		_, err = db.Exec(stmt, tripId)
 		if !checkError(w, err) {
-			tx.Rollback()
 			return
 		}
 	}
@@ -140,9 +132,8 @@ func PatchTripApproval(w http.ResponseWriter, r *http.Request) {
 			FROM trip_approval_guid
 			WHERE trip_id = ? AND status != '')`
 	var approvalExists bool
-	err = tx.QueryRowContext(ctx, stmt, tripId).Scan(&approvalExists)
+	err = db.QueryRow(stmt, tripId).Scan(&approvalExists)
 	if !checkError(w, err) {
-		tx.Rollback()
 		return
 	}
 
@@ -160,16 +151,14 @@ func PatchTripApproval(w http.ResponseWriter, r *http.Request) {
 			FROM trip_approval_guid
 			WHERE trip_id = ? AND status != ''`
 		var memberId int
-		err = tx.QueryRowContext(ctx, stmt, tripId).Scan(&memberId, &approval.Status)
+		err = db.QueryRow(stmt, tripId).Scan(&memberId, &approval.Status)
 		if !checkError(w, err) {
-			tx.Rollback()
 			return
 		}
 
 		// Set response
 		memberName, ok := dbGetMemberName(w, memberId)
 		if !ok {
-			tx.Rollback()
 			return
 		}
 		approval.Reason = fmt.Sprintf("Trip already has status %s by %s",
@@ -178,7 +167,6 @@ func PatchTripApproval(w http.ResponseWriter, r *http.Request) {
 		// Set response
 		if action == "approve" {
 			if !stageEmailNewTrip(w, tripId) {
-				tx.Rollback()
 				return
 			}
 			approval.Reason = "Successfully approved trip"
@@ -193,16 +181,10 @@ func PatchTripApproval(w http.ResponseWriter, r *http.Request) {
 			UPDATE trip_approval_guid
 			SET status = ?
 			WHERE code = ?`
-		_, err := tx.ExecContext(ctx, stmt, action, guidCode)
+		_, err := db.Exec(stmt, action, guidCode)
 		if !checkError(w, err) {
-			tx.Rollback()
 			return
 		}
-	}
-
-	err = tx.Commit()
-	if !checkError(w, err) {
-		return
 	}
 
 	respondJSON(w, http.StatusOK, approval)
