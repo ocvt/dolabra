@@ -93,20 +93,6 @@ production.
 
 ## TODO
 
-* Validate input data
-  * account
-    * name
-    * email
-    * any text (incl datetime) field
-  * trip
-    * name
-    * date + in future
-    * description
-    * any text (incl datetime) field
-  * trip signup
-    * notes
-    * boot reason
-    * any text (incl datetime) field
 * Use db transactions
 * Add NotFound & MethodNotAllowed handlers
 * Clean up CORS + turn of debug logging

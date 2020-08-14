@@ -8,6 +8,7 @@ require (
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/houqp/sqlvet v1.1.0 // indirect
 	github.com/mattn/go-sqlite3 v1.11.0
+	github.com/microcosm-cc/bluemonday v1.0.4
 	github.com/rs/cors v1.7.0
 	github.com/stripe/stripe-go v70.15.0+incompatible
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
