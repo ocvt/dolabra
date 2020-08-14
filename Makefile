@@ -19,11 +19,12 @@ format:
 	gofmt -w .
 
 static-check: deps
-	go vet
 	sqlvet .
+	staticcheck ./app ./app/handler ./utils
 
 deps:
 	go get github.com/houqp/sqlvet
+	go get honnef.co/go/tools/cmd/staticcheck
 
 clean:
 	rm -f dolabra

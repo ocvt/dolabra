@@ -14,4 +14,5 @@ require (
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	google.golang.org/api v0.29.0
 	gopkg.in/mail.v2 v2.3.1
+	honnef.co/go/tools v0.0.1-2020.1.5 // indirect
 )
