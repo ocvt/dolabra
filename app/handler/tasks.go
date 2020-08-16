@@ -134,6 +134,7 @@ func DoTasks() {
 		fromName, fromEmail := dbGetMemberNameEmail(0)
 		replyToName, replyToEmail := dbGetMemberNameEmail(email.ReplyToId)
 
+		doQuickSignup := false
 		var rows *sql.Rows
 		var err error
 		if email.NotificationTypeId == "TRIP_APPROVAL" {
@@ -172,7 +173,8 @@ func DoTasks() {
 				WHERE trip_id = ? AND attending_code = 'WAIT'`
 			rows, err = db.Query(stmt, email.TripId)
 		} else {
-			// Send to all ACTIVE members with notification preference set
+			doQuickSignup = true
+			// Send to all ACTIVE members with notification preference set and quicksignups
 			stmt := `
 				SELECT id
 				FROM member
@@ -185,6 +187,7 @@ func DoTasks() {
 		}
 		defer rows.Close()
 
+		// Members
 		memberIds := list.New()
 		for rows.Next() {
 			var memberId int
@@ -222,6 +225,40 @@ func DoTasks() {
 		err = rows.Err()
 		if err != nil {
 			log.Fatal(err)
+		}
+
+		// Quick Signups
+		if doQuickSignup {
+			stmt = `
+				SELECT DISTINCT email
+				FROM quick_signup`
+			rows, err = db.Query(stmt)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer rows.Close()
+
+			for rows.Next() {
+				var emailAddress string
+				err = rows.Scan(&emailAddress)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				// Put into queue
+				rawEmail := rawEmailStruct{
+					FromName:     fromName,
+					FromEmail:    fromEmail,
+					ReplyToEmail: replyToEmail,
+					ReplyToName:  replyToName,
+					ToName:       "",
+					ToEmail:      emailAddress,
+					Subject:      email.Subject,
+					Body:         email.Body,
+				}
+
+				emailQueue.PushBack(rawEmail)
+			}
 		}
 
 		// Mark email as sent
