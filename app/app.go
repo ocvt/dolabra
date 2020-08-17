@@ -107,6 +107,7 @@ func setRouters() {
 		r.Post("/{tripId}/signup", handler.PostTripsSignup)
 		r.Route("/{tripId}/admin", func(r chi.Router) {
 			r.Get("/", handler.GetTripsAdmin)
+			r.Get("/attendance", handler.GetTripsAdminAttendanceInfo)
 			r.Patch("/cancel", handler.PatchTripsCancel)
 			r.Patch("/publish", handler.PatchTripsPublish)
 			r.Patch("/signup/{memberId}/absent", handler.PatchTripsSignupAbsent)

@@ -5,6 +5,14 @@ import (
 	"net/http"
 )
 
+type attendanceInfoStruct struct {
+	Attend int `json:"attend"`
+	Boot   int `json:"boot"`
+	Cancel int `json:"cancel"`
+	Force  int `json:"force"`
+	Wait   int `json:"wait"`
+}
+
 /*
 	Detailed trip info. Used for:
 	- POST /trips
@@ -348,6 +356,68 @@ func GetTripsAdmin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJSON(w, http.StatusOK, map[string][]*tripSignupStruct{"tripSignups": tripSignups})
+}
+
+func GetTripsAdminAttendanceInfo(w http.ResponseWriter, r *http.Request) {
+	sub, ok := checkLogin(w, r)
+	if !ok {
+		return
+	}
+
+	// Get member id and trip id
+	memberId, ok := dbGetActiveMemberId(w, sub)
+	if !ok {
+		return
+	}
+	tripId, ok := getURLIntParam(w, r, "tripId")
+	if !ok {
+		return
+	}
+
+	// Permissions
+	if !dbEnsureOfficerOrTripLeader(w, tripId, memberId) {
+		return
+	}
+
+	stmt := `
+		SELECT attending_code
+		FROM trip_signup
+		WHERE trip_id = ?
+		ORDER BY datetime(signup_datetime) ASC`
+	rows, err := db.Query(stmt, tripId)
+	if !checkError(w, err) {
+		return
+	}
+	defer rows.Close()
+
+	attendanceInfo := attendanceInfoStruct{}
+	for rows.Next() {
+		var attendingCode string
+		err = rows.Scan(&attendingCode)
+		if !checkError(w, err) {
+			return
+		}
+
+		if attendingCode == "ATTEND" {
+			attendanceInfo.Attend += 1
+		} else if attendingCode == "BOOT" {
+			attendanceInfo.Boot += 1
+		} else if attendingCode == "CANCEL" {
+			attendanceInfo.Cancel += 1
+		} else if attendingCode == "FORCE" {
+			attendanceInfo.Force += 1
+		} else {
+			// WAIT
+			attendanceInfo.Wait += 1
+		}
+	}
+
+	err = rows.Err()
+	if !checkError(w, err) {
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]attendanceInfoStruct{"attendanceInfo": attendanceInfo})
 }
 
 func GetTripsArchive(w http.ResponseWriter, r *http.Request) {
