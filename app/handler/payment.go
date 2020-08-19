@@ -3,22 +3,39 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/go-chi/chi"
 	"github.com/ocvt/dolabra/utils"
-	"github.com/stripe/stripe-go"
-	"github.com/stripe/stripe-go/paymentintent"
-	"github.com/stripe/stripe-go/webhook"
+	"github.com/stripe/stripe-go/v71"
+	"github.com/stripe/stripe-go/v71/checkout/session"
+	"github.com/stripe/stripe-go/v71/webhook"
 )
+
+/* Stripe payment flow:
+ * 1. Member navigates to {FRONTEND}/dues
+ * 2. Member selects item to buy
+ * 3. When member clicks 'Submit', javascript does GET {API}/payment/{paymentOption}
+ * 4. API returns Stripe Checkout session id
+ * 5. javascript parses response and redirects to Stripe checkout
+ * 6  Stripe sends a webhook to {API}/payment/success on the 'checkout.session.completed' event
+ * 7. API scknowledges event
+ * 8. Stripe redirects to {FRONTEND}/dues/success or {FRONTEND}/dues/cancel
+ */
+
+/* Manual payment flow:
+ * 1. Officer manually creates an order with webtools
+ * 2. Member is given secret code
+ * 3. Member redeems code
+ */
 
 /* Only for redeeming codes */
 type simpleStoreCodeStruct struct {
 	Code string `json:"code"`
 }
 
+// Start new Stripe payment
 func GetPayment(w http.ResponseWriter, r *http.Request) {
 	sub, ok := checkLogin(w, r)
 	if !ok {
@@ -61,15 +78,30 @@ func GetPayment(w http.ResponseWriter, r *http.Request) {
 	}
 	amount *= 100
 
-	// Create paymentIntent and send to client
-	stripe.LogLevel = 1
+	// Create checkout session
+	// https://stripe.com/docs/payments/checkout/accept-a-payment#create-checkout-session
 	stripe.Key = utils.GetConfig().StripeSecretKey
-	params := &stripe.PaymentIntentParams{
-		Amount:      stripe.Int64(int64(amount)),
-		Currency:    stripe.String(string(stripe.CurrencyUSD)),
-		Description: &description,
+	params := &stripe.CheckoutSessionParams{
+		PaymentMethodTypes: stripe.StringSlice([]string{
+			"card",
+		}),
+		Mode: stripe.String("payment"),
+		LineItems: []*stripe.CheckoutSessionLineItemParams{
+			&stripe.CheckoutSessionLineItemParams{
+				PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
+					Currency: stripe.String("usd"),
+					ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
+						Name: stripe.String(description),
+					},
+					UnitAmount: stripe.Int64(int64(amount)),
+				},
+				Quantity: stripe.Int64(1),
+			},
+		},
+		SuccessURL: stripe.String(utils.GetConfig().FrontendUrl + "/dues/success"),
+		CancelURL:  stripe.String(utils.GetConfig().FrontendUrl + "/dues/cancel"),
 	}
-	myPI, err := paymentintent.New(params)
+	session, err := session.New(params)
 	if !checkError(w, err) {
 		return
 	}
@@ -77,20 +109,20 @@ func GetPayment(w http.ResponseWriter, r *http.Request) {
 	// Insert payment
 	if membershipYears > 0 && !dbInsertPayment(
 		w, 0, "", memberId, "MEMBERSHIP", membershipYears, amount, "STRIPE",
-		myPI.ID, false) {
+		session.ID, false) {
 		return
 	}
 	if shirt && !dbInsertPayment(
-		w, 0, "", memberId, "SHIRT", 1, amount, "STRIPE", myPI.ID, false) {
+		w, 0, "", memberId, "SHIRT", 1, amount, "STRIPE", session.ID, false) {
 		return
 	}
 
-	response := map[string]string{
-		"stripeClientSecret": myPI.ClientSecret,
-	}
-	respondJSON(w, http.StatusOK, response)
+	// Pass checkout session id
+	// https://stripe.com/docs/payments/checkout/accept-a-payment#pass-the-session-id
+	respondJSON(w, http.StatusOK, map[string]string{"sessionId": session.ID})
 }
 
+// Redeem manually generated store codes
 func PostPaymentRedeem(w http.ResponseWriter, r *http.Request) {
 	sub, ok := checkLogin(w, r)
 	if !ok {
@@ -211,10 +243,9 @@ func PostPaymentRedeem(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusNoContent, nil)
 }
 
-// Mostly copied from
-// https://stripe.com/docs/payments/payment-intents/verifying-status#webhooks
-func PostPaymentSucceeded(w http.ResponseWriter, r *http.Request) {
-	// Get POST body
+// Complete Stripe payment
+// https://stripe.com/docs/payments/checkout/accept-a-payment#payment-success
+func PostPaymentSuccess(w http.ResponseWriter, r *http.Request) {
 	const MaxBodyBytes = int64(65536)
 	r.Body = http.MaxBytesReader(w, r.Body, MaxBodyBytes)
 	body, err := ioutil.ReadAll(r.Body)
@@ -230,40 +261,32 @@ func PostPaymentSucceeded(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// We only accept payment_intent.succeeded event types so no need to check
-	var myPI stripe.PaymentIntent
-	err = json.Unmarshal(event.Data.Raw, &myPI)
+	// We only accept checkout.session.completedevent types so no need to check
+	var session stripe.CheckoutSession
+	err = json.Unmarshal(event.Data.Raw, &session)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	fmt.Printf("myPI ID: %s", myPI.ID)
-
-	// TODO Detect payment failure?
 
 	// Add years and complete payment
-	memberId, membershipYears, ok := dbGetItemCount(w, "MEMBERSHIP", "STRIPE", myPI.ID)
+	memberId, membershipYears, ok := dbGetItemCount(w, "MEMBERSHIP", "STRIPE", session.ID)
 	if !ok {
 		return
 	}
 
-	stmt := `
-		UPDATE member
-		SET paid_expire_datetime = datetime(paid_expire_datetime, '+? years')
-		WHERE member.id = ?`
-	_, err = db.Exec(stmt, membershipYears, memberId)
-	if !checkError(w, err) {
+	if !dbExtendMembership(w, memberId, membershipYears) {
 		return
 	}
 
-	stmt = `
+	stmt := `
 		UPDATE payment
 		SET completed = true
 		WHERE
 			store_item_id = 'MEMBERSHIP'
 			AND method = 'STRIPE'
 			AND payment_id = ?`
-	_, err = db.Exec(stmt, myPI.ID)
+	_, err = db.Exec(stmt, session.ID)
 	if !checkError(w, err) {
 		return
 	}

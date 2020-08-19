@@ -68,7 +68,7 @@ func setRouters() {
 		r.Use(handler.ProcessClientAuth)
 		r.Get("/{paymentOption}", handler.GetPayment)
 		r.Post("/redeem", handler.PostPaymentRedeem)
-		r.Post("/paymentSucceeded", handler.PostPaymentSucceeded)
+		r.Post("/success", handler.PostPaymentSuccess)
 	})
 
 	r.Route("/auth", func(r chi.Router) {

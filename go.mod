@@ -11,6 +11,7 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.4
 	github.com/rs/cors v1.7.0
 	github.com/stripe/stripe-go v70.15.0+incompatible
+	github.com/stripe/stripe-go/v71 v71.46.0
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	google.golang.org/api v0.29.0
 	gopkg.in/mail.v2 v2.3.1
