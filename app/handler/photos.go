@@ -87,7 +87,7 @@ func getTripFolderId(w http.ResponseWriter, tripId string) (string, bool) {
 
 func uploadTripPhoto(w http.ResponseWriter, r *http.Request, tripId string, fileName string) bool {
 	// Get photo
-	file, _, err := r.FormFile("file")
+	file, _, err := r.FormFile("photoFile")
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return false

@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 )
@@ -98,6 +99,11 @@ func ProcessClientAuth(next http.Handler) http.Handler {
 
 func ValidateInput(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		verySpecialPath := strings.HasSuffix(r.URL.Path, "/admin/mainphoto")
+		if verySpecialPath {
+			next.ServeHTTP(w, r)
+		}
+
 		// Allow some HTML for certain paths
 		specialPath := r.URL.Path == "/webtools/emails" || r.URL.Path == "/webtools/news"
 
