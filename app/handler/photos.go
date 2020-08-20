@@ -5,18 +5,19 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/ocvt/dolabra/utils"
 	"google.golang.org/api/drive/v3"
 )
 
 /* HELPERS */
-func getPhotos(w http.ResponseWriter, tripFolderId string) ([]map[string]string, bool) {
+func getPhotos(w http.ResponseWriter, tripFolderId string) ([]map[string]string, []map[string]string, bool) {
 	// Use Google Application Default Credentials
 	service, err := drive.NewService(context.Background())
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
-		return nil, false
+		return nil, nil, false
 	}
 
 	// Get trip photos
@@ -24,18 +25,27 @@ func getPhotos(w http.ResponseWriter, tripFolderId string) ([]map[string]string,
 	fileListStruct, err := service.Files.List().Q(query).Fields("files(id, name)").Do()
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
-		return nil, false
+		return nil, nil, false
 	}
 
+	// If exists, mainphoto is list containing single image
+	var mainphoto []map[string]string
 	var imageList []map[string]string
 	for i := 0; i < len(fileListStruct.Files); i++ {
-		imageList = append(imageList, map[string]string{
-			"name": fileListStruct.Files[i].Name,
-			"url":  fmt.Sprintf("https://drive.google.com/uc?id=%s&export=view", fileListStruct.Files[i].Id),
-		})
+		if strings.HasPrefix(fileListStruct.Files[i].Name, "mainphoto") {
+			mainphoto = append(imageList, map[string]string{
+				"name": fileListStruct.Files[i].Name,
+				"url":  fmt.Sprintf("https://drive.google.com/uc?id=%s&export=view", fileListStruct.Files[i].Id),
+			})
+		} else {
+			imageList = append(imageList, map[string]string{
+				"name": fileListStruct.Files[i].Name,
+				"url":  fmt.Sprintf("https://drive.google.com/uc?id=%s&export=view", fileListStruct.Files[i].Id),
+			})
+		}
 	}
 
-	return imageList, true
+	return mainphoto, imageList, true
 }
 
 func getTripFolderId(w http.ResponseWriter, tripId string) (string, bool) {
@@ -141,7 +151,7 @@ func GetAllTripsPhotos(w http.ResponseWriter, r *http.Request) {
 
 	var imageList []map[string]string
 	for i := 0; i < len(fileListStruct.Files); i++ {
-		imageListTmp, ok := getPhotos(w, fileListStruct.Files[i].Id)
+		_, imageListTmp, ok := getPhotos(w, fileListStruct.Files[i].Id)
 		if !ok {
 			return
 		}
@@ -156,7 +166,7 @@ func GetAllTripsPhotos(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetHomePhotos(w http.ResponseWriter, r *http.Request) {
-	imageList, ok := getPhotos(w, utils.GetConfig().GDriveHomePhotosFolderId)
+	_, imageList, ok := getPhotos(w, utils.GetConfig().GDriveHomePhotosFolderId)
 	if !ok {
 		return
 	}
@@ -180,16 +190,19 @@ func GetTripsPhotos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	imageList, ok := getPhotos(w, tripFolderId)
+	mainphoto, imageList, ok := getPhotos(w, tripFolderId)
 	if !ok {
 		return
 	}
 
+	if mainphoto == nil {
+		mainphoto = []map[string]string{}
+	}
 	if imageList == nil {
 		imageList = []map[string]string{}
 	}
 
-	respondJSON(w, http.StatusOK, map[string][]map[string]string{"images": imageList})
+	respondJSON(w, http.StatusOK, map[string][]map[string]string{"mainphoto": mainphoto, "images": imageList})
 }
 
 func PatchTripsMainphoto(w http.ResponseWriter, r *http.Request) {
