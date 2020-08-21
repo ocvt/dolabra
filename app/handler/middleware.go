@@ -99,52 +99,60 @@ func ProcessClientAuth(next http.Handler) http.Handler {
 
 func ValidateInput(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		verySpecialPath := strings.HasSuffix(r.URL.Path, "/admin/mainphoto")
-		if verySpecialPath {
-			next.ServeHTTP(w, r)
-		}
+		ok := func(w http.ResponseWriter, r *http.Request) bool {
+			verySpecialPath := strings.HasSuffix(r.URL.Path, "/photos") || strings.HasSuffix(r.URL.Path, "/admin/mainphoto")
+			if verySpecialPath {
+				return true
+			}
 
-		// Allow some HTML for certain paths
-		specialPath := r.URL.Path == "/webtools/emails" || r.URL.Path == "/webtools/news"
+			// Allow some HTML for certain paths
+			specialPath := r.URL.Path == "/webtools/emails" || r.URL.Path == "/webtools/news"
 
-		bodyBytes, err := ioutil.ReadAll(r.Body)
-		if err == io.EOF {
-			next.ServeHTTP(w, r)
-		} else if !checkError(w, err) {
+			bodyBytes, err := ioutil.ReadAll(r.Body)
+			if err == io.EOF {
+				return true
+			} else if !checkError(w, err) {
+				return false
+			}
+			body := string(bodyBytes)
+
+			// Attempt to convert to JSON
+			var input map[string]interface{}
+			err = json.Unmarshal(bodyBytes, &input)
+
+			// Not JSON
+			if err != nil {
+				newBody := strictHTML.Sanitize(body)
+				if string(newBody) != body {
+					respondError(w, http.StatusBadRequest, "HTTP body is not valid: "+string(body))
+					return false
+				}
+			}
+
+			// JSON, check each value
+			for k := range input {
+				if v, ok := input[k].(string); ok {
+					var newValue string
+					if specialPath {
+						newValue = ugcHTML.Sanitize(v)
+					} else {
+						newValue = strictHTML.Sanitize(v)
+					}
+					if newValue != v {
+						respondError(w, http.StatusBadRequest, "HTTP body is not valid: "+v)
+						return false
+					}
+				}
+			}
+
+			r.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+			return true
+		}(w, r)
+
+		if !ok {
 			return
 		}
-		body := string(bodyBytes)
 
-		// Attempt to convert to JSON
-		var input map[string]interface{}
-		err = json.Unmarshal(bodyBytes, &input)
-
-		// Not JSON
-		if err != nil {
-			newBody := strictHTML.Sanitize(body)
-			if string(newBody) != body {
-				respondError(w, http.StatusBadRequest, "HTTP body is not valid: "+string(body))
-				return
-			}
-		}
-
-		// JSON, check each value
-		for k := range input {
-			if v, ok := input[k].(string); ok {
-				var newValue string
-				if specialPath {
-					newValue = ugcHTML.Sanitize(v)
-				} else {
-					newValue = strictHTML.Sanitize(v)
-				}
-				if newValue != v {
-					respondError(w, http.StatusBadRequest, "HTTP body is not valid: "+v)
-					return
-				}
-			}
-		}
-
-		r.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
 		next.ServeHTTP(w, r)
 	})
 }

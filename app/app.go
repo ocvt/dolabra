@@ -51,6 +51,7 @@ func setRouters() {
 	r.Get("/homephotos", handler.GetHomePhotos)
 	r.Get("/news", handler.GetNews)
 	r.Get("/news/archive", handler.GetNewsArchive)
+	r.Get("/photo/{photoId}", handler.GetPhoto)
 	r.Patch("/tripapproval/{guidCode}/{action}", handler.PatchTripApproval)
 	r.Post("/quicksignup", handler.PostQuicksignup)
 	r.Post("/unsubscribe/all", handler.PostUnsubscribeAll)

@@ -3,10 +3,13 @@ package handler
 import (
 	"context"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
+	"github.com/go-chi/chi"
 	"github.com/ocvt/dolabra/utils"
 	"google.golang.org/api/drive/v3"
 )
@@ -35,12 +38,12 @@ func getPhotos(w http.ResponseWriter, tripFolderId string) ([]map[string]string,
 		if strings.HasPrefix(fileListStruct.Files[i].Name, "mainphoto") {
 			mainphoto = append(imageList, map[string]string{
 				"name": fileListStruct.Files[i].Name,
-				"url":  fmt.Sprintf("https://drive.google.com/uc?id=%s&export=view", fileListStruct.Files[i].Id),
+				"url":  utils.GetConfig().ApiUrl + "/photo/" + fileListStruct.Files[i].Id,
 			})
 		} else {
 			imageList = append(imageList, map[string]string{
 				"name": fileListStruct.Files[i].Name,
-				"url":  fmt.Sprintf("https://drive.google.com/uc?id=%s&export=view", fileListStruct.Files[i].Id),
+				"url":  utils.GetConfig().ApiUrl + "/photo/" + fileListStruct.Files[i].Id,
 			})
 		}
 	}
@@ -176,6 +179,28 @@ func GetHomePhotos(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJSON(w, http.StatusOK, map[string][]map[string]string{"images": imageList})
+}
+
+func GetPhoto(w http.ResponseWriter, r *http.Request) {
+	log.Printf("URI: " + r.URL.RequestURI() + "\n")
+	photoId := chi.URLParam(r, "photoId")
+
+	// Use Google Application Default Credentials
+	service, err := drive.NewService(context.Background())
+	if !checkError(w, err) {
+		return
+	}
+
+	// Download & return photo
+	photoRes, err := service.Files.Get(photoId).Download()
+	if !checkError(w, err) {
+		return
+	}
+
+	_, err = io.Copy(w, photoRes.Body)
+	if err != nil {
+		log.Fatal("Failed writing response: ", err.Error())
+	}
 }
 
 func GetTripsPhotos(w http.ResponseWriter, r *http.Request) {
