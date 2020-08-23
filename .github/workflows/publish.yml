@@ -5,16 +5,15 @@ on:
 
 jobs:
   push_to_registry:
-    name: Push docker image to GH packages
+    name: Push docker image to Docker Hub
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
-      - name: Push to GH packages
+      - name: Push to Docker Hub
         uses: docker/build-push-action@v1
         with:
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-          registry: docker.pkg.github.com
-          repository: ocvt/dolabra/dolabra
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          repository: ocvt/dolabra
           tag_with_ref: true
