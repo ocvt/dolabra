@@ -76,7 +76,7 @@ func setRouters() {
 		r.Get("/google", handler.GoogleLogin)
 		r.Get("/google/callback", handler.GoogleCallback)
 		r.Get("/logout", handler.GetLogout)
-		if len(os.Getenv("DEV")) > 0 {
+		if os.Getenv("DEV") == "1" {
 			r.Get("/dev/{sub}", handler.DevLogin)
 		}
 	})

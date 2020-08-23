@@ -486,7 +486,7 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 
 	// Mark as officer if first person
 	initOfficerId := int64(2)
-	if len(os.Getenv("DEV")) > 0 {
+	if os.Getenv("DEV") == "1" {
 		initOfficerId = 4
 	}
 	if memberId == initOfficerId {
