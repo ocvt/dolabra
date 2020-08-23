@@ -1,0 +1,20 @@
+name: Publish Docker image on new release
+on:
+  release:
+    types: [published]
+
+jobs:
+  push_to_registry:
+    name: Push docker image to GH packages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+      - name: Push to GH packages
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: docker.pkg.github.com
+          repository: ocvt/dolabra/dolabra
+          tag_with_ref: true

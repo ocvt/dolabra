@@ -70,14 +70,14 @@ defined:
 
 ## Running it
 
-`launch.sh` starts a local instance for dev or testing purposes. Take a look at
-[our docker repo](https://github.com/ocvt/docker) for examples running in
-production.
+`docker-compose up`  starts a local instance for dev or testing purposes. Take
+a look at [our docker repo](https://github.com/ocvt/docker) for examples
+running in production.
 
 
 ## Testing
 
-* `make static-check` runs `go vet` and `sqlvet`
+* `make static-check` runs `staticcheck` and `sqlvet`
 * `make format` runs `go fmt`
 * `make integration-test` builds everything and runs python integration tests
   from the `tests` folder
