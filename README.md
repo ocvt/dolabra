@@ -93,4 +93,4 @@ production.
 
 ## TODO
 
-* use checkError for photos more
+* ???

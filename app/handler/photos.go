@@ -18,16 +18,14 @@ import (
 func getPhotos(w http.ResponseWriter, tripFolderId string) ([]map[string]string, []map[string]string, bool) {
 	// Use Google Application Default Credentials
 	service, err := drive.NewService(context.Background())
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+	if !checkError(w, err) {
 		return nil, nil, false
 	}
 
 	// Get trip photos
 	query := fmt.Sprintf("'%s' in parents", tripFolderId)
 	fileListStruct, err := service.Files.List().Q(query).Fields("files(id, name)").Do()
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+	if !checkError(w, err) {
 		return nil, nil, false
 	}
 
@@ -54,8 +52,7 @@ func getPhotos(w http.ResponseWriter, tripFolderId string) ([]map[string]string,
 func getTripFolderId(w http.ResponseWriter, tripId string) (string, bool) {
 	// Use Google Application Default Credentials
 	service, err := drive.NewService(context.Background())
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+	if !checkError(w, err) {
 		return "", false
 	}
 
@@ -65,8 +62,7 @@ func getTripFolderId(w http.ResponseWriter, tripId string) (string, bool) {
 		"name = '%s'",
 		utils.GetConfig().GDriveTripsFolderId, tripId)
 	folderListStruct, err := service.Files.List().Q(query).Fields("files/id").Do()
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+	if !checkError(w, err) {
 		return "", false
 	}
 	if len(folderListStruct.Files) > 0 {
@@ -80,8 +76,7 @@ func getTripFolderId(w http.ResponseWriter, tripId string) (string, bool) {
 		MimeType: "application/vnd.google-apps.folder",
 	}
 	newFolder, err = service.Files.Create(newFolder).Do()
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+	if !checkError(w, err) {
 		return "", false
 	}
 
@@ -91,16 +86,14 @@ func getTripFolderId(w http.ResponseWriter, tripId string) (string, bool) {
 func uploadTripPhoto(w http.ResponseWriter, r *http.Request, tripId string, fileName string) bool {
 	// Get photo
 	file, _, err := r.FormFile("photoFile")
-	if err != nil {
-		respondError(w, http.StatusBadRequest, err.Error())
+	if !checkError(w, err) {
 		return false
 	}
 	defer file.Close()
 
 	// Use Google Application Default Credentials env var
 	service, err := drive.NewService(context.Background())
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+	if !checkError(w, err) {
 		return false
 	}
 
@@ -112,8 +105,7 @@ func uploadTripPhoto(w http.ResponseWriter, r *http.Request, tripId string, file
 	if fileName == "" {
 		// Get random file name
 		idListStruct, err := service.Files.GenerateIds().Count(1).Do()
-		if err != nil {
-			respondError(w, http.StatusInternalServerError, err.Error())
+		if !checkError(w, err) {
 			return false
 		}
 		fileName = idListStruct.Ids[0]
@@ -126,20 +118,14 @@ func uploadTripPhoto(w http.ResponseWriter, r *http.Request, tripId string, file
 	}
 
 	_, err = service.Files.Create(driveFile).Media(file).Do()
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
-		return false
-	}
-
-	return true
+	return checkError(w, err)
 }
 
 /* MAIN FUNCTIONS */
 func GetAllTripsPhotos(w http.ResponseWriter, r *http.Request) {
 	// Use Google Application Default Credentials
 	service, err := drive.NewService(context.Background())
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+	if !checkError(w, err) {
 		return
 	}
 
@@ -147,8 +133,7 @@ func GetAllTripsPhotos(w http.ResponseWriter, r *http.Request) {
 	query := fmt.Sprintf("mimeType = 'application/vnd.google-apps.folder' and "+
 		"'%s' in parents", utils.GetConfig().GDriveTripsFolderId)
 	fileListStruct, err := service.Files.List().Q(query).Fields("files(id, name)").Do()
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, err.Error())
+	if !checkError(w, err) {
 		return
 	}
 
@@ -199,7 +184,7 @@ func GetPhoto(w http.ResponseWriter, r *http.Request) {
 
 	_, err = io.Copy(w, photoRes.Body)
 	if err != nil {
-		log.Fatal("Failed writing response: ", err.Error())
+		log.Printf("Failed writing response: " + err.Error())
 	}
 }
 
