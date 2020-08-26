@@ -284,7 +284,7 @@ func PostPaymentSuccess(w http.ResponseWriter, r *http.Request) {
 		SET completed = true
 		WHERE
 			store_item_id = 'MEMBERSHIP'
-			AND method = 'STRIPE'
+			AND payment_method = 'STRIPE'
 			AND payment_id = ?`
 	_, err = db.Exec(stmt, session.ID)
 	if !checkError(w, err) {
