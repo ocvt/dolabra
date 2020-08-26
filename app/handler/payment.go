@@ -261,7 +261,7 @@ func PostPaymentSuccess(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// We only accept checkout.session.completedevent types so no need to check
+	// We only accept checkout.session.completed event types so no need to check
 	var session stripe.CheckoutSession
 	err = json.Unmarshal(event.Data.Raw, &session)
 	if err != nil {
