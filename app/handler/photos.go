@@ -167,7 +167,6 @@ func GetHomePhotos(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetPhoto(w http.ResponseWriter, r *http.Request) {
-	log.Printf("URI: " + r.URL.RequestURI() + "\n")
 	photoId := chi.URLParam(r, "photoId")
 
 	// Use Google Application Default Credentials
