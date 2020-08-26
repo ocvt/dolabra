@@ -42,6 +42,12 @@ The `DEV` variable enables the `/auth/dev/{sub}` path allowing scripts to
 easily send in a custom `sub` (auth identifier) without going through a
 proper idp.
 
+### Stripe
+
+Register a Stripe webhook on the `checkout.session.completed` event to send
+events to https://API_URL/noauth/payment/success. The relevant env vars should
+be self-explanatory.
+
 ### Environmental variables
 
 Create `dolabra.env` (copy `dolabra.env.sample`) with the following variables
@@ -65,7 +71,7 @@ defined:
 * `STRIPE_PUBLIC_KEY`: Public key for Stripe payments
 * `STRIPE_SECRET_KEY`: Secret key for Stripe payments
 * `STRIPE_WEBHOOK_SECRET`: Webhook secret for Stripe payments
-* `DEV`: Optionally set to `1` to enable developer moded
+* `DEV`: Optionally set to `1` to enable developer mode
 
 
 ## Running it
