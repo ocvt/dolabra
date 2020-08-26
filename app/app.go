@@ -63,13 +63,13 @@ func setRouters() {
 		r.Get("/trips/photos", handler.GetAllTripsPhotos)
 		r.Get("/trips/{tripId}/photos", handler.GetTripsPhotos)
 		r.Get("/trips/types", handler.GetTripsTypes)
+		r.Post("/payment/success", handler.PostPaymentSuccess)
 	})
 
 	r.Route("/payment", func(r chi.Router) {
 		r.Use(handler.ProcessClientAuth)
 		r.Get("/{paymentOption}", handler.GetPayment)
 		r.Post("/redeem", handler.PostPaymentRedeem)
-		r.Post("/success", handler.PostPaymentSuccess)
 	})
 
 	r.Route("/auth", func(r chi.Router) {
