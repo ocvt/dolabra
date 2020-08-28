@@ -11,6 +11,8 @@ up () {
     --volume $PWD/data:/go/src/app/data:rw \
     --publish 3000:3000 \
     ocvt/dolabra:latest
+
+  docker system prune -a
 }
 
 down () {
