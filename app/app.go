@@ -31,7 +31,6 @@ func Initialize() {
 
 // Set routes
 func setRouters() {
-	// TODO configure CORS
 	// Set middleware
 	r.Use(cors.New(cors.Options{
 		AllowCredentials: true,
