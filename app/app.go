@@ -47,6 +47,7 @@ func setRouters() {
 	// Validate body for all requests
 	r.Use(handler.ValidateInput)
 
+	r.Get("/healthcheck", handler.GetHealthCheck)
 	r.Get("/homephotos", handler.GetHomePhotos)
 	r.Get("/news", handler.GetNews)
 	r.Get("/news/archive", handler.GetNewsArchive)

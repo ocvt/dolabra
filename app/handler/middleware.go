@@ -156,3 +156,8 @@ func ValidateInput(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+/* Misc */
+func GetHealthCheck(w http.ResponseWriter, r *http.Request) {
+	respondJSON(w, http.StatusNoContent, nil)
+}
