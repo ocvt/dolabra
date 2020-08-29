@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS emergency_contact (
 
 -- Table: equipment
 CREATE TABLE IF NOT EXISTS equipment (
-      id TEXT PRIMARY KEY UNIQUE NOT NULL,
+      id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
       create_datetime DATETIME NOT NULL,
       description TEXT UNIQUE NOT NULL,
       count INTEGER NOT NULL

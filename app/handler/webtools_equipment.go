@@ -11,7 +11,7 @@ type equipmentStruct struct {
 	/* Required for adding equipment */
 	// Id & Count only for PATCH, included in URL param
 	Id          int    `json:"id,omitempty"`
-	Count       int    `json:"count,omitempty"`
+	Count       int    `json:"count"`
 	Description string `json:"description"`
 }
 
@@ -32,11 +32,12 @@ func GetWebtoolsEquipment(w http.ResponseWriter, r *http.Request) {
 		err = rows.Scan(
 			&equipment[i].Id,
 			&equipment[i].CreateDatetime,
-			&equipment[i].Count,
-			&equipment[i].Description)
+			&equipment[i].Description,
+			&equipment[i].Count)
 		if !checkError(w, err) {
 			return
 		}
+		i++
 	}
 
 	err = rows.Err()
@@ -62,7 +63,7 @@ func PatchWebtoolsEquipment(w http.ResponseWriter, r *http.Request) {
 		UPDATE equipment
 		SET count = ?
 		WHERE id = ?`
-	_, err := db.Exec(stmt, equipmentId, count)
+	_, err := db.Exec(stmt, count, equipmentId)
 	if !checkError(w, err) {
 		return
 	}
@@ -81,18 +82,13 @@ func PostWebtoolsEquipment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	count := equipment.Count
-	if count == 0 {
-		count = 1
-	}
-
 	stmt := `
 		INSERT INTO equipment (
 			create_datetime,
 			description,
 			count)
 		VALUES (datetime('now'), ?, ?)`
-	_, err = db.Exec(stmt, equipment.Description, count)
+	_, err = db.Exec(stmt, equipment.Description, equipment.Count)
 	if !checkError(w, err) {
 		return
 	}
