@@ -15,6 +15,8 @@ Photos are stored on gdrive and require 2 accounts minimum
 * One system account created with GCP to manage the photos
   * You will be given the option to download system account credentials during
     creation, which are used below
+  * The system account email must be given Editor permission to the main
+    photos folder.
 
 The photos structure is fairly flexible. We only neeed to know the folder
 containing trips and the folder containing homephotos
@@ -83,10 +85,11 @@ running in production.
 
 ## Testing
 
-* `make static-check` runs `staticcheck` and `sqlvet`
-* `make format` runs `go fmt`
-* `make integration-test` builds everything and runs python integration tests
+* `./launch static-check` runs `staticcheck` and `sqlvet`
+* `./launch format` runs `go fmt`
+* `./launch integration-test` builds everything and runs python integration tests
   from the `tests` folder
+* See `./launch`
 
 
 ### Notes
