@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"container/list"
 	"context"
 	"encoding/json"
 	"io/ioutil"
@@ -155,6 +156,7 @@ func PostPaymentRedeem(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
+	codes := list.New()
 	for rows.Next() {
 		var storeCode storeCodeStruct
 		err = rows.Scan(
@@ -171,11 +173,25 @@ func PostPaymentRedeem(w http.ResponseWriter, r *http.Request) {
 		if !checkError(w, err) {
 			return
 		}
+		codes.PushBack(storeCode)
+	}
+	err = rows.Err()
+	if !checkError(w, err) {
+		return
+	}
+
+	if codes.Len() == 0 {
+		respondError(w, http.StatusForbidden, "Code does not exist or has already been redeemed.")
+		return
+	}
+
+	for c := codes.Front(); c != nil; c = c.Next() {
+		code := c.Value.(storeCodeStruct)
 
 		// Impossible to be MEMBERSHIP AND not redeemed AND not completed
-		completed := storeCode.Completed
-		if storeCode.StoreItemId == "MEMBERSHIP" {
-			if !dbExtendMembership(w, memberId, storeCode.StoreItemCount) {
+		completed := code.Completed
+		if code.StoreItemId == "MEMBERSHIP" {
+			if !dbExtendMembership(w, memberId, code.StoreItemCount) {
 				return
 			}
 			completed = true
@@ -204,14 +220,14 @@ func PostPaymentRedeem(w http.ResponseWriter, r *http.Request) {
 		_, err = tx.ExecContext(
 			ctx,
 			stmt,
-			storeCode.CreateDatetime,
-			storeCode.GeneratedById,
-			storeCode.Note,
+			code.CreateDatetime,
+			code.GeneratedById,
+			code.Note,
 			memberId,
-			storeCode.StoreItemId,
-			storeCode.StoreItemCount,
-			storeCode.Amount,
-			storeCode.Code,
+			code.StoreItemId,
+			code.StoreItemCount,
+			code.Amount,
+			code.Code,
 			completed)
 		if !checkError(w, err) {
 			tx.Rollback()
@@ -223,7 +239,7 @@ func PostPaymentRedeem(w http.ResponseWriter, r *http.Request) {
 			UPDATE store_code
 			SET redeemed = true
 			WHERE id = ?`
-		_, err = tx.ExecContext(ctx, stmt, storeCode.Id)
+		_, err = tx.ExecContext(ctx, stmt, code.Id)
 		if !checkError(w, err) {
 			tx.Rollback()
 			return
@@ -233,11 +249,6 @@ func PostPaymentRedeem(w http.ResponseWriter, r *http.Request) {
 		if !checkError(w, err) {
 			return
 		}
-	}
-
-	err = rows.Err()
-	if !checkError(w, err) {
-		return
 	}
 
 	respondJSON(w, http.StatusNoContent, nil)
