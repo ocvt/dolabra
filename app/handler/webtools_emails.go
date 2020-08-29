@@ -2,7 +2,10 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+
+	"github.com/ocvt/dolabra/utils"
 )
 
 func GetWebtoolsEmails(w http.ResponseWriter, r *http.Request) {
@@ -59,6 +62,19 @@ func PostWebtoolsEmails(w http.ResponseWriter, r *http.Request) {
 	email.NotificationTypeId = "GENERAL_ANNOUNCEMENTS"
 	email.TripId = 0
 	email.ReplyToId = 0
+
+	label := utils.GetConfig().EmailLabel
+	url := utils.GetConfig().FrontendUrl
+	email.Body += fmt.Sprintf(
+		"<br>"+
+			"<br>"+
+			"<br>"+
+			"<hr>"+
+			"This message has been sent via the %s Websystem.<br>"+
+			"You can modify your notification and account settings "+
+			"<a href=\"%s/myocvt\">here</a>.<br> You can also click "+
+			"<a href=\"%s/unsubscribe\">here</a> to unsubscribe.<br>"+
+			"<hr>", label, url, url)
 
 	if !stageEmail(w, email) {
 		return
