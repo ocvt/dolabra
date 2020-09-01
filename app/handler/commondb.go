@@ -58,6 +58,19 @@ func generateCode(n int) string {
 }
 
 /* General db helpers */
+func dbGetSecurity(w http.ResponseWriter, memberId int) (int, bool) {
+	stmt := `
+		SELECT security
+		FROM officer
+		WHERE member_id = ?`
+	var security int
+	err := db.QueryRow(stmt, memberId).Scan(&security)
+	if !checkError(w, err) {
+		return 0, false
+	}
+	return security, true
+}
+
 func dbCreateNullTrip() error {
 	stmt := `
 		INSERT OR REPLACE INTO trip

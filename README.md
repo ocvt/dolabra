@@ -102,4 +102,4 @@ running in production.
 
 ## TODO
 
-* ???
+* organize commondb.go funcs

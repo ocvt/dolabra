@@ -36,9 +36,21 @@ func DeleteWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Permissions
-	// TODO Don't allow officers with less privileges to modify officers with more privileges
 	if memberId == officerId {
 		respondError(w, http.StatusForbidden, "Cannot remove yourself from officers.")
+		return
+	}
+
+	memberSecurity, ok := dbGetSecurity(w, memberId)
+	if !ok {
+		return
+	}
+	officerSecurity, ok := dbGetSecurity(w, officerId)
+	if !ok {
+		return
+	}
+	if memberSecurity <= officerSecurity {
+		respondError(w, http.StatusForbidden, "Cannot modify officer with equal or higher security.")
 		return
 	}
 
@@ -54,9 +66,6 @@ func DeleteWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
-	// Permissions
-	// TODO Don't allow officers with less privileges to modify officers with more privileges
-
 	stmt := `
 		SELECT
 			member.id,
@@ -103,6 +112,17 @@ func GetWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
 }
 
 func PostWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
+	sub, ok := checkLogin(w, r)
+	if !ok {
+		return
+	}
+
+	// Get memberId
+	memberId, ok := dbGetActiveMemberId(w, sub)
+	if !ok {
+		return
+	}
+
 	// Get request body
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
@@ -113,10 +133,17 @@ func PostWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Permissions
-	// TODO Don't allow officers with less privileges to modify officers with more privileges
 	if !dbEnsureMemberIdExists(w, officer.MemberId) ||
 		!dbEnsureNotOfficer(w, officer.MemberId) {
+		return
+	}
+
+	memberSecurity, ok := dbGetSecurity(w, memberId)
+	if !ok {
+		return
+	}
+	if memberSecurity < officer.Security {
+		respondError(w, http.StatusForbidden, "Cannot add officer with higher security.")
 		return
 	}
 

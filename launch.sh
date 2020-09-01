@@ -18,7 +18,7 @@ up () {
 down () {
   stop
   docker rm -f dolabra || true
-  rm -f data/dolabra-sqlite.sqlite3
+#  rm -f data/dolabra-sqlite.sqlite3
 }
 
 stop () {
