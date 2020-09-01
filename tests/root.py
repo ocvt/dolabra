@@ -40,7 +40,6 @@ def TestPayment(s):
     assert r.status_code == 200
     assert 'stripeClientSecret' in json.loads(r.text)
 
-# TODO Test with real code
 def TestPaymentRedeem(s):
   url = HOST + '/payment/redeem'
   r = req.post(url)
@@ -51,7 +50,7 @@ def TestPaymentRedeem(s):
   assert r.status_code == 400
   
   r = s.post(url, json=payment_redeem_json)
-  assert r.status_code == 204
+  assert r.status_code == 403
 
 def TestQuicksignup():
   url = HOST + '/quicksignup'

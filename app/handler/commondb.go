@@ -58,17 +58,23 @@ func generateCode(n int) string {
 }
 
 /* General db helpers */
-func dbGetSecurity(w http.ResponseWriter, memberId int) (int, bool) {
+func dbCheckMemberWantsNotification(memberId int, notificationType string) bool {
 	stmt := `
-		SELECT security
-		FROM officer
-		WHERE member_id = ?`
-	var security int
-	err := db.QueryRow(stmt, memberId).Scan(&security)
-	if !checkError(w, err) {
-		return 0, false
+		SELECT notification_preference
+		FROM member
+		WHERE id = ?`
+	var notificationsStr string
+	err := db.QueryRow(stmt, memberId).Scan(&notificationsStr)
+	if err != nil {
+		log.Fatal(err)
 	}
-	return security, true
+
+	notifications := map[string]bool{}
+	err = json.Unmarshal([]byte(notificationsStr), &notifications)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return notifications[notificationType]
 }
 
 func dbCreateNullTrip() error {
@@ -258,6 +264,19 @@ func dbGetMemberSubWithIdp(w http.ResponseWriter, idp string, idpSub string) (st
 	return sub, true
 }
 
+func dbGetSecurity(w http.ResponseWriter, memberId int) (int, bool) {
+	stmt := `
+		SELECT security
+		FROM officer
+		WHERE member_id = ?`
+	var security int
+	err := db.QueryRow(stmt, memberId).Scan(&security)
+	if !checkError(w, err) {
+		return 0, false
+	}
+	return security, true
+}
+
 func dbInsertPayment(w http.ResponseWriter, enteredById int, note string,
 	memberId int, storeItemId string, storeItemCount int, amount int,
 	paymentMethod string, paymentId string, completed bool) bool {
@@ -285,25 +304,6 @@ func dbInsertPayment(w http.ResponseWriter, enteredById int, note string,
 		paymentId,
 		completed)
 	return checkError(w, err)
-}
-
-func dbCheckMemberWantsNotification(memberId int, notificationType string) bool {
-	stmt := `
-		SELECT notification_preference
-		FROM member
-		WHERE id = ?`
-	var notificationsStr string
-	err := db.QueryRow(stmt, memberId).Scan(&notificationsStr)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	notifications := map[string]bool{}
-	err = json.Unmarshal([]byte(notificationsStr), &notifications)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return notifications[notificationType]
 }
 
 /* "Ensure" helpers */
