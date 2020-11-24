@@ -92,7 +92,8 @@ func GetNewsArchive(w http.ResponseWriter, r *http.Request) {
 			news.content
 		FROM member
 		INNER JOIN news ON news.member_id = member.id
-		WHERE news.publish = true`
+		WHERE news.publish = true
+		ORDER BY datetime(news.create_datetime) DESC`
 	rows, err := db.Query(stmt)
 	if !checkError(w, err) {
 		return
