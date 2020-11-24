@@ -36,6 +36,7 @@ func processIdp(w http.ResponseWriter, idp string, idpSub string) bool {
 			return false
 		}
 	} else {
+		// Generate new, unused ocvt sub
 		exists := true
 		for exists {
 			sub = generateCode(SUB_LENGTH)
@@ -45,13 +46,15 @@ func processIdp(w http.ResponseWriter, idp string, idpSub string) bool {
 			}
 		}
 
+		// Insert new sub using system member id as placeholder
+		//   member_id is changed once user completes registration
 		stmt := `
 			INSERT INTO auth(
 				member_id,
 				sub,
 				idp,
 				idp_sub)
-			VALUES (0, ?, ?, ?)`
+			VALUES (8000000, ?, ?, ?)`
 		_, err := db.Exec(stmt, sub, idp, idpSub)
 		if !checkError(w, err) {
 			return false

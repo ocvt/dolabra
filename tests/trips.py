@@ -46,7 +46,7 @@ def TestTripsTypes():
 
 # TODO officer and trip leader
 def TestTripsAdmin(s):
-  url = ENDPOINT + '/1/admin'
+  url = ENDPOINT + '/3001/admin'
   
   r = req.get(url)
   assert r.status_code == 401
@@ -96,11 +96,11 @@ def TestTripsCreate(s):
   trip_json['notificationTypeId'] = tmp
   r = s.post(url, json=trip_json)
   assert r.status_code == 201
-  assert json.loads(r.text)['tripId'] == 1
+  assert json.loads(r.text)['tripId'] == 3001
 
   r = s.post(url, json=trip_json)
   assert r.status_code == 201
-  assert json.loads(r.text)['tripId'] == 2
+  assert json.loads(r.text)['tripId'] == 3002
 
   url = NOAUTH
   r = req.get(url)
@@ -115,8 +115,8 @@ def TestTripsCreate(s):
 
 def TestTripsPublish(s1, s2):
   url_noauth = NOAUTH
-  url_publish = ENDPOINT + '/1/admin/publish'
-  url_signup = ENDPOINT + '/1/signup'
+  url_publish = ENDPOINT + '/3001/admin/publish'
+  url_signup = ENDPOINT + '/3001/signup'
   
   r = req.get(url_noauth)
   assert r.status_code == 200
@@ -145,7 +145,7 @@ def TestTripsPublish(s1, s2):
   assert len(json.loads(r.text)['trips']) == 1
   
 def TestTripsPostSignup(s1, s2, s3):
-  url = ENDPOINT + '/1/signup'
+  url = ENDPOINT + '/3001/signup'
 
   r = req.post(url)
   assert r.status_code == 401
@@ -169,7 +169,7 @@ def TestTripsPostSignup(s1, s2, s3):
   assert r.status_code == 204
 
 def TestTripsGetSignup(s1, s2):
-  url = ENDPOINT + '/1/mysignup'
+  url = ENDPOINT + '/3001/mysignup'
 
   r = req.get(url)
   assert r.status_code == 401
@@ -184,8 +184,8 @@ def TestTripsGetSignup(s1, s2):
   assert json.loads(r.text)['id'] == 2
 
 def TestTripsSignupCancel(s1, s2):
-  url = ENDPOINT + '/1/mysignup/cancel'
-  url_signup = ENDPOINT + '/1/signup'
+  url = ENDPOINT + '/3001/mysignup/cancel'
+  url_signup = ENDPOINT + '/3001/signup'
 
   r = req.patch(url)
   assert r.status_code == 401
@@ -209,7 +209,7 @@ def TestTripsSignupCancel(s1, s2):
 # TODO Test admin
 
 def TestTripsCancel(s1, s2, s3):
-  url = ENDPOINT + '/1/admin/cancel'
+  url = ENDPOINT + '/3001/admin/cancel'
   url_noauth = NOAUTH
 
   r = req.patch(url)

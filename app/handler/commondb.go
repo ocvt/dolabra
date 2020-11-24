@@ -80,7 +80,7 @@ func dbCheckMemberWantsNotification(memberId int, notificationType string) bool 
 func dbCreateNullTrip() error {
 	stmt := `
 		INSERT OR REPLACE INTO trip
-		VALUES (0, '1990-01-01 00:00:00', true, false, 0, false, false, false,
+		VALUES (3000, '1990-01-01 00:00:00', true, false, false, 8000000, false, false,
 						false, false, '', 0, 'Null Trip for Announcement logs',
 						'TRIP_OTHER', '1990-01-02 00:00:00', '1990-01-03 00:00:00', '', '',
 						'', '', '', 0, 0, '', '', false, '')`
@@ -98,8 +98,8 @@ func dbCreateSystemMember() error {
 
 	stmt := `
 		INSERT OR REPLACE INTO member
-		VALUES (0, ?, ?, ?, datetime('now'), '555-555-5555', 'Prefer not to say',
-						1990, false, 'Robot', 'Require frequent oiling',
+		VALUES (8000000, ?, ?, ?, datetime('now'), '555-555-5555', 'Prefer not to say',
+						1990, false, true, 'Require frequent oiling',
 						datetime('now', '+100 years'), ?)`
 	_, err = db.Exec(
 		stmt,
@@ -438,7 +438,7 @@ func dbIsMemberWithMemberId(w http.ResponseWriter, memberId int) (bool, bool) {
 		SELECT EXISTS (
 			SELECT 1
 			FROM auth
-			WHERE member_id > 0 AND member_id = ?)`
+			WHERE member_id > 8000000 AND member_id = ?)`
 	var exists bool
 	err := db.QueryRow(stmt, memberId).Scan(&exists)
 	return exists, checkError(w, err)
@@ -449,7 +449,7 @@ func dbIsMemberWithSub(w http.ResponseWriter, sub string) (bool, bool) {
 		SELECT EXISTS (
 			SELECT 1
 			FROM auth
-			WHERE member_id > 0 AND sub = ?)`
+			WHERE member_id > 8000000 AND sub = ?)`
 	var exists bool
 	err := db.QueryRow(stmt, sub).Scan(&exists)
 	return exists, checkError(w, err)

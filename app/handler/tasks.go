@@ -131,7 +131,7 @@ func DoTasks() {
 	for e := emails.Front(); e != nil; e = e.Next() {
 		email := e.Value.(emailStruct)
 		// Always send from System Account
-		fromName, fromEmail := dbGetMemberNameEmail(0)
+		fromName, fromEmail := dbGetMemberNameEmail(8000000)
 		replyToName, replyToEmail := dbGetMemberNameEmail(email.ReplyToId)
 
 		doQuickSignup := false

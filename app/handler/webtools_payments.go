@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-const MANUAL_PAYMENT_ID_LENGTH = 64
+const MANUAL_PAYMENT_ID_LENGTH = 8
 
 type paymentStruct struct {
 	/* Managed Server side */

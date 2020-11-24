@@ -60,8 +60,8 @@ func PostWebtoolsEmails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	email.NotificationTypeId = "GENERAL_ANNOUNCEMENTS"
-	email.TripId = 0
-	email.ReplyToId = 0
+	email.TripId = 3000
+	email.ReplyToId = 8000000
 
 	label := utils.GetConfig().EmailLabel
 	url := utils.GetConfig().FrontendUrl

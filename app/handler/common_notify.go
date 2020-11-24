@@ -114,8 +114,8 @@ func stageEmailNewTrip(w http.ResponseWriter, tripId int) bool {
 	date := prettyPrintDate(trip.StartDatetime)
 	email := emailStruct{
 		NotificationTypeId: trip.NotificationTypeId,
-		ReplyToId:          0,
-		ToId:               0,
+		ReplyToId:          8000000,
+		ToId:               8000000,
 		TripId:             tripId,
 	}
 	email.Subject = fmt.Sprintf("New Trip: %s", trip.Name)
@@ -154,7 +154,7 @@ func stageEmailTripApproval(w http.ResponseWriter, tripId int, memberId int, gui
 
 	email := emailStruct{
 		NotificationTypeId: "TRIP_APPROVAL",
-		ReplyToId:          0,
+		ReplyToId:          8000000,
 		ToId:               memberId,
 		TripId:             tripId,
 	}
@@ -193,7 +193,7 @@ func stageEmailTripReminder(tripId int) error {
 	email := emailStruct{
 		NotificationTypeId: "TRIP_MESSAGE_NOTIFY",
 		ReplyToId:          trip.MemberId,
-		ToId:               0,
+		ToId:               8000000,
 		TripId:             tripId,
 	}
 	email.Subject = "Trip Reminder: " + trip.Name
@@ -224,8 +224,8 @@ func stageEmailTripCancel(w http.ResponseWriter, tripId int) bool {
 
 	email := emailStruct{
 		NotificationTypeId: "TRIP_MESSAGE_NOTIFY",
-		ReplyToId:          0,
-		ToId:               0,
+		ReplyToId:          8000000,
+		ToId:               8000000,
 		TripId:             tripId,
 	}
 	email.Subject = "Trip CANCELED: " + trip.Name
@@ -244,7 +244,7 @@ func stageEmailTripCancel(w http.ResponseWriter, tripId int) bool {
 func stageEmailSignupAttend(w http.ResponseWriter, tripId int, tripName string, memberId int) bool {
 	email := emailStruct{
 		NotificationTypeId: "TRIP_ALERT_ATTEND",
-		ReplyToId:          0,
+		ReplyToId:          8000000,
 		ToId:               memberId,
 		TripId:             tripId,
 		Subject:            "You have been added to the trip " + tripName,
@@ -258,7 +258,7 @@ func stageEmailSignupAttend(w http.ResponseWriter, tripId int, tripName string, 
 func stageEmailSignupBoot(w http.ResponseWriter, tripId int, tripName string, bootReason string, memberId int) bool {
 	email := emailStruct{
 		NotificationTypeId: "TRIP_ALERT_BOOT",
-		ReplyToId:          0,
+		ReplyToId:          8000000,
 		ToId:               memberId,
 		TripId:             tripId,
 		Subject:            "You have been Booted from the trip " + tripName,
@@ -272,7 +272,7 @@ func stageEmailSignupBoot(w http.ResponseWriter, tripId int, tripName string, bo
 func stageEmailSignupCancel(w http.ResponseWriter, tripId int, tripName string, memberId int) bool {
 	email := emailStruct{
 		NotificationTypeId: "TRIP_ALERT_CANCEL",
-		ReplyToId:          0,
+		ReplyToId:          8000000,
 		ToId:               memberId,
 		TripId:             tripId,
 		Subject:            "You have canceled your signup for trip " + tripName + ".",
@@ -287,7 +287,7 @@ func stageEmailSignupCancel(w http.ResponseWriter, tripId int, tripName string, 
 func stageEmailSignupForce(w http.ResponseWriter, tripId int, tripName string, memberId int) bool {
 	email := emailStruct{
 		NotificationTypeId: "TRIP_ALERT_FORCE",
-		ReplyToId:          0,
+		ReplyToId:          8000000,
 		ToId:               memberId,
 		TripId:             tripId,
 		Subject:            "You have been Force Added to the trip " + tripName,
@@ -301,7 +301,7 @@ func stageEmailSignupForce(w http.ResponseWriter, tripId int, tripName string, m
 func stageEmailSignupWait(w http.ResponseWriter, tripId int, tripName string, memberId int) bool {
 	email := emailStruct{
 		NotificationTypeId: "TRIP_ALERT_WAIT",
-		ReplyToId:          0,
+		ReplyToId:          8000000,
 		ToId:               memberId,
 		TripId:             tripId,
 		Subject:            "You have been Force Added to the trip " + tripName,

@@ -109,12 +109,12 @@ func GetPayment(w http.ResponseWriter, r *http.Request) {
 
 	// Insert payment
 	if membershipYears > 0 && !dbInsertPayment(
-		w, 0, "", memberId, "MEMBERSHIP", membershipYears, amount, "STRIPE",
+		w, 8000000, "", memberId, "MEMBERSHIP", membershipYears, amount, "STRIPE",
 		session.ID, false) {
 		return
 	}
 	if shirt && !dbInsertPayment(
-		w, 0, "", memberId, "SHIRT", 1, amount, "STRIPE", session.ID, false) {
+		w, 8000000, "", memberId, "SHIRT", 1, amount, "STRIPE", session.ID, false) {
 		return
 	}
 
