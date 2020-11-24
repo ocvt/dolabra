@@ -233,3 +233,66 @@ CREATE TABLE IF NOT EXISTS trip_signup (
       FOREIGN KEY(trip_id) REFERENCES trip(id),
       FOREIGN KEY(attending_code) REFERENCES trip_attending_code(id)
 );
+
+-- oldsite stuff (temporary for migration)
+-- Table: oldsite_member
+CREATE TABLE IF NOT EXISTS oldsite_member (
+      id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
+      email TEXT NOT NULL,
+      first_name TEXT NOT NULL COLLATE NOCASE,
+      last_name TEXT NOT NULL COLLATE NOCASE,
+      create_datetime DATETIME NOT NULL,
+      cell_number TEXT NOT NULL,
+      gender TEXT NOT NULL,
+      birth_year INTEGER NOT NULL,
+      active BOOLEAN NOT NULL,
+      medical_cond BOOLEAN NOT NULL,
+      medical_cond_desc TEXT NOT NULL,
+      paid_expire_datetime DATETIME NOT NULL,
+      notification_preference TEXT NOT NULL
+);
+
+-- Table: oldsit_emergency_contact
+CREATE TABLE IF NOT EXISTS oldsite_emergency_contact (
+      id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
+      member_id INTEGER UNIQUE NOT NULL,
+      name TEXT NOT NULL COLLATE NOCASE,
+      number TEXT NOT NULL,
+      relationship TEXT NOT NULL,
+      FOREIGN KEY(member_id) REFERENCES oldsite_member(id)
+);
+
+-- Table: oldsite_payment
+CREATE TABLE IF NOT EXISTS oldsite_payment (
+      id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
+      create_datetime DATETIME NOT NULL,
+      entered_by_id INTEGER NOT NULL,
+      note TEXT NOT NULL,
+      member_id INTEGER NOT NULL,
+      store_item_id TEXT NOT NULL,
+      store_item_count INTEGER NOT NULL,
+      amount INTEGER NOT NULL,
+      payment_method TEXT NOT NULL,
+      payment_id TEXT NOT NULL,
+      completed BOOLEAN NOT NULL,
+      FOREIGN KEY(member_id) REFERENCES oldsite_member(id),
+      FOREIGN KEY(store_item_id) REFERENCES store_item(id)
+);
+
+-- Table: oldsite_manual_payment
+CREATE TABLE IF NOT EXISTS oldsite_manual_payments (
+      id INTEGER PRIMARY KEY UNIQUE NOT NULL,
+      email TEXT,
+      name TEXT,
+      create_date DATETIME,
+      membership_days INTEGER,
+      entered_by INTEGER,
+      notes TEXT,
+      completed BOOLEAN,
+      completed_date DATETIME,
+      member_completed BOOLEAN,
+      member_completed_date DATETIME,
+      member_id INTEGER,
+      shirt_completed BOOLEAN,
+      shirt_completed_date DATETIME
+);
