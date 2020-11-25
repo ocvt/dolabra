@@ -300,17 +300,17 @@ func DoTasks() {
 		} else {
 			emailQueue.Remove(e)
 			// Attempt to send error to system email, otherwise log error
-			name := utils.GetConfig().SmtpFromFirstNameDefault + " " + utils.GetConfig().SmtpFromFirstNameDefault
-			email := utils.GetConfig().SmtpFromEmailDefault
+			nameSystem := utils.GetConfig().SmtpFromFirstNameDefault + " " + utils.GetConfig().SmtpFromFirstNameDefault
+			emailSystem := utils.GetConfig().SmtpFromEmailDefault
 			rawEmail := rawEmailStruct{
-				FromName:     name,
-				FromEmail:    email,
-				ReplyToName:  name,
-				ReplyToEmail: email,
-				ToName:       name,
-				ToEmail:      email,
-				Subject:      "Error sending emails",
-				Body:         "Error occured sending emails: " + err.Error(),
+				FromName:     nameSystem,
+				FromEmail:    emailSystem,
+				ReplyToName:  nameSystem,
+				ReplyToEmail: emailSystem,
+				ToName:       nameSystem,
+				ToEmail:      emailSystem,
+				Subject:      "Error sending email [name: " + email.ToName + "] [email: " + email.ToEmail + "]",
+				Body:         "Error occured sending email: " + err.Error(),
 			}
 			_, err = sendEmail(sesService, rawEmail)
 			if err != nil {
