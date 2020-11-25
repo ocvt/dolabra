@@ -50,7 +50,7 @@ Register a Stripe webhook on the `checkout.session.completed` event to send
 events to https://API_URL/noauth/payment/success. The relevant env vars should
 be self-explanatory.
 
-### Environmental variables
+### Environmental Variables
 
 Create `dolabra.env` (copy `dolabra.env.sample`) with the following variables
 defined:

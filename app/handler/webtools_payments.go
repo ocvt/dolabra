@@ -222,7 +222,7 @@ func PostWebtoolsGenerateCode(w http.ResponseWriter, r *http.Request) {
 			amount,
 			code,
 			completed,
-			redeemedDatetime)
+			redeemed_datetime)
 		VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, ?, NULL)`
 	_, err = db.Exec(stmt,
 		memberId,
