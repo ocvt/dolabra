@@ -30,8 +30,8 @@ func getPhotos(w http.ResponseWriter, tripFolderId string) ([]map[string]string,
 	}
 
 	// If exists, mainphoto is list containing single image
-	var mainphoto []map[string]string
-	var imageList []map[string]string
+	mainphoto := []map[string]string{}
+	imageList := []map[string]string{}
 	for i := 0; i < len(fileListStruct.Files); i++ {
 		if strings.HasPrefix(fileListStruct.Files[i].Name, "mainphoto") {
 			mainphoto = append(imageList, map[string]string{
@@ -49,11 +49,11 @@ func getPhotos(w http.ResponseWriter, tripFolderId string) ([]map[string]string,
 	return mainphoto, imageList, true
 }
 
-func getTripFolderId(w http.ResponseWriter, tripId string) (string, bool) {
+func getTripFolderId(w http.ResponseWriter, tripId string) (string, bool, bool) {
 	// Use Google Application Default Credentials
 	service, err := drive.NewService(context.Background())
 	if !checkError(w, err) {
-		return "", false
+		return "", false, false
 	}
 
 	// Lookup trip folder
@@ -63,13 +63,22 @@ func getTripFolderId(w http.ResponseWriter, tripId string) (string, bool) {
 		utils.GetConfig().GDriveTripsFolderId, tripId)
 	folderListStruct, err := service.Files.List().Q(query).Fields("files/id").Do()
 	if !checkError(w, err) {
-		return "", false
+		return "", false, false
 	}
 	if len(folderListStruct.Files) > 0 {
-		return folderListStruct.Files[0].Id, true
+		return folderListStruct.Files[0].Id, true, true
 	}
 
-	// Create new trip folder if it doesn't exist
+	return "", false, true
+}
+
+func newTripFolderId(w http.ResponseWriter, tripId string) (string, bool) {
+	// Use Google Application Default Credentials
+	service, err := drive.NewService(context.Background())
+	if !checkError(w, err) {
+		return "", false
+	}
+
 	newFolder := &drive.File{
 		Name:     tripId,
 		Parents:  []string{utils.GetConfig().GDriveTripsFolderId},
@@ -97,9 +106,15 @@ func uploadTripPhoto(w http.ResponseWriter, r *http.Request, tripId string, file
 		return false
 	}
 
-	tripFolderId, ok := getTripFolderId(w, tripId)
+	tripFolderId, exists, ok := getTripFolderId(w, tripId)
 	if !ok {
 		return false
+	}
+	if !exists {
+		tripFolderId, ok = newTripFolderId(w, tripId)
+		if !ok {
+			return false
+		}
 	}
 
 	if fileName == "" {
@@ -194,21 +209,18 @@ func GetTripsPhotos(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Lookup trip folder
-	tripFolderId, ok := getTripFolderId(w, strconv.Itoa(tripId))
+	tripFolderId, exists, ok := getTripFolderId(w, strconv.Itoa(tripId))
 	if !ok {
 		return
 	}
 
-	mainphoto, imageList, ok := getPhotos(w, tripFolderId)
-	if !ok {
-		return
-	}
-
-	if mainphoto == nil {
-		mainphoto = []map[string]string{}
-	}
-	if imageList == nil {
-		imageList = []map[string]string{}
+	mainphoto := []map[string]string{}
+	imageList := []map[string]string{}
+	if exists {
+		mainphoto, imageList, ok = getPhotos(w, tripFolderId)
+		if !ok {
+			return
+		}
 	}
 
 	respondJSON(w, http.StatusOK, map[string][]map[string]string{"mainphoto": mainphoto, "images": imageList})
