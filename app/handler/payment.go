@@ -149,7 +149,7 @@ func PostPaymentRedeem(w http.ResponseWriter, r *http.Request) {
 	stmt := `
 		SELECT *
 		FROM store_code
-		WHERE redeemed_datetime = NULL AND code = ?`
+		WHERE redeemed_datetime is NULL AND code = ?`
 	rows, err := db.Query(stmt, simpleStoreCode.Code)
 	if !checkError(w, err) {
 		return

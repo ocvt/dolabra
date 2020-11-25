@@ -104,7 +104,7 @@ func DoTasks() {
 			subject,
 			body
 		FROM email
-		WHERE sent_datetime = NULL`
+		WHERE sent_datetime is NULL`
 	rows, err = db.Query(stmt)
 	if err != nil {
 		log.Fatal(err)

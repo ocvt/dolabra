@@ -87,7 +87,7 @@ func stageEmailPlain(email emailStruct) error {
 			reply_to_id,
 			subject,
 			body)
-		VALUES (datetime('now'), null, ?, ?, ?, ?, ?, ?)`
+		VALUES (datetime('now'), NULL, ?, ?, ?, ?, ?, ?)`
 	_, err := db.Exec(
 		stmt,
 		email.NotificationTypeId,
