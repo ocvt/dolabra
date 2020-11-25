@@ -134,6 +134,7 @@ func setRouters() {
 		r.Get("/equipment", handler.GetWebtoolsEquipment)
 		r.Get("/officers", handler.GetWebtoolsOfficers)
 		r.Get("/payments", handler.GetWebtoolsPayments)
+		r.Get("/quicksignups", handler.GetWebtoolsQuicksignups)
 		r.Patch("/equipment/{equipmentId}/{count}", handler.PatchWebtoolsEquipment)
 		r.Patch("/payments/{paymentRowId}/completed", handler.PatchWebtoolsPaymentsCompleted)
 		r.Post("/approvers", handler.PostWebtoolsApprovers)
@@ -143,6 +144,7 @@ func setRouters() {
 		r.Post("/payments/generateCode", handler.PostWebtoolsGenerateCode)
 		r.Post("/news", handler.PostWebtoolsNews)
 		r.Post("/officers", handler.PostWebtoolsOfficers)
+		r.Post("/quicksignups/{action}", handler.PostWebtoolsQuicksignups)
 		r.Route("/members", func(r chi.Router) {
 			r.Get("/", handler.GetWebtoolsMembers)
 			r.Get("/{memberId}/attendance", handler.GetWebtoolsMembersAttendance)
