@@ -100,7 +100,7 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
 		SET
 			sub = '',
 			idp = '',
-			idp_sub = ''
+			idp_hash = ''
 		WHERE member_id = ?`
 	_, err = tx.ExecContext(ctx, stmt, memberId)
 	if !checkError(w, err) {

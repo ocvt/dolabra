@@ -251,13 +251,13 @@ func dbGetMemberNotifications(w http.ResponseWriter, memberId int) (notification
 	return notifications, true
 }
 
-func dbGetMemberSubWithIdp(w http.ResponseWriter, idp string, idpSub string) (string, bool) {
+func dbGetMemberSubWithIdp(w http.ResponseWriter, idp string, idpHash string) (string, bool) {
 	stmt := `
 		SELECT sub
 		FROM auth
-		WHERE idp = ? AND idp_sub = ?`
+		WHERE idp = ? AND idp_hash = ?`
 	var sub string
-	err := db.QueryRow(stmt, idp, idpSub).Scan(&sub)
+	err := db.QueryRow(stmt, idp, idpHash).Scan(&sub)
 	if !checkError(w, err) {
 		return "", false
 	}
@@ -422,14 +422,14 @@ func dbIsApprover(w http.ResponseWriter, memberId int) (bool, bool) {
 	return exists, checkError(w, err)
 }
 
-func dbIsMemberWithIdp(w http.ResponseWriter, idp string, idpSub string) (bool, bool) {
+func dbIsMemberWithIdp(w http.ResponseWriter, idp string, idpHash string) (bool, bool) {
 	stmt := `
 		SELECT EXISTS (
 			SELECT 1
 			FROM auth
-			WHERE idp = ? AND idp_sub = ?)`
+			WHERE idp = ? AND idp_hash = ?)`
 	var exists bool
-	err := db.QueryRow(stmt, idp, idpSub).Scan(&exists)
+	err := db.QueryRow(stmt, idp, idpHash).Scan(&exists)
 	return exists, checkError(w, err)
 }
 

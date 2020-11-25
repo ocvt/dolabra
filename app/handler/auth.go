@@ -2,6 +2,8 @@ package handler
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -24,14 +26,18 @@ const SUB_LENGTH = 16
 
 /* HELPERS */
 func processIdp(w http.ResponseWriter, idp string, idpSub string) bool {
-	exists, ok := dbIsMemberWithIdp(w, idp, idpSub)
+	// Generate hash from idpSub
+	idpHashBytes := sha256.Sum256([]byte(idpSub))
+	idpHash := hex.EncodeToString(idpHashBytes[:])
+
+	exists, ok := dbIsMemberWithIdp(w, idp, idpHash)
 	if !ok {
 		return false
 	}
 
 	var sub string
 	if exists {
-		sub, ok = dbGetMemberSubWithIdp(w, idp, idpSub)
+		sub, ok = dbGetMemberSubWithIdp(w, idp, idpHash)
 		if !ok {
 			return false
 		}
@@ -53,9 +59,9 @@ func processIdp(w http.ResponseWriter, idp string, idpSub string) bool {
 				member_id,
 				sub,
 				idp,
-				idp_sub)
+				idp_hash)
 			VALUES (8000000, ?, ?, ?)`
-		_, err := db.Exec(stmt, sub, idp, idpSub)
+		_, err := db.Exec(stmt, sub, idp, idpHash)
 		if !checkError(w, err) {
 			return false
 		}
@@ -73,9 +79,9 @@ func processIdp(w http.ResponseWriter, idp string, idpSub string) bool {
 
 /* MAIN FUNCTIONS */
 func DevLogin(w http.ResponseWriter, r *http.Request) {
-	idpSub := chi.URLParam(r, "sub")
+	idpHash := chi.URLParam(r, "sub")
 
-	ok := processIdp(w, "DEV", idpSub)
+	ok := processIdp(w, "DEV", idpHash)
 	if !ok {
 		return
 	}

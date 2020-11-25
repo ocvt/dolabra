@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS auth (
       member_id INTEGER NOT NULL,
       sub TEXT NOT NULL,
       idp TEXT NOT NULL,
-      idp_sub TEXT NOT NULL,
+      idp_hash TEXT NOT NULL,
       FOREIGN KEY(member_id) REFERENCES member(id)
 );
 
