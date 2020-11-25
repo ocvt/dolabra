@@ -27,7 +27,6 @@ func GetWebtoolsEmails(w http.ResponseWriter, r *http.Request) {
 			&emails[i].Id,
 			&emails[i].CreateDatetime,
 			&emails[i].SentDatetime,
-			&emails[i].Sent,
 			&emails[i].NotificationTypeId,
 			&emails[i].TripId,
 			&emails[i].ToId,
@@ -62,6 +61,7 @@ func PostWebtoolsEmails(w http.ResponseWriter, r *http.Request) {
 	email.NotificationTypeId = "GENERAL_ANNOUNCEMENTS"
 	email.TripId = 3000
 	email.ReplyToId = 8000000
+	email.ToId = 8000000
 
 	label := utils.GetConfig().EmailLabel
 	url := utils.GetConfig().FrontendUrl

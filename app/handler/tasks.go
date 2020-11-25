@@ -95,9 +95,16 @@ func DoTasks() {
 
 	/* Load staged emails into queue to send */
 	stmt = `
-		SELECT *
+		SELECT
+			id,
+			notification_type_id,
+			trip_id,
+			to_id,
+			reply_to_id,
+			subject,
+			body
 		FROM email
-		WHERE sent = false`
+		WHERE sent_datetime = NULL`
 	rows, err = db.Query(stmt)
 	if err != nil {
 		log.Fatal(err)
@@ -109,9 +116,6 @@ func DoTasks() {
 		email := emailStruct{}
 		err = rows.Scan(
 			&email.Id,
-			&email.CreateDatetime,
-			&email.SentDatetime,
-			&email.Sent,
 			&email.NotificationTypeId,
 			&email.TripId,
 			&email.ToId,
@@ -265,8 +269,7 @@ func DoTasks() {
 		stmt = `
 			UPDATE email
 			SET
-				sent_datetime = datetime('now'),
-				sent = true
+				sent_datetime = datetime('now')
 			WHERE id = ?`
 		_, err = db.Exec(stmt, email.Id)
 		if err != nil {

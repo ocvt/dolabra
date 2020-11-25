@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,16 +13,14 @@ import (
 )
 
 type emailStruct struct {
-	/* Only used to GET already sent emails */
-	SentDatetime string `json:"sentDatetime,omitempty"`
 	/* Managed server side */
-	Id                 int    `json:"id,omitempty"`
-	CreateDatetime     string `json:"createDatetime,omitempty"`
-	Sent               bool   `json:"sent,omitempty"`
-	NotificationTypeId string `json:"notificationTypeId,omitempty"`
-	TripId             int    `json:"tripId,omitempty"`
-	ReplyToId          int    `json:"replyToId,omitempty"`
-	ToId               int    `json:"toId,omitempty"` // 0 if not direct message
+	Id                 int            `json:"id,omitempty"`
+	CreateDatetime     string         `json:"createDatetime,omitempty"`
+	SentDatetime       sql.NullString `json:"sentDatetime,omitempty"`
+	NotificationTypeId string         `json:"notificationTypeId,omitempty"`
+	TripId             int            `json:"tripId,omitempty"`
+	ReplyToId          int            `json:"replyToId,omitempty"`
+	ToId               int            `json:"toId,omitempty"` // 0 if not direct message
 	/* Required fields for creating announcements */
 	Subject string `json:"subject"`
 	Body    string `json:"body"`
@@ -82,14 +81,13 @@ func stageEmailPlain(email emailStruct) error {
 		INSERT INTO email (
 			create_datetime,
 			sent_datetime,
-			sent,
 			notification_type_id,
 			trip_id,
 			to_id,
 			reply_to_id,
 			subject,
 			body)
-		VALUES (datetime('now'), datetime(0, 'unixepoch'), false, ?, ?, ?, ?, ?, ?)`
+		VALUES (datetime('now'), null, ?, ?, ?, ?, ?, ?)`
 	_, err := db.Exec(
 		stmt,
 		email.NotificationTypeId,

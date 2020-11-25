@@ -12,7 +12,7 @@ up () {
     --publish 3000:3000 \
     ocvt/dolabra:latest
 
-  docker system prune -a
+  docker system prune -af
 }
 
 down () {

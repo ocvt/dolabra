@@ -18,8 +18,7 @@ CREATE TABLE IF NOT EXISTS auth (
 CREATE TABLE IF NOT EXISTS email (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
       create_datetime DATETIME NOT NULL,
-      sent_datetime DATETIME NOT NULL,
-      sent BOOLEAN NOT NULL,
+      sent_datetime DATETIME,
       notification_type_id TEXT NOT NULL,
       trip_id INTEGER NOT NULL,
       to_id INTEGER  NOT NULL,
