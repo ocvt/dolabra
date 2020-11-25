@@ -11,11 +11,11 @@ non-outdoor trips.
 ### Photos
 
 Photos are stored on gdrive and require 2 accounts minimum
-* One to own the photos and share them with other leaders (through gdrive)
-* One system account created with GCP to manage the photos
-  * You will be given the option to download system account credentials during
+- One to own the photos and share them with other leaders (through gdrive)
+- One system account created with GCP to manage the photos
+  - You will be given the option to download system account credentials during
     creation, which are used below
-  * The system account email must be given Editor permission to the main
+  - The system account email must be given Editor permission to the main
     photos folder.
 
 The photos structure is fairly flexible. We only neeed to know the folder
@@ -27,14 +27,14 @@ folders when photos are uploaded.
 
 ### SMTP
 
-The `SMTP_FROM_*` variables are used to create a system account as the first
+The `SMTP_FROM_-` variables are used to create a system account as the first
 entry in the database so it's easy to reference when sending emails without
 additional overhead.
 
 tl;dr we can pass in `0` as the person who's sending the email and it just
 works(tm).
 
-This system account is *always* put in the From field and should be designed to
+This system account is -always- put in the From field and should be designed to
 catch bounced emails. Sometimes the reply-to field is also filled if the email
 is being sent by a specific person.
 
@@ -54,26 +54,26 @@ be self-explanatory.
 
 Create `dolabra.env` (copy `dolabra.env.sample`) with the following variables
 defined:
-* `COOKIE_DOMAIN`: Domain to use for cookies (should be shared between api & frontend)
-* `EMAIL_LABEL`: Label used in email subjects, ie '[MY CLUB] New notification'
-* `FRONTEND_URL`: Frontend url (for linking from emails)
-* `AWS_ACCESS_KEY_ID`: AWS access key (for SES)
-* `AWS_SECRET_ACCESS_KEY`: AWS secret key (for SES)
-* `GOOGLE_CLIENT_SECRET`: Client Secret for Google Sign-in
-* `GOOGLE_CLIENT_ID`: Client Id for Google Sign-in
-* `GOOGLE_APPLICATION_CREDENTIALS`: Path to json file with GCP system account
+- `COOKIE_DOMAIN`: Domain to use for cookies (should be shared between api & frontend)
+- `EMAIL_LABEL`: Label used in email subjects, ie '[MY CLUB] New notification'
+- `FRONTEND_URL`: Frontend url (for linking from emails)
+- `AWS_ACCESS_KEY_ID`: AWS access key (for SES)
+- `AWS_SECRET_ACCESS_KEY`: AWS secret key (for SES)
+- `GOOGLE_CLIENT_SECRET`: Client Secret for Google Sign-in
+- `GOOGLE_CLIENT_ID`: Client Id for Google Sign-in
+- `GOOGLE_APPLICATION_CREDENTIALS`: Path to json file with GCP system account
   credentials. Place this file in `utils/` since this folder is shared with
   docker (for Photos)
-* `GDRIVE_TRIPS_FOLDER_ID`: Gdrive folder containing trips (for Photos)
-* `GDRIVE_HOME_PHOTOS_FOLDER_ID`: Gdrive folder containing homephotos
+- `GDRIVE_TRIPS_FOLDER_ID`: Gdrive folder containing trips (for Photos)
+- `GDRIVE_HOME_PHOTOS_FOLDER_ID`: Gdrive folder containing homephotos
   (for Photos)
-* `SMTP_FROM_FIRST_NAME_DEFAULT`: Firstname of person in the `From` field
-* `SMTP_FROM_LAST_NAME_DEFAULT`: Lastname of person in the `From` field
-* `SMTP_FROM_EMAIL_DEFAULT`: Email put in the `From` field
-* `STRIPE_PUBLIC_KEY`: Public key for Stripe payments
-* `STRIPE_SECRET_KEY`: Secret key for Stripe payments
-* `STRIPE_WEBHOOK_SECRET`: Webhook secret for Stripe payments
-* `DEV`: Optionally set to `1` to enable developer mode
+- `SMTP_FROM_FIRST_NAME_DEFAULT`: Firstname of person in the `From` field
+- `SMTP_FROM_LAST_NAME_DEFAULT`: Lastname of person in the `From` field
+- `SMTP_FROM_EMAIL_DEFAULT`: Email put in the `From` field
+- `STRIPE_PUBLIC_KEY`: Public key for Stripe payments
+- `STRIPE_SECRET_KEY`: Secret key for Stripe payments
+- `STRIPE_WEBHOOK_SECRET`: Webhook secret for Stripe payments
+- `DEV`: Optionally set to `1` to enable developer mode
 
 
 ## Running it
@@ -85,21 +85,21 @@ running in production.
 
 ## Testing
 
-* `./launch static-check` runs `staticcheck` and `sqlvet`
-* `./launch format` runs `go fmt`
-* `./launch integration-test` builds everything and runs python integration tests
+- `./launch static-check` runs `staticcheck` and `sqlvet`
+- `./launch format` runs `go fmt`
+- `./launch integration-test` builds everything and runs python integration tests
   from the `tests` folder
-* See `./launch`
+- See `./launch`
 
 
 ### Notes
 
-* 403 is returned if the error is related to permissions or user input (ie trying to signup with a
+- 403 is returned if the error is related to permissions or user input (ie trying to signup with a
   pet on a trip that does not allow pets), otherwise 400 is used for generic errors or whenever we
   don't 100% know the cause of the issue
-* trip signups include a `short_notice` option indicating if they're ok with changing from waitlist
+- trip signups include a `short_notice` option indicating if they're ok with changing from waitlist
   to attend close to when the trip starts. It is not currently used.
 
 ## TODO
 
-* ???
+- ???
