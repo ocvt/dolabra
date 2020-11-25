@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 )
@@ -32,11 +33,11 @@ type paymentStruct struct {
 // a separate struct
 type storeCodeStruct struct {
 	/* Managed Server side */
-	Id              int    `json:"id,omitempty"`
-	CreateDatetime  string `json:"createDatetime,omitempty"`
-	GeneratedById   int    `json:"generatedById,omitempty"`
-	GeneratedByName string `json:"generatedByName,omitempty"`
-	Redeemed        bool   `json:"redeemed,omitempty"`
+	Id               int            `json:"id,omitempty"`
+	CreateDatetime   string         `json:"createDatetime,omitempty"`
+	GeneratedById    int            `json:"generatedById,omitempty"`
+	GeneratedByName  string         `json:"generatedByName,omitempty"`
+	RedeemedDatetime sql.NullString `json:"redeemedDatetime,omitempty"`
 	/* Required fields */
 	Note           string `json:"note"`
 	StoreItemId    string `json:"storeItemId"`
@@ -50,8 +51,8 @@ func GetWebtoolsCodes(w http.ResponseWriter, r *http.Request) {
 	stmt := `
 		SELECT *
 		FROM store_code
-		WHERE redeemed = false
-		ORDER BY datetime(store_code.create_datetime) DESC`
+		WHERE redeemed_datetime = NULL
+		ORDER BY datetime(create_datetime) DESC`
 	rows, err := db.Query(stmt)
 	if !checkError(w, err) {
 		return
@@ -72,7 +73,7 @@ func GetWebtoolsCodes(w http.ResponseWriter, r *http.Request) {
 			&codes[i].Amount,
 			&codes[i].Code,
 			&codes[i].Completed,
-			&codes[i].Redeemed)
+			&codes[i].RedeemedDatetime)
 		if !checkError(w, err) {
 			return
 		}
@@ -221,8 +222,8 @@ func PostWebtoolsGenerateCode(w http.ResponseWriter, r *http.Request) {
 			amount,
 			code,
 			completed,
-			redeemed)
-		VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, ?, false)`
+			redeemedDatetime)
+		VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, ?, NULL)`
 	_, err = db.Exec(stmt,
 		memberId,
 		storeCode.Note,

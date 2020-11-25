@@ -151,7 +151,7 @@ CREATE TABLE IF NOT EXISTS store_code (
       amount INTEGER NOT NULL,
       code TEXT NOT NULL,
       completed BOOLEAN NOT NULL,
-      redeemed BOOLEAN NOT NULL,
+      redeemed_datetime DATETIME,
       FOREIGN KEY(generated_by_id) REFERENCES member(id),
       FOREIGN KEY(store_item_id) REFERENCES store_item(id)
 );
