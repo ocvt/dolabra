@@ -92,6 +92,7 @@ func setRouters() {
 		r.Patch("/notifications", handler.PatchMyAccountNotifications)
 		r.Patch("/reactivate", handler.PatchMyAccountReactivate)
 		r.Post("/", handler.PostMyAccount)
+		r.Post("/migrate", handler.PostMyAccountMigrate)
 	})
 
 	r.Route("/trips", func(r chi.Router) {
