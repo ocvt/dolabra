@@ -10,27 +10,24 @@
 # Migrations:
 # - news
 #   - ocvt_news.create_date -> news.create_datetime
-#   - ocvt_news.title -> news.title, news.
-#   - ocvt_news.content -> news.content
-#   - ocvt_news.content first X characters -> news.summary
-#   - ocvt_news.entered_by -> news.member_id ----> MANUALLY UPDATE AFTER USERS ARE ADDED
+#   - ocvt_news.title       -> news.title, news.summary
+#   - ocvt_news.content     -> news.content
 #   - SET news.publish TRUE
-# - users -> 'oldsite_member' START member_id at 12000
-#   - ocvt_users.email -> oldsite_member.email
-#   - ocvt_users.name_first -> oldsite_member.first_name
-#   - ocvt_users.name_last -> oldsite_member.last_name
-#   - ocvt_users.date_created -> oldsite_member.create_datetime
-#   - ocvt_users.cell_number -> oldsite_member.cell_number
-#   - ocvt_users.gender -> oldsite_member.gender
-#   - ocvt_users.birth_year -> oldsite_member.birth_year
-#   - ocvt_users.active -> oldsite_member.active
-#   - ocvt_users.medical_cond -> oldsite_member.medical_cond
-#   - ocvt_users.medical_cond_desc -> oldsite_member.medical_cond_desc
-#   - ocvt_members.expiration_date -> oldsite_member.paid_expire_datetime
-# - emergency contacts -> 'oldsite_emergency_contact' JOIN ON oldsite_member.member_id
-#   - emergency_contacts.contact_name -> oldsite_emergency_contact.name
-#   - emergency_contacts.contact_number -> oldsite_emergency_contact.number
-#   - emergency_contacts.contact_relationship -> oldsite_emergency_contact.relationship
+# - users -> 'oldsite_member'
+#   - ocvt_users.email                        -> oldsite_member.email
+#   - ocvt_users.name_first                   -> oldsite_member.first_name
+#   - ocvt_users.name_last                    -> oldsite_member.last_name
+#   - ocvt_users.date_created                 -> oldsite_member.create_datetime
+#   - ocvt_users.cell_number                  -> oldsite_member.cell_number
+#   - ocvt_users.gender                       -> oldsite_member.gender
+#   - ocvt_users.birth_year                   -> oldsite_member.birth_year
+#   - ocvt_users.active                       -> oldsite_member.active
+#   - ocvt_users.medical_cond                 -> oldsite_member.medical_cond
+#   - ocvt_users.medical_cond_desc            -> oldsite_member.medical_cond_desc
+#   - ocvt_members.expiration_date            -> oldsite_member.paid_expire_datetime
+#   - emergency_contacts.contact_name         -> oldsite_member.ec_name
+#   - emergency_contacts.contact_number       -> oldsite_member.ec_number
+#   - emergency_contacts.contact_relationship -> oldsite_member.ec_relationship
 # - notification preferences
 #   - for each row in notification_settings:
 #     - if member_id in oldsite_member:
@@ -60,11 +57,17 @@ while True:
     if len(row) == 0:
         break
 
+    # parse & decode
+    create_datetime = row[0][1].decode('utf-8')
+    title           = row[0][2].decode('utf-8')
+    summary         = row[0][2].decode('utf-8')
+    content         = row[0][3].decode('utf-8')
+
     stmt = """
         INSERT INTO news (member_id, create_datetime, publish, title, summary, content)
         VALUES (0, ?, true, ?, ?, ?)
     """
-    sc.execute(stmt, (row[0][1], row[0][2], row[0][2], row[0][3]))
+    sc.execute(stmt, (create_datetime, title, summary, content))
 
 
 ## USERS
@@ -88,37 +91,43 @@ while True:
     if len(row) == 0:
         break
 
-    # medical cond desc
-    if row[0][10] is None:
-        mcd = ""
-    else:
-        mcd = row[0][10]
+    # parse & decode
+    id              = int(row[0][0])
+    email           = row[0][1].decode('utf-8')
+    first_name      = row[0][2].decode('utf-8')
+    last_name       = row[0][3].decode('utf-8')
+    create_datetime = row[0][4].decode('utf-8')
+    cell_number     = row[0][5].decode('utf-8')
+    gender          = row[0][6].decode('utf-8')
+    birth_year      = int(row[0][7])
+    active          = int(row[0][8]) == 1
+    mc              = int(row[0][9]) == 1
+    mcd             = "" if row[0][10] is None else row[0][10].decode('utf-8')
+    # emergency contacts
+    ec_name         = "" if row[0][11] is None else row[0][11].decode('utf-8')
+    ec_number       = "" if row[0][12] is None else row[0][12].decode('utf-8')
+    ec_relationship = "" if row[0][13] is None else row[0][13].decode('utf-8')
+    # membership
+    paid_expire_datetime = None if row[0][14] is None else row[0][14].decode('utf-8')
 
     stmt = """
         INSERT INTO oldsite_member (
             id, email, first_name, last_name, create_datetime, cell_number, gender, birth_year, active,
-            medical_cond, medical_cond_desc, paid_expire_datetime, notification_preference
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?)
+            medical_cond, medical_cond_desc, paid_expire_datetime, ec_name, ec_number, ec_relationship, notification_preference
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?)
     """
     sc.execute(stmt, (
-        int(row[0][0]), row[0][1], row[0][2], row[0][3], row[0][4], row[0][5], row[0][6],
-        int(row[0][7]), int(row[0][8]) == 1, mcd != "", mcd, default_n_str)
+        id, email, first_name, last_name, create_datetime, cell_number, gender, birth_year, active,
+        mc, mcd, ec_name, ec_number, ec_relationship, default_n_str)
     )
 
-    if row[0][11] is not None:
+    if paid_expire_datetime is not None:
         stmt = """
-            INSERT INTO oldsite_emergency_contact (member_id, name, number, relationship)
-            VALUES (?, ?, ?, ?)
-        """
-        sc.execute(stmt, (int(row[0][0]), row[0][11], row[0][12], row[0][13]))
-
-    if row[0][14] is not None:
-        stmt= """
-            UPDATE member
+            UPDATE oldsite_member
             SET paid_expire_datetime = ?
             WHERE id = ?
         """
-        sc.execute(stmt, (row[0][14], int(row[0][0])))
+        sc.execute(stmt, (paid_expire_datetime, id))
 
 
 ## NOTIFICATION SETTINGS
@@ -199,23 +208,28 @@ while True:
     if len(row) == 0:
         break
 
-    item_id =  row[0][3].decode('utf-8')
-    if oldsite_items[item_id]["MEMBERSHIP"] > 0:
+    # parse & decode
+    member_id       = int(row[0][0])
+    create_datetime = row[0][1].decode('utf-8')
+    payment_id      = row[0][2].decode('utf-8')
+    item_number     = row[0][3].decode('utf-8')
+
+    if oldsite_items[item_number]["MEMBERSHIP"] > 0:
         stmt = """
             INSERT INTO oldsite_payment (
                 create_datetime, entered_by_id, note, member_id, store_item_id, store_item_count,
                 amount, payment_method, payment_id, completed
-            ) VALUES (?, 0, '', ?, ?, ?, ?, 'OLDSITE', ?, true)
+            ) VALUES (?, 8000000, '', ?, ?, ?, ?, 'OLDSITE', ?, true)
         """
-        sc.execute(stmt, (row[0][1], int(row[0][0]), 'MEMBERSHIP', oldsite_items[item_id]["MEMBERSHIP"], oldsite_items[item_id]["cost"], row[0][2]))
-    if oldsite_items[item_id]["SHIRT"] > 0:
+        sc.execute(stmt, (create_datetime, member_id, 'MEMBERSHIP', oldsite_items[item_number]["MEMBERSHIP"], oldsite_items[item_number]["cost"], payment_id))
+    if oldsite_items[item_number]["SHIRT"] > 0:
         stmt = """
             INSERT INTO oldsite_payment (
                 create_datetime, entered_by_id, note, member_id, store_item_id, store_item_count,
                 amount, payment_method, payment_id, completed
-            ) VALUES (?, 0, '', ?, ?, ?, ?, 'OLDSITE', ?, true)
+            ) VALUES (?, 8000000, '', ?, ?, ?, ?, 'OLDSITE', ?, true)
         """
-        sc.execute(stmt, (row[0][1], int(row[0][0]), 'SHIRT', oldsite_items[item_id]["SHIRT"], oldsite_items[item_id]["cost"], row[0][2]))
+        sc.execute(stmt, (create_datetime, member_id, 'SHIRT', oldsite_items[item_number]["SHIRT"], oldsite_items[item_number]["cost"], payment_id))
     
 
 ## MANUAL PAYMENTS
@@ -226,9 +240,7 @@ while True:
     if len(row) == 0:
         break
 
-    m_id = None
-    if row[0][11] is not None:
-        m_id = int(row[0][11])
+    member_id = None if row[0][11] is None else int(row[0][11])
     stmt = """
         INSERT INTO oldsite_manual_payments (
             id, email, name, create_date, membership_days, entered_by, notes,

@@ -45,7 +45,7 @@ func lookupOldMember(w http.ResponseWriter, oldMember oldMemberStruct) (*memberS
 		return nil, nil, nil, false
 	}
 
-	// Uses oldsite member id (700XXXX)
+	// Uses oldsite member id (701XXXX)
 	stmt = `
 		SELECT *
 		FROM oldsite_payment

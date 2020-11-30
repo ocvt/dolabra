@@ -142,9 +142,11 @@ func PostMyAccountMigrate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Copy all payments (membership is already applied in migrate.py script)
+	// All fields are copied directly except for:
+	//  - entered_by_id: always system user (8000000) since the actual user who entered may not exist
+	//  - member id: different upon migration
 	for p := payments.Front(); p != nil; p = p.Next() {
 		payment := p.Value.(paymentStruct)
-		// Copy payment into main payment table
 		stmt = `
 			INSERT INTO payment (
 				create_datetime,
@@ -157,16 +159,16 @@ func PostMyAccountMigrate(w http.ResponseWriter, r *http.Request) {
 				payment_method,
 				payment_id,
 				completed)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+			VALUES (?, 8000000, ?, ?, ?, ?, ?, ?, ?, ?)`
 		_, err = tx.ExecContext(ctx, stmt,
 			payment.CreateDatetime,
-			payment.EnteredById,
 			payment.Note,
 			memberId,
 			payment.StoreItemId,
 			payment.StoreItemCount,
 			payment.Amount,
 			payment.PaymentMethod,
+			payment.PaymentId,
 			payment.Completed)
 		if !checkError(w, err) {
 			tx.Rollback()
@@ -177,8 +179,8 @@ func PostMyAccountMigrate(w http.ResponseWriter, r *http.Request) {
 	// Delete old member data to prevent the same person being migrated twice
 	// member.Id is old member id (new id is memberId)
 	stmt = `
-		DELETE FROM oldsite_member
-		WHERE id = ?`
+		DELETE FROM oldsite_payment
+		WHERE member_id = ?`
 	_, err = tx.ExecContext(ctx, stmt, member.Id)
 	if !checkError(w, err) {
 		tx.Rollback()
@@ -186,8 +188,8 @@ func PostMyAccountMigrate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt = `
-		DELETE FROM oldsite_payment
-		WHERE member_id = ?`
+		DELETE FROM oldsite_member
+		WHERE id = ?`
 	_, err = tx.ExecContext(ctx, stmt, member.Id)
 	if !checkError(w, err) {
 		tx.Rollback()
