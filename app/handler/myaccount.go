@@ -370,7 +370,7 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 			ec_number,
 			ec_relationship,
 			notification_preference)
-		VALUES (?, ?, ?, datetime('now'), ?, ?, ?, 1, ?, ?, datetime('now'), '', '', '', ?)`
+		VALUES (?, ?, ?, datetime('now'), ?, ?, ?, true, ?, ?, datetime('now'), '', '', '', ?)`
 	result, err := tx.ExecContext(
 		ctx,
 		stmt,
