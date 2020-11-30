@@ -31,16 +31,6 @@ CREATE TABLE IF NOT EXISTS email (
       FOREIGN KEY(reply_to_id) REFERENCES member(id)
 );
 
--- Table: emergency_contact
-CREATE TABLE IF NOT EXISTS emergency_contact (
-      id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
-      member_id INTEGER UNIQUE NOT NULL,
-      name TEXT NOT NULL COLLATE NOCASE,
-      number TEXT NOT NULL,
-      relationship TEXT NOT NULL,
-      FOREIGN KEY(member_id) REFERENCES member(id)
-);
-
 -- Table: equipment
 CREATE TABLE IF NOT EXISTS equipment (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
@@ -74,6 +64,9 @@ CREATE TABLE IF NOT EXISTS member (
       medical_cond BOOLEAN NOT NULL,
       medical_cond_desc TEXT NOT NULL,
       paid_expire_datetime DATETIME NOT NULL,
+      ec_name TEXT NOT NULL COLLATE NOCASE,
+      ec_number TEXT NOT NULL,
+      ec_relationship TEXT NOT NULL,
       notification_preference TEXT NOT NULL
 );
 
@@ -248,17 +241,10 @@ CREATE TABLE IF NOT EXISTS oldsite_member (
       medical_cond BOOLEAN NOT NULL,
       medical_cond_desc TEXT NOT NULL,
       paid_expire_datetime DATETIME NOT NULL,
+      ec_name TEXT NOT NULL COLLATE NOCASE,
+      ec_number TEXT NOT NULL,
+      ec_relationship TEXT NOT NULL,
       notification_preference TEXT NOT NULL
-);
-
--- Table: oldsit_emergency_contact
-CREATE TABLE IF NOT EXISTS oldsite_emergency_contact (
-      id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
-      member_id INTEGER UNIQUE NOT NULL,
-      name TEXT NOT NULL COLLATE NOCASE,
-      number TEXT NOT NULL,
-      relationship TEXT NOT NULL,
-      FOREIGN KEY(member_id) REFERENCES oldsite_member(id)
 );
 
 -- Table: oldsite_payment

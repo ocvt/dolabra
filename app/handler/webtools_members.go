@@ -12,23 +12,22 @@ type tripName struct {
 func GetWebtoolsMembers(w http.ResponseWriter, r *http.Request) {
 	stmt := `
 		SELECT
-			member.id,
-			member.email,
-			member.first_name,
-			member.last_name,
-			member.create_datetime,
-			member.cell_number,
-			member.gender,
-			member.birth_year,
-			member.active,
-			member.medical_cond,
-			member.medical_cond_desc,
-			member.paid_expire_datetime,
-			emergency_contact.name,
-			emergency_contact.number,
-			emergency_contact.relationship
-		FROM member
-		INNER JOIN emergency_contact ON emergency_contact.member_id = member.id`
+			id,
+			email,
+			first_name,
+			last_name,
+			create_datetime,
+			cell_number,
+			gender,
+			birth_year,
+			active,
+			medical_cond,
+			medical_cond_desc,
+			paid_expire_datetime,
+			ec_name,
+			ec_number,
+			ec_relationship
+		FROM member`
 	rows, err := db.Query(stmt)
 	if !checkError(w, err) {
 		return
@@ -52,9 +51,9 @@ func GetWebtoolsMembers(w http.ResponseWriter, r *http.Request) {
 			&members[i].MedicalCond,
 			&members[i].MedicalCondDesc,
 			&members[i].PaidExpireDatetime,
-			&members[i].EmergencyContactName,
-			&members[i].EmergencyContactNumber,
-			&members[i].EmergencyContactRelationship)
+			&members[i].ECName,
+			&members[i].ECNumber,
+			&members[i].ECRelationship)
 		if !checkError(w, err) {
 			return
 		}

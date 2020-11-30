@@ -75,10 +75,9 @@ type tripSignupStruct struct {
 	BirthYear       int    `json:"birthYear,omitempty"`
 	MedicalCond     bool   `json:"medicalCond,omitempty"`
 	MedicalCondDesc string `json:"medicalCondDesc,omitempty"`
-	// from emergency_contact table
-	EmergencyContactName         string `json:"emergencyContactName,omitempty"`
-	EmergencyContactNumber       string `json:"emergencyContactNumber,omitempty"`
-	EmergencyContactRelationship string `json:"emergencyContactRelationship,omitempty"`
+	ECName          string `json:"ECName,omitempty"`
+	ECNumber        string `json:"ECNumber,omitempty"`
+	ECRelationship  string `json:"ECRelationship,omitempty"`
 	/* Required fields for signing up for a trip */
 	ShortNotice bool   `json:"shortNotice"`
 	Driver      bool   `json:"driver"`
@@ -319,7 +318,10 @@ func GetTripsAdmin(w http.ResponseWriter, r *http.Request) {
 				gender,
 				birth_year,
 				medical_cond,
-				medical_cond_desc
+				medical_cond_desc,
+				ec_name,
+				ec_number,
+				ec_relationship
 			FROM member
 			WHERE id = ?`
 		err := db.QueryRow(stmt, tripSignups[i].MemberId).Scan(
@@ -330,19 +332,10 @@ func GetTripsAdmin(w http.ResponseWriter, r *http.Request) {
 			&tripSignups[i].Gender,
 			&tripSignups[i].BirthYear,
 			&tripSignups[i].MedicalCond,
-			&tripSignups[i].MedicalCondDesc)
-		if !checkError(w, err) {
-			return
-		}
-
-		stmt = `
-			SELECT name, number, relationship
-			FROM emergency_contact
-			WHERE member_id = ?`
-		err = db.QueryRow(stmt, tripSignups[i].MemberId).Scan(
-			&tripSignups[i].EmergencyContactName,
-			&tripSignups[i].EmergencyContactNumber,
-			&tripSignups[i].EmergencyContactRelationship)
+			&tripSignups[i].MedicalCondDesc,
+			&tripSignups[i].ECName,
+			&tripSignups[i].ECNumber,
+			&tripSignups[i].ECRelationship)
 		if !checkError(w, err) {
 			return
 		}

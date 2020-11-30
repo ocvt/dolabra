@@ -23,7 +23,7 @@ type approverStruct struct {
 	Email      string `json:"email,omitempty"`
 	FirstName  string `json:"firstName,omitempty"`
 	LastName   string `json:"lastName,omitempty"`
-	/* Required fields for creating a trip */
+	/* Required fields for adding a new approver */
 	MemberId       int    `json:"memberId"`
 	ExpireDatetime string `json:"expireDatetime"`
 }

@@ -89,7 +89,6 @@ func setRouters() {
 		r.Get("/notifications", handler.GetMyAccountNotifications)
 		r.Patch("/", handler.PatchMyAccount)
 		r.Patch("/deactivate", handler.PatchMyAccountDeactivate)
-		r.Patch("/emergency", handler.PatchMyAccountEmergency)
 		r.Patch("/notifications", handler.PatchMyAccountNotifications)
 		r.Patch("/reactivate", handler.PatchMyAccountReactivate)
 		r.Post("/", handler.PostMyAccount)

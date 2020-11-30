@@ -32,8 +32,8 @@ def TestMyAccountPersonal(s):
   assert data == member_new_json
 
 def TestMyAccountUpdateEmergency(s):
-  url = HOST + '/myaccount/emergency'
-  r = s.patch(url, json=member_new_emergency_json)
+  url = HOST + '/myaccount'
+  r = s.patch(url, json=member_json)
   assert r.status_code == 204
 
 def TestMyAccount(s):

@@ -13,6 +13,9 @@ type memberStruct struct {
 	CreateDatetime     string `json:"createDatetime,omitempty"`
 	Active             bool   `json:"active,omitempty"`
 	PaidExpireDatetime string `json:"paidExpireDatetime,omitempty"`
+	ECName             string `json:"ECName,omitempty"`
+	ECNumber           string `json:"ECNumber,omitempty"`
+	ECRelationship     string `json:"ECRelationship,omitempty"`
 	/* Required fields for creating an account */
 	Email           string `json:"email"`
 	FirstName       string `json:"firstName"`
@@ -22,17 +25,6 @@ type memberStruct struct {
 	Birthyear       int    `json:"birthyear"`
 	MedicalCond     bool   `json:"medicalCond"`
 	MedicalCondDesc string `json:"medicalCondDesc"`
-	/* Allow independent updates of member & emergency info */
-	EmergencyContactName         string `json:"emergencyContactName,omitempty"`
-	EmergencyContactNumber       string `json:"emergencyContactNumber,omitempty"`
-	EmergencyContactRelationship string `json:"emergencyContactRelationship,omitempty"`
-}
-
-// Separate struct for updating emergency info independently
-type emergencyStruct struct {
-	EmergencyContactName         string `json:"emergencyContactName"`
-	EmergencyContactNumber       string `json:"emergencyContactNumber"`
-	EmergencyContactRelationship string `json:"emergencyContactRelationship"`
 }
 
 func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
@@ -74,22 +66,12 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
 			medical_cond = false,
 			medical_cond_desc = '',
 			paid_expire_datetime = 0,
+			ec_name = '',
+			ec_number = '',
+			ec_relationship = '',
 			notification_preference = ?
 		WHERE id = ?`
 	_, err = tx.ExecContext(ctx, stmt, notificationsStr, memberId)
-	if !checkError(w, err) {
-		tx.Rollback()
-		return
-	}
-
-	stmt = `
-		UPDATE emergency_contact
-		SET
-			name = '',
-			number = '',
-			relationship = ''
-		WHERE member_id = ?`
-	_, err = tx.ExecContext(ctx, stmt, memberId)
 	if !checkError(w, err) {
 		tx.Rollback()
 		return
@@ -159,24 +141,23 @@ func GetMyAccount(w http.ResponseWriter, r *http.Request) {
 
 	stmt := `
 		SELECT
-			member.id,
-			member.email,
-			member.first_name,
-			member.last_name,
-			member.create_datetime,
-			member.cell_number,
-			member.gender,
-			member.birth_year,
-			member.active,
-			member.medical_cond,
-			member.medical_cond_desc,
-			member.paid_expire_datetime,
-			emergency_contact.name,
-			emergency_contact.number,
-			emergency_contact.relationship
+			id,
+			email,
+			first_name,
+			last_name,
+			create_datetime,
+			cell_number,
+			gender,
+			birth_year,
+			active,
+			medical_cond,
+			medical_cond_desc,
+			paid_expire_datetime,
+			ec_name,
+			ec_number,
+			ec_relationship
 		FROM member
-		INNER JOIN emergency_contact ON emergency_contact.member_id = member.id
-		WHERE member.id = ?`
+		WHERE id = ?`
 	var member memberStruct
 	err := db.QueryRow(stmt, memberId).Scan(
 		&member.Id,
@@ -191,9 +172,9 @@ func GetMyAccount(w http.ResponseWriter, r *http.Request) {
 		&member.MedicalCond,
 		&member.MedicalCondDesc,
 		&member.PaidExpireDatetime,
-		&member.EmergencyContactName,
-		&member.EmergencyContactNumber,
-		&member.EmergencyContactRelationship)
+		&member.ECName,
+		&member.ECNumber,
+		&member.ECRelationship)
 	if !checkError(w, err) {
 		return
 	}
@@ -263,7 +244,10 @@ func PatchMyAccount(w http.ResponseWriter, r *http.Request) {
 			gender = ?,
 			birth_year = ?,
 			medical_cond = ?,
-			medical_cond_desc = ?
+			medical_cond_desc = ?,
+			ec_name = ?,
+			ec_number = ?,
+			ec_relationship = ?
 		WHERE id = ?`
 	_, err = db.Exec(
 		stmt,
@@ -275,6 +259,9 @@ func PatchMyAccount(w http.ResponseWriter, r *http.Request) {
 		member.Birthyear,
 		member.MedicalCond,
 		member.MedicalCondDesc,
+		member.ECName,
+		member.ECNumber,
+		member.ECRelationship,
 		memberId)
 	if !checkError(w, err) {
 		return
@@ -300,47 +287,6 @@ func PatchMyAccountDeactivate(w http.ResponseWriter, r *http.Request) {
 		SET active = false
 		WHERE id = ?`
 	_, err := db.Exec(stmt, memberId)
-	if !checkError(w, err) {
-		return
-	}
-
-	respondJSON(w, http.StatusNoContent, nil)
-}
-
-func PatchMyAccountEmergency(w http.ResponseWriter, r *http.Request) {
-	sub, ok := checkLogin(w, r)
-	if !ok {
-		return
-	}
-
-	// Get memberId
-	memberId, ok := dbGetActiveMemberId(w, sub)
-	if !ok {
-		return
-	}
-
-	// Get request body
-	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
-	var emergency emergencyStruct
-	err := decoder.Decode(&emergency)
-	if err != nil {
-		respondError(w, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	stmt := `
-		UPDATE emergency_contact
-		SET
-			name = ?,
-			number = ?,
-			relationship = ?
-		WHERE member_id = ?`
-	_, err = db.Exec(stmt,
-		emergency.EmergencyContactName,
-		emergency.EmergencyContactNumber,
-		emergency.EmergencyContactRelationship,
-		memberId)
 	if !checkError(w, err) {
 		return
 	}
@@ -420,8 +366,11 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 			medical_cond,
 			medical_cond_desc,
 			paid_expire_datetime,
+			ec_name,
+			ec_number,
+			ec_relationship,
 			notification_preference)
-		VALUES (?, ?, ?, datetime('now'), ?, ?, ?, 1, ?, ?, datetime('now'), ?)`
+		VALUES (?, ?, ?, datetime('now'), ?, ?, ?, 1, ?, ?, datetime('now'), '', '', '', ?)`
 	result, err := tx.ExecContext(
 		ctx,
 		stmt,
@@ -441,23 +390,6 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 
 	// Get new member id
 	memberId, err := result.LastInsertId()
-	if !checkError(w, err) {
-		tx.Rollback()
-		return
-	}
-
-	// Insert placeholder values for emergency contact
-	stmt = `
-		INSERT INTO emergency_contact (
-			member_id,
-			name,
-			number,
-			relationship)
-		VALUES (?, '', '', '')`
-	_, err = tx.ExecContext(
-		ctx,
-		stmt,
-		memberId)
 	if !checkError(w, err) {
 		tx.Rollback()
 		return

@@ -100,7 +100,7 @@ func dbCreateSystemMember() error {
 		INSERT OR REPLACE INTO member
 		VALUES (8000000, ?, ?, ?, datetime('now'), '555-555-5555', 'Prefer not to say',
 						1990, false, true, 'Require frequent oiling',
-						datetime('now', '+100 years'), ?)`
+						datetime('now', '+100 years'), '', '', '', ?)`
 	_, err = db.Exec(
 		stmt,
 		utils.GetConfig().SmtpFromEmailDefault,

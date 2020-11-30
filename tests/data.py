@@ -17,9 +17,9 @@ member_new_json = {
 }
 
 member_new_emergency_json = {
-  'emergencyContactName': 'Elon Musk',
-  'emergencyContactNumber': '9993729484',
-  'emergencyContactRelationship': 'father'
+  'ECName': 'Elon Musk',
+  'ECNumber': '9993729484',
+  'ECRelationship': 'father'
 }
 
 member_json = {**member_new_json, **member_new_emergency_json}
