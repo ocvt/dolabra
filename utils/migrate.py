@@ -65,7 +65,7 @@ while True:
 
     stmt = """
         INSERT INTO news (member_id, create_datetime, publish, title, summary, content)
-        VALUES (0, ?, true, ?, ?, ?)
+        VALUES (8000000, ?, true, ?, ?, ?)
     """
     sc.execute(stmt, (create_datetime, title, summary, content))
 
