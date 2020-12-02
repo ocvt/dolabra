@@ -16,5 +16,5 @@ jobs:
           username: ${{ secrets.GHCR_USERNAME }}
           password: ${{ secrets.GHCR_PASSWORD }}
           registry: ghcr.io
-          repository: ocvt/ocvt-site
+          repository: ocvt/dolabra
           tag_with_ref: true
