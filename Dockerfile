@@ -1,5 +1,6 @@
 FROM golang:1.13-buster
 
+LABEL org.opencontainers.image.source https://github.com/ocvt/dolabra
 LABEL maintainer="Paul Walko <paul@seaturtle.pw>"
 
 WORKDIR /go/src/app

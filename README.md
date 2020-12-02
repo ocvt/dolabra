@@ -62,8 +62,7 @@ defined:
 - `GOOGLE_CLIENT_SECRET`: Client Secret for Google Sign-in
 - `GOOGLE_CLIENT_ID`: Client Id for Google Sign-in
 - `GOOGLE_APPLICATION_CREDENTIALS`: Path to json file with GCP system account
-  credentials. Place this file in `utils/` since this folder is shared with
-  docker (for Photos)
+  credentials. Place this file in `data/`.
 - `GDRIVE_TRIPS_FOLDER_ID`: Gdrive folder containing trips (for Photos)
 - `GDRIVE_HOME_PHOTOS_FOLDER_ID`: Gdrive folder containing homephotos
   (for Photos)
