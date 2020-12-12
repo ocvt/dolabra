@@ -26,8 +26,7 @@ func lookupOldMember(w http.ResponseWriter, oldMember oldMemberStruct) (*memberS
 		oldMember.Gender).Scan(
 		&member.Id,
 		&member.Email,
-		&member.FirstName,
-		&member.LastName,
+		&member.Name,
 		&member.CreateDatetime,
 		&member.CellNumber,
 		&member.Pronouns,

@@ -10,8 +10,7 @@ type officerStruct struct {
 	// from member table
 	CellNumber string `json:"cellNumber,omitempty"`
 	Email      string `json:"email,omitempty"`
-	FirstName  string `json:"firstName,omitempty"`
-	LastName   string `json:"lastName,omitempty"`
+	Name       string `json:"name,omitempty"`
 	/* Required fields for creating a trip */
 	MemberId       int    `json:"memberId"`
 	ExpireDatetime string `json:"expireDatetime"`
@@ -70,8 +69,7 @@ func GetWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
 		SELECT
 			member.id,
 			member.email,
-			member.first_name,
-			member.last_name,
+			member.name,
 			member.cell_number,
 			officer.expire_datetime,
 			officer.position,
@@ -91,8 +89,7 @@ func GetWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
 		err = rows.Scan(
 			&officers[i].MemberId,
 			&officers[i].Email,
-			&officers[i].FirstName,
-			&officers[i].LastName,
+			&officers[i].Name,
 			&officers[i].CellNumber,
 			&officers[i].ExpireDatetime,
 			&officers[i].Position,

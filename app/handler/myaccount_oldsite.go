@@ -55,8 +55,7 @@ func PostMyAccountMigrate(w http.ResponseWriter, r *http.Request) {
 	stmt := `
 		INSERT INTO member (
 			email,
-			first_name,
-			last_name,
+			name,
 			create_datetime,
 			cell_number,
 			gender,
@@ -69,13 +68,12 @@ func PostMyAccountMigrate(w http.ResponseWriter, r *http.Request) {
 			ec_number,
 			ec_relationship,
 			notification_preference)
-		VALUES (?, ?, ?, ?, ?, ?, ?, true, ?, ?, ?, ?, ?, ?, ?)`
+		VALUES (?, ?, ?, ?, ?, ?, true, ?, ?, ?, ?, ?, ?, ?)`
 	result, err := tx.ExecContext(
 		ctx,
 		stmt,
 		member.Email,
-		member.FirstName,
-		member.LastName,
+		member.Name,
 		member.CreateDatetime,
 		member.CellNumber,
 		member.Pronouns,

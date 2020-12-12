@@ -66,8 +66,7 @@ defined:
 - `GDRIVE_TRIPS_FOLDER_ID`: Gdrive folder containing trips (for Photos)
 - `GDRIVE_HOME_PHOTOS_FOLDER_ID`: Gdrive folder containing homephotos
   (for Photos)
-- `SMTP_FROM_FIRST_NAME_DEFAULT`: Firstname of person in the `From` field
-- `SMTP_FROM_LAST_NAME_DEFAULT`: Lastname of person in the `From` field
+- `SMTP_FROM_NAME_DEFAULT`: Name of person in the `From` field
 - `SMTP_FROM_EMAIL_DEFAULT`: Email put in the `From` field
 - `STRIPE_PUBLIC_KEY`: Public key for Stripe payments
 - `STRIPE_SECRET_KEY`: Secret key for Stripe payments

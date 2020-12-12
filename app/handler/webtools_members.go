@@ -14,8 +14,7 @@ func GetWebtoolsMembers(w http.ResponseWriter, r *http.Request) {
 		SELECT
 			id,
 			email,
-			first_name,
-			last_name,
+			name,
 			create_datetime,
 			cell_number,
 			pronouns,
@@ -41,8 +40,8 @@ func GetWebtoolsMembers(w http.ResponseWriter, r *http.Request) {
 		err = rows.Scan(
 			&members[i].Id,
 			&members[i].Email,
-			&members[i].FirstName,
-			&members[i].LastName,
+			&members[i].Name,
+			&members[i].Name,
 			&members[i].CreateDatetime,
 			&members[i].CellNumber,
 			&members[i].Pronouns,

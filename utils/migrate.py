@@ -94,8 +94,7 @@ while True:
     # parse & decode
     id              = int(row[0][0])
     email           = row[0][1].decode('utf-8')
-    first_name      = row[0][2].decode('utf-8')
-    last_name       = row[0][3].decode('utf-8')
+    name            = row[0][2].decode('utf-8') + ' ' + row[0][3].decode('utf-8')
     create_datetime = row[0][4].decode('utf-8')
     cell_number     = row[0][5].decode('utf-8')
     gender          = row[0][6].decode('utf-8')
@@ -112,7 +111,7 @@ while True:
 
     stmt = """
         INSERT INTO oldsite_member (
-            id, email, first_name, last_name, create_datetime, cell_number, gender, birth_year, active,
+            id, email, name, create_datetime, cell_number, gender, birth_year, active,
             medical_cond, medical_cond_desc, paid_expire_datetime, ec_name, ec_number, ec_relationship, notification_preference
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?)
     """

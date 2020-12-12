@@ -10,7 +10,7 @@ type newsStruct struct {
 	Id             int    `json:"id,omitempty"`
 	CreateDatetime string `json:"createDatetime,omitempty"`
 	// from member table
-	FirstName string `json:"firstName,omitempty"`
+	Name string `json:"name,omitempty"`
 	/* Required fields for creating news */
 	Title   string `json:"title"`
 	Summary string `json:"summary"`
@@ -39,7 +39,7 @@ func DeleteWebtoolsNews(w http.ResponseWriter, r *http.Request) {
 func GetNews(w http.ResponseWriter, r *http.Request) {
 	stmt := `
 		SELECT
-			member.first_name,
+			member.name,
 			news.id,
 			news.create_datetime,
 			news.title,
@@ -61,7 +61,7 @@ func GetNews(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		news = append(news, &newsStruct{})
 		err = rows.Scan(
-			&news[i].FirstName,
+			&news[i].Name,
 			&news[i].Id,
 			&news[i].CreateDatetime,
 			&news[i].Title,
@@ -84,7 +84,7 @@ func GetNews(w http.ResponseWriter, r *http.Request) {
 func GetNewsArchive(w http.ResponseWriter, r *http.Request) {
 	stmt := `
 		SELECT
-			member.first_name,
+			member.name,
 			news.id,
 			news.create_datetime,
 			news.title,
@@ -105,7 +105,7 @@ func GetNewsArchive(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		news = append(news, &newsStruct{})
 		err = rows.Scan(
-			&news[i].FirstName,
+			&news[i].Name,
 			&news[i].Id,
 			&news[i].CreateDatetime,
 			&news[i].Title,

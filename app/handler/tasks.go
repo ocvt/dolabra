@@ -300,7 +300,7 @@ func DoTasks() {
 		} else {
 			emailQueue.Remove(e)
 			// Attempt to send error to system email, otherwise log error
-			nameSystem := utils.GetConfig().SmtpFromFirstNameDefault + " " + utils.GetConfig().SmtpFromFirstNameDefault
+			nameSystem := utils.GetConfig().SmtpFromNameDefault
 			emailSystem := utils.GetConfig().SmtpFromEmailDefault
 			rawEmail := rawEmailStruct{
 				FromName:     nameSystem,

@@ -18,8 +18,7 @@ type memberStruct struct {
 	ECRelationship     string `json:"ECRelationship,omitempty"`
 	/* Required fields for creating an account */
 	Email           string `json:"email"`
-	FirstName       string `json:"firstName"`
-	LastName        string `json:"lastName"`
+	Name            string `json:"name"`
 	CellNumber      string `json:"cellNumber"`
 	Pronouns        string `json:"pronouns"`
 	Birthyear       int    `json:"birthyear"`
@@ -56,8 +55,7 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
 		UPDATE member
 		SET
 			email = '',
-			first_name = '',
-			last_name = '',
+			name = '',
 			create_datetime = 0,
 			cell_number = '',
 			pronouns = '',
@@ -143,8 +141,7 @@ func GetMyAccount(w http.ResponseWriter, r *http.Request) {
 		SELECT
 			id,
 			email,
-			first_name,
-			last_name,
+			name,
 			create_datetime,
 			cell_number,
 			pronouns,
@@ -162,8 +159,7 @@ func GetMyAccount(w http.ResponseWriter, r *http.Request) {
 	err := db.QueryRow(stmt, memberId).Scan(
 		&member.Id,
 		&member.Email,
-		&member.FirstName,
-		&member.LastName,
+		&member.Name,
 		&member.CreateDatetime,
 		&member.CellNumber,
 		&member.Pronouns,
@@ -200,16 +196,16 @@ func GetMyAccountName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	stmt := `
-		SELECT first_name
+		SELECT name
 		FROM member
 		WHERE id = ?`
-	var firstName string
-	err := db.QueryRow(stmt, memberId).Scan(&firstName)
+	var name string
+	err := db.QueryRow(stmt, memberId).Scan(&name)
 	if !checkError(w, err) {
 		return
 	}
 
-	respondJSON(w, http.StatusOK, map[string]interface{}{"firstName": firstName, "officer": isOfficer})
+	respondJSON(w, http.StatusOK, map[string]interface{}{"name": name, "officer": isOfficer})
 }
 
 func PatchMyAccount(w http.ResponseWriter, r *http.Request) {
@@ -238,8 +234,7 @@ func PatchMyAccount(w http.ResponseWriter, r *http.Request) {
 		UPDATE member
 		SET
 			email = ?,
-			first_name = ?,
-			last_name = ?,
+			name = ?,
 			cell_number = ?,
 			pronouns = ?,
 			birth_year = ?,
@@ -252,8 +247,7 @@ func PatchMyAccount(w http.ResponseWriter, r *http.Request) {
 	_, err = db.Exec(
 		stmt,
 		member.Email,
-		member.FirstName,
-		member.LastName,
+		member.Name,
 		member.CellNumber,
 		member.Pronouns,
 		member.Birthyear,
@@ -356,8 +350,7 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 	stmt := `
 		INSERT INTO member (
 			email,
-			first_name,
-			last_name,
+			name,
 			create_datetime,
 			cell_number,
 			pronouns,
@@ -370,13 +363,12 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 			ec_number,
 			ec_relationship,
 			notification_preference)
-		VALUES (?, ?, ?, datetime('now'), ?, ?, ?, true, ?, ?, datetime('now'), '', '', '', ?)`
+		VALUES (?, ?, datetime('now'), ?, ?, ?, true, ?, ?, datetime('now'), '', '', '', ?)`
 	result, err := tx.ExecContext(
 		ctx,
 		stmt,
 		member.Email,
-		member.FirstName,
-		member.LastName,
+		member.Name,
 		member.CellNumber,
 		member.Pronouns,
 		member.Birthyear,

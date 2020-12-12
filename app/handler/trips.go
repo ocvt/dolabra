@@ -68,8 +68,7 @@ type tripSignupStruct struct {
 	Attended       bool   `json:"attended,omitempty"`
 	// from member table
 	Email           string `json:"email,omitempty"`
-	FirstName       string `json:"firstName,omitempty"`
-	LastName        string `json:"lastName,omitempty"`
+	Name            string `json:"name,omitempty"`
 	CellNumber      string `json:"cellNumber,omitempty"`
 	Pronouns        string `json:"pronouns,omitempty"`
 	BirthYear       int    `json:"birthYear,omitempty"`
@@ -312,8 +311,7 @@ func GetTripsAdmin(w http.ResponseWriter, r *http.Request) {
 		stmt = `
 			SELECT
 				email,
-				first_name,
-				last_name,
+				name,
 				cell_number,
 				pronouns,
 				birth_year,
@@ -326,8 +324,7 @@ func GetTripsAdmin(w http.ResponseWriter, r *http.Request) {
 			WHERE id = ?`
 		err := db.QueryRow(stmt, tripSignups[i].MemberId).Scan(
 			&tripSignups[i].Email,
-			&tripSignups[i].FirstName,
-			&tripSignups[i].LastName,
+			&tripSignups[i].Name,
 			&tripSignups[i].CellNumber,
 			&tripSignups[i].Pronouns,
 			&tripSignups[i].BirthYear,

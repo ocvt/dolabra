@@ -28,8 +28,7 @@ func GetWebtoolsApprovers(w http.ResponseWriter, r *http.Request) {
 		SELECT
 			member.id,
 			member.email,
-			member.first_name,
-			member.last_name,
+			member.name,
 			member.cell_number,
 			trip_approver.expire_datetime
 		FROM member
@@ -47,8 +46,7 @@ func GetWebtoolsApprovers(w http.ResponseWriter, r *http.Request) {
 		err = rows.Scan(
 			&approvers[i].MemberId,
 			&approvers[i].Email,
-			&approvers[i].FirstName,
-			&approvers[i].LastName,
+			&approvers[i].Name,
 			&approvers[i].CellNumber,
 			&approvers[i].ExpireDatetime)
 		if !checkError(w, err) {

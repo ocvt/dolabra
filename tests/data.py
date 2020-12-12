@@ -6,8 +6,7 @@ member_is_trip_creator_json = {
 
 member_new_json = {
   'email': 'test@example.com',
-  'firstName': 'No',
-  'lastName': 'Thanks',
+  'name': 'No Thanks',
   'cellNumber': '5551234567',
   'pronouns': 'they/them',
   'birthyear': 1990,

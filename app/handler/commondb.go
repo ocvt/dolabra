@@ -98,14 +98,13 @@ func dbCreateSystemMember() error {
 
 	stmt := `
 		INSERT OR REPLACE INTO member
-		VALUES (8000000, ?, ?, ?, datetime('now'), '555-555-5555', 'prefer not to say',
+		VALUES (8000000, ?, ?, datetime('now'), '555-555-5555', 'prefer not to say',
 						1990, false, true, 'Require frequent oiling',
 						datetime('now', '+100 years'), '', '', '', ?)`
 	_, err = db.Exec(
 		stmt,
 		utils.GetConfig().SmtpFromEmailDefault,
-		utils.GetConfig().SmtpFromFirstNameDefault,
-		utils.GetConfig().SmtpFromLastNameDefault,
+		utils.GetConfig().SmtpFromNameDefault,
 		notificationsStr) // sqlvet: ignore
 
 	return err
@@ -205,22 +204,22 @@ func dbGetMemberId(w http.ResponseWriter, sub string) (int, bool) {
 
 func dbGetMemberName(w http.ResponseWriter, memberId int) (string, bool) {
 	stmt := `
-		SELECT first_name || ' ' || last_name AS full_name
+		SELECT name
 		FROM member
 		WHERE id = ?`
-	var fullName string
-	err := db.QueryRow(stmt, memberId).Scan(&fullName)
+	var name string
+	err := db.QueryRow(stmt, memberId).Scan(&name)
 	if !checkError(w, err) {
 		return "", false
 	}
-	return fullName, true
+	return name, true
 }
 
 func dbGetMemberNameEmail(memberId int) (string, string) {
 	stmt := `
 		SELECT
 			email,
-			first_name || ' ' || last_name AS full_name
+			name
 		FROM member
 		WHERE id = ?`
 	var name, email string

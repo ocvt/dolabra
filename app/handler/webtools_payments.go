@@ -98,7 +98,7 @@ func GetWebtoolsCodes(w http.ResponseWriter, r *http.Request) {
 func GetWebtoolsPayments(w http.ResponseWriter, r *http.Request) {
 	stmt := `
 		SELECT
-			member.first_name || ' ' || member.last_name AS full_name,
+			member.name,
 			member.email,
 			payment.id,
 			payment.create_datetime,

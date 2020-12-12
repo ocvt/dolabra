@@ -21,8 +21,7 @@ type approverStruct struct {
 	// from member table
 	CellNumber string `json:"cellNumber,omitempty"`
 	Email      string `json:"email,omitempty"`
-	FirstName  string `json:"firstName,omitempty"`
-	LastName   string `json:"lastName,omitempty"`
+	Name       string `json:"name,omitempty"`
 	/* Required fields for adding a new approver */
 	MemberId       int    `json:"memberId"`
 	ExpireDatetime string `json:"expireDatetime"`

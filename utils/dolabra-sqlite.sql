@@ -54,8 +54,7 @@ CREATE TABLE IF NOT EXISTS trip_approval_guid (
 CREATE TABLE IF NOT EXISTS member (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
       email TEXT NOT NULL,
-      first_name TEXT NOT NULL COLLATE NOCASE,
-      last_name TEXT NOT NULL COLLATE NOCASE,
+      name TEXT NOT NULL COLLATE NOCASE,
       create_datetime DATETIME NOT NULL,
       cell_number TEXT NOT NULL,
       pronouns TEXT NOT NULL,
@@ -237,8 +236,7 @@ CREATE TABLE IF NOT EXISTS trip_signup (
 CREATE TABLE IF NOT EXISTS oldsite_member (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
       email TEXT NOT NULL,
-      first_name TEXT NOT NULL COLLATE NOCASE,
-      last_name TEXT NOT NULL COLLATE NOCASE,
+      name TEXT NOT NULL COLLATE NOCASE,
       create_datetime DATETIME NOT NULL,
       cell_number TEXT NOT NULL,
       gender TEXT NOT NULL,

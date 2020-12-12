@@ -14,8 +14,7 @@ type Config struct {
 	GoogleClientId           string
 	GDriveTripsFolderId      string
 	GDriveHomePhotosFolderId string
-	SmtpFromFirstNameDefault string
-	SmtpFromLastNameDefault  string
+	SmtpFromNameDefault      string
 	SmtpFromEmailDefault     string
 	StripePublicKey          string
 	StripeSecretKey          string
@@ -33,8 +32,7 @@ func GetConfig() *Config {
 		GoogleClientId:           os.Getenv("GOOGLE_CLIENT_ID"),
 		GDriveTripsFolderId:      os.Getenv("GDRIVE_TRIPS_FOLDER_ID"),
 		GDriveHomePhotosFolderId: os.Getenv("GDRIVE_HOME_PHOTOS_FOLDER_ID"),
-		SmtpFromFirstNameDefault: os.Getenv("SMTP_FROM_FIRST_NAME_DEFAULT"),
-		SmtpFromLastNameDefault:  os.Getenv("SMTP_FROM_LAST_NAME_DEFAULT"),
+		SmtpFromNameDefault:      os.Getenv("SMTP_FROM_NAME_DEFAULT"),
 		SmtpFromEmailDefault:     os.Getenv("SMTP_FROM_EMAIL_DEFAULT"),
 		StripePublicKey:          os.Getenv("STRIPE_PUBLIC_KEY"),
 		StripeSecretKey:          os.Getenv("STRIPE_SECRET_KEY"),
