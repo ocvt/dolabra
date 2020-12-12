@@ -86,6 +86,17 @@ func insertData(db *sql.DB) {
 			('FORCE', 'User is force added'),
 			('WAIT', 'User is on waiting list')
 	`)
+
+	// Populate allowed pronouns. (We don't care about the actual pronouns, this is only for simplicity in programming)
+	execHelper(db, `
+		INSERT OR REPLACE INTO pronouns (id)
+		VALUES
+			('he/him'),
+			('she/her'),
+			('they/them'),
+			('prefer not to say')
+	`)
+
 }
 
 func DBMigrate(db *sql.DB) {

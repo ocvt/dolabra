@@ -30,7 +30,7 @@ func lookupOldMember(w http.ResponseWriter, oldMember oldMemberStruct) (*memberS
 		&member.LastName,
 		&member.CreateDatetime,
 		&member.CellNumber,
-		&member.Gender,
+		&member.Pronouns,
 		&member.Birthyear,
 		&member.Active,
 		&member.MedicalCond,
@@ -43,6 +43,13 @@ func lookupOldMember(w http.ResponseWriter, oldMember oldMemberStruct) (*memberS
 	if err != nil && err.Error() == "sql: no rows in result set" {
 		respondError(w, http.StatusBadRequest, "Account from old site cannot be found")
 		return nil, nil, nil, false
+	}
+
+	// Convert gender to pronouns. Oldsite was limited to M/F only
+	if member.Pronouns == "F" {
+		member.Pronouns = "she/her"
+	} else {
+		member.Pronouns = "he/him"
 	}
 
 	// Uses oldsite member id (701XXXX)

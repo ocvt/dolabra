@@ -9,7 +9,7 @@ member_new_json = {
   'firstName': 'No',
   'lastName': 'Thanks',
   'cellNumber': '5551234567',
-  'gender': 'Apache Attack Helicopter',
+  'pronouns': 'they/them',
   'birthyear': 1990,
   'active': True,
   'medicalCond': True,

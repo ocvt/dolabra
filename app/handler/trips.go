@@ -71,7 +71,7 @@ type tripSignupStruct struct {
 	FirstName       string `json:"firstName,omitempty"`
 	LastName        string `json:"lastName,omitempty"`
 	CellNumber      string `json:"cellNumber,omitempty"`
-	Gender          string `json:"gender,omitempty"`
+	Pronouns        string `json:"pronouns,omitempty"`
 	BirthYear       int    `json:"birthYear,omitempty"`
 	MedicalCond     bool   `json:"medicalCond,omitempty"`
 	MedicalCondDesc string `json:"medicalCondDesc,omitempty"`
@@ -315,7 +315,7 @@ func GetTripsAdmin(w http.ResponseWriter, r *http.Request) {
 				first_name,
 				last_name,
 				cell_number,
-				gender,
+				pronouns,
 				birth_year,
 				medical_cond,
 				medical_cond_desc,
@@ -329,7 +329,7 @@ func GetTripsAdmin(w http.ResponseWriter, r *http.Request) {
 			&tripSignups[i].FirstName,
 			&tripSignups[i].LastName,
 			&tripSignups[i].CellNumber,
-			&tripSignups[i].Gender,
+			&tripSignups[i].Pronouns,
 			&tripSignups[i].BirthYear,
 			&tripSignups[i].MedicalCond,
 			&tripSignups[i].MedicalCondDesc,

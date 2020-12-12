@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS member (
       last_name TEXT NOT NULL COLLATE NOCASE,
       create_datetime DATETIME NOT NULL,
       cell_number TEXT NOT NULL,
-      gender TEXT NOT NULL,
+      pronouns TEXT NOT NULL,
       birth_year INTEGER NOT NULL,
       active BOOLEAN NOT NULL,
       medical_cond BOOLEAN NOT NULL,
@@ -67,7 +67,8 @@ CREATE TABLE IF NOT EXISTS member (
       ec_name TEXT NOT NULL COLLATE NOCASE,
       ec_number TEXT NOT NULL,
       ec_relationship TEXT NOT NULL,
-      notification_preference TEXT NOT NULL
+      notification_preference TEXT NOT NULL,
+      FOREIGN KEY(pronouns) REFERENCES pronouns(id)
 );
 
 -- Table: member_log
@@ -123,6 +124,11 @@ CREATE TABLE IF NOT EXISTS payment (
       completed BOOLEAN NOT NULL,
       FOREIGN KEY(member_id) REFERENCES member(id),
       FOREIGN KEY(store_item_id) REFERENCES store_item(id)
+);
+
+-- Table: pronouns
+CREATE TABLE IF NOT EXISTS pronouns (
+      id TEXT PRIMARY KEY UNIQUE NOT NULL
 );
 
 -- Table: quick_signup

@@ -21,7 +21,7 @@ type memberStruct struct {
 	FirstName       string `json:"firstName"`
 	LastName        string `json:"lastName"`
 	CellNumber      string `json:"cellNumber"`
-	Gender          string `json:"gender"`
+	Pronouns        string `json:"pronouns"`
 	Birthyear       int    `json:"birthyear"`
 	MedicalCond     bool   `json:"medicalCond"`
 	MedicalCondDesc string `json:"medicalCondDesc"`
@@ -60,7 +60,7 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
 			last_name = '',
 			create_datetime = 0,
 			cell_number = '',
-			gender = '',
+			pronouns = '',
 			birth_year = 0,
 			active = false,
 			medical_cond = false,
@@ -147,7 +147,7 @@ func GetMyAccount(w http.ResponseWriter, r *http.Request) {
 			last_name,
 			create_datetime,
 			cell_number,
-			gender,
+			pronouns,
 			birth_year,
 			active,
 			medical_cond,
@@ -166,7 +166,7 @@ func GetMyAccount(w http.ResponseWriter, r *http.Request) {
 		&member.LastName,
 		&member.CreateDatetime,
 		&member.CellNumber,
-		&member.Gender,
+		&member.Pronouns,
 		&member.Birthyear,
 		&member.Active,
 		&member.MedicalCond,
@@ -241,7 +241,7 @@ func PatchMyAccount(w http.ResponseWriter, r *http.Request) {
 			first_name = ?,
 			last_name = ?,
 			cell_number = ?,
-			gender = ?,
+			pronouns = ?,
 			birth_year = ?,
 			medical_cond = ?,
 			medical_cond_desc = ?,
@@ -255,7 +255,7 @@ func PatchMyAccount(w http.ResponseWriter, r *http.Request) {
 		member.FirstName,
 		member.LastName,
 		member.CellNumber,
-		member.Gender,
+		member.Pronouns,
 		member.Birthyear,
 		member.MedicalCond,
 		member.MedicalCondDesc,
@@ -360,7 +360,7 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 			last_name,
 			create_datetime,
 			cell_number,
-			gender,
+			pronouns,
 			birth_year,
 			active,
 			medical_cond,
@@ -378,7 +378,7 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 		member.FirstName,
 		member.LastName,
 		member.CellNumber,
-		member.Gender,
+		member.Pronouns,
 		member.Birthyear,
 		member.MedicalCond,
 		member.MedicalCondDesc,

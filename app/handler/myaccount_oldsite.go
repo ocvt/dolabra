@@ -78,7 +78,7 @@ func PostMyAccountMigrate(w http.ResponseWriter, r *http.Request) {
 		member.LastName,
 		member.CreateDatetime,
 		member.CellNumber,
-		member.Gender,
+		member.Pronouns,
 		member.Birthyear,
 		member.MedicalCond,
 		member.MedicalCondDesc,
