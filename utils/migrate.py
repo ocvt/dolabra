@@ -97,7 +97,7 @@ while True:
     name            = row[0][2].decode('utf-8') + ' ' + row[0][3].decode('utf-8')
     create_datetime = row[0][4].decode('utf-8')
     cell_number     = row[0][5].decode('utf-8')
-    gender          = row[0][6].decode('utf-8')
+    gender          = 'he/him' if row[0][6].decode('utf-8') is 'M' else 'she/her'
     birth_year      = int(row[0][7])
     active          = int(row[0][8]) == 1
     mc              = int(row[0][9]) == 1

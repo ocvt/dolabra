@@ -44,13 +44,6 @@ func lookupOldMember(w http.ResponseWriter, oldMember oldMemberStruct) (*memberS
 		return nil, nil, nil, false
 	}
 
-	// Convert gender to pronouns. Oldsite was limited to M/F only
-	if member.Pronouns == "F" {
-		member.Pronouns = "she/her"
-	} else {
-		member.Pronouns = "he/him"
-	}
-
 	// Uses oldsite member id (701XXXX)
 	stmt = `
 		SELECT *
