@@ -239,7 +239,7 @@ CREATE TABLE IF NOT EXISTS oldsite_member (
       name TEXT NOT NULL COLLATE NOCASE,
       create_datetime DATETIME NOT NULL,
       cell_number TEXT NOT NULL,
-      gender TEXT NOT NULL,
+      pronouns TEXT NOT NULL,
       birth_year INTEGER NOT NULL,
       active BOOLEAN NOT NULL,
       medical_cond BOOLEAN NOT NULL,
@@ -248,7 +248,8 @@ CREATE TABLE IF NOT EXISTS oldsite_member (
       ec_name TEXT NOT NULL COLLATE NOCASE,
       ec_number TEXT NOT NULL,
       ec_relationship TEXT NOT NULL,
-      notification_preference TEXT NOT NULL
+      notification_preference TEXT NOT NULL,
+      FOREIGN KEY(pronouns) REFERENCES pronouns(id)
 );
 
 -- Table: oldsite_payment

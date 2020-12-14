@@ -97,7 +97,7 @@ while True:
     name            = row[0][2].decode('utf-8') + ' ' + row[0][3].decode('utf-8')
     create_datetime = row[0][4].decode('utf-8')
     cell_number     = row[0][5].decode('utf-8')
-    gender          = 'he/him' if row[0][6].decode('utf-8') is 'M' else 'she/her'
+    pronouns        = 'he/him' if row[0][6].decode('utf-8') is 'M' else 'she/her'
     birth_year      = int(row[0][7])
     active          = int(row[0][8]) == 1
     mc              = int(row[0][9]) == 1
@@ -111,12 +111,12 @@ while True:
 
     stmt = """
         INSERT INTO oldsite_member (
-            id, email, name, create_datetime, cell_number, gender, birth_year, active,
+            id, email, name, create_datetime, cell_number, pronouns, birth_year, active,
             medical_cond, medical_cond_desc, paid_expire_datetime, ec_name, ec_number, ec_relationship, notification_preference
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?, ?)
     """
     sc.execute(stmt, (
-        id, email, first_name, last_name, create_datetime, cell_number, gender, birth_year, active,
+        id, email, name, create_datetime, cell_number, pronouns, birth_year, active,
         mc, mcd, ec_name, ec_number, ec_relationship, default_n_str)
     )
 

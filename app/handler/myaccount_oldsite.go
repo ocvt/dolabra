@@ -10,6 +10,9 @@ import (
 // Similar to memberStruct but only used to migrate users from old site
 type oldMemberStruct struct {
 	Id int `json:"id,omitempty"`
+	/* Converted values from old site */
+	Name     string `json:"name,omitempty"`
+	Pronouns string `json:"pronouns,omitempty"`
 	/* Required fields to lookup oldsite data */
 	Email     string `json:"email"`
 	FirstName string `json:"firstName"`
@@ -32,6 +35,13 @@ func PostMyAccountMigrate(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
+	}
+
+	// Convert oldsite M/F and name to new site format
+	oldMember.Name = oldMember.FirstName + " " + oldMember.LastName
+	oldMember.Pronouns = "he/him"
+	if oldMember.Gender == "F" {
+		oldMember.Pronouns = "she/her"
 	}
 
 	// Ensure user doesn't already exist
@@ -58,7 +68,7 @@ func PostMyAccountMigrate(w http.ResponseWriter, r *http.Request) {
 			name,
 			create_datetime,
 			cell_number,
-			gender,
+			pronouns,
 			birth_year,
 			active,
 			medical_cond,

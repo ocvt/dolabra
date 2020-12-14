@@ -100,4 +100,4 @@ running in production.
 
 ## TODO
 
-- ???
+- Get name and email from OIDC if possible

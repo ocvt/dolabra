@@ -14,16 +14,14 @@ func lookupOldMember(w http.ResponseWriter, oldMember oldMemberStruct) (*memberS
 		SELECT *
 		FROM oldsite_member
 		WHERE email = ?
-			AND first_name = ?
-			AND last_name = ?
+			AND name = ?
 			AND birth_year = ?
-			AND gender = ?`
+			AND pronouns = ?`
 	err := db.QueryRow(stmt,
 		oldMember.Email,
-		oldMember.FirstName,
-		oldMember.LastName,
+		oldMember.Name,
 		oldMember.Birthyear,
-		oldMember.Gender).Scan(
+		oldMember.Pronouns).Scan(
 		&member.Id,
 		&member.Email,
 		&member.Name,
