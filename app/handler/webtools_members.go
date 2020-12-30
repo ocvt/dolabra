@@ -41,7 +41,6 @@ func GetWebtoolsMembers(w http.ResponseWriter, r *http.Request) {
 			&members[i].Id,
 			&members[i].Email,
 			&members[i].Name,
-			&members[i].Name,
 			&members[i].CreateDatetime,
 			&members[i].CellNumber,
 			&members[i].Pronouns,
