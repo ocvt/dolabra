@@ -15,7 +15,6 @@ import (
 var db *sql.DB
 var emailQueue *list.List
 var strictHTML *bluemonday.Policy
-var ugcHTML *bluemonday.Policy
 
 // Initialize global variables
 func Initialize() {
@@ -37,7 +36,6 @@ func Initialize() {
 
 	// Initialize HTML sanitizer
 	strictHTML = bluemonday.StrictPolicy()
-	ugcHTML = bluemonday.UGCPolicy()
 
 	// Generate cookie encryption key
 	key = make([]byte, 512)

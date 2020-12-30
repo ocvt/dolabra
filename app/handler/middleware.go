@@ -100,13 +100,13 @@ func ProcessClientAuth(next http.Handler) http.Handler {
 func ValidateInput(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ok := func(w http.ResponseWriter, r *http.Request) bool {
-			verySpecialPath := strings.HasSuffix(r.URL.Path, "/photos") || strings.HasSuffix(r.URL.Path, "/admin/mainphoto")
-			if verySpecialPath {
+			specialPath := strings.HasSuffix(r.URL.Path, "/photos") ||
+				strings.HasSuffix(r.URL.Path, "/admin/mainphoto") ||
+				strings.HasSuffix(r.URL.Path, "/webtools/emails") ||
+				strings.HasSuffix(r.URL.Path, "/webtools/news")
+			if specialPath {
 				return true
 			}
-
-			// Allow some HTML for certain paths
-			specialPath := r.URL.Path == "/webtools/emails" || r.URL.Path == "/webtools/news"
 
 			bodyBytes, err := ioutil.ReadAll(r.Body)
 			if err == io.EOF {
@@ -132,12 +132,7 @@ func ValidateInput(next http.Handler) http.Handler {
 			// JSON, check each value
 			for k := range input {
 				if v, ok := input[k].(string); ok {
-					var newValue string
-					if specialPath {
-						newValue = ugcHTML.Sanitize(v)
-					} else {
-						newValue = strictHTML.Sanitize(v)
-					}
+					newValue := strictHTML.Sanitize(v)
 					if newValue != v {
 						respondError(w, http.StatusBadRequest, "HTTP body is not valid: "+v)
 						return false
