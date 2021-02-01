@@ -45,7 +45,7 @@ func setRouters() {
 	r.Use(middleware.Recoverer)
 
 	// Validate body for all requests
-	r.Use(handler.ValidateInput)
+	//	r.Use(handler.ValidateInput)
 
 	r.Get("/healthcheck", handler.GetHealthCheck)
 	r.Get("/homephotos", handler.GetHomePhotos)

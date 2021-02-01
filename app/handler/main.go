@@ -8,13 +8,14 @@ import (
 	"log"
 
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/microcosm-cc/bluemonday"
+	//	"github.com/microcosm-cc/bluemonday"
 	"github.com/ocvt/dolabra/utils"
 )
 
 var db *sql.DB
 var emailQueue *list.List
-var strictHTML *bluemonday.Policy
+
+//var strictHTML *bluemonday.Policy
 
 // Initialize global variables
 func Initialize() {
@@ -35,7 +36,7 @@ func Initialize() {
 	utils.DBMigrate(db)
 
 	// Initialize HTML sanitizer
-	strictHTML = bluemonday.StrictPolicy()
+	//	strictHTML = bluemonday.UGCPolicy()
 
 	// Generate cookie encryption key
 	key = make([]byte, 512)
