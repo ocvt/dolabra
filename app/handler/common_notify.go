@@ -109,6 +109,18 @@ func stageEmailNewTrip(w http.ResponseWriter, tripId int) bool {
 		return false
 	}
 
+	locationDetails := ""
+	if trip.Location != "" {
+		locationDetails +=
+			"Location: " + trip.Location + "<br>" +
+				"<br>"
+	}
+	if trip.LocationDirections != "" {
+		locationDetails +=
+			"Location Directions: " + trip.LocationDirections + "<br>" +
+				"<br>"
+	}
+
 	date := prettyPrintDate(trip.StartDatetime)
 	email := emailStruct{
 		NotificationTypeId: trip.NotificationTypeId,
@@ -123,8 +135,7 @@ func stageEmailNewTrip(w http.ResponseWriter, tripId int) bool {
 			"<br>"+
 			"Trip Summary: %s<br>"+
 			"<br>"+
-			"Location Directions: %s<br>"+
-			"<br>"+
+			"%s"+
 			"<br>"+
 			"Full details and the signup form can be found at "+
 			"<a href=\"%s/trips/%d\">%s/trips/%d</a><br>"+
@@ -137,7 +148,7 @@ func stageEmailNewTrip(w http.ResponseWriter, tripId int) bool {
 			"<a href=\"%s/myocvt\">here</a>.<br> You can also click "+
 			"<a href=\"%s/unsubscribe\">here</a> to unsubscribe.<br>"+
 			"<hr>",
-		label, date, trip.Name, trip.Summary, trip.LocationDirections,
+		label, date, trip.Name, trip.Summary, locationDetails,
 		url, tripId, url, tripId, label, url, url)
 
 	return stageEmail(w, email)
