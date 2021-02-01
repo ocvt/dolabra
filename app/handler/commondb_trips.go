@@ -516,7 +516,7 @@ func dbIsTooLateSignup(w http.ResponseWriter, tripId int) (bool, bool) {
 		SELECT EXISTS (
 			SELECT 1
 			FROM trip
-			WHERE id = ? AND datetime(start_datetime) < datetime('now', '+12 hours') AND allow_late_signups = true)`
+			WHERE id = ? AND datetime(start_datetime) < datetime('now', '+12 hours') AND allow_late_signups = false)`
 	var exists bool
 	err := db.QueryRow(stmt, tripId).Scan(&exists)
 	return exists, checkError(w, err)
