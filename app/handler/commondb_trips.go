@@ -153,6 +153,20 @@ func dbGetRecentUnpaidSignup(w http.ResponseWriter, tripId int) (int, bool) {
 	return memberId, true
 }
 
+func dbGetSignupMemberId(w http.ResponseWriter, tripId int, signupId int) (int, bool) {
+	stmt := `
+		SELECT member_id
+		FROM trip_signup
+		WHERE
+			id = ? AND trip_id = ?`
+	var memberId int
+	err := db.QueryRow(stmt, signupId, tripId).Scan(&memberId)
+	if !checkError(w, err) {
+		return 0, false
+	}
+	return memberId, true
+}
+
 func dbGetTrip(w http.ResponseWriter, tripId int) (*tripStruct, bool) {
 	trip, err := dbGetTripPlain(tripId)
 	if !checkError(w, err) {

@@ -116,7 +116,11 @@ func PatchTripsSignupAbsent(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	signupMemberId, ok := getURLIntParam(w, r, "memberId")
+	signupId, ok := getURLIntParam(w, r, "signupId")
+	if !ok {
+		return
+	}
+	signupMemberId, ok := dbGetSignupMemberId(w, tripId, signupId)
 	if !ok {
 		return
 	}
@@ -155,7 +159,11 @@ func PatchTripsSignupBoot(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	signupMemberId, ok := getURLIntParam(w, r, "memberId")
+	signupId, ok := getURLIntParam(w, r, "signupId")
+	if !ok {
+		return
+	}
+	signupMemberId, ok := dbGetSignupMemberId(w, tripId, signupId)
 	if !ok {
 		return
 	}
@@ -309,7 +317,11 @@ func PatchTripsSignupForceadd(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	signupMemberId, ok := getURLIntParam(w, r, "memberId")
+	signupId, ok := getURLIntParam(w, r, "signupId")
+	if !ok {
+		return
+	}
+	signupMemberId, ok := dbGetSignupMemberId(w, tripId, signupId)
 	if !ok {
 		return
 	}
@@ -359,10 +371,15 @@ func PatchTripsSignupTripLeaderPromote(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	signupMemberId, ok := getURLIntParam(w, r, "memberId")
+	signupId, ok := getURLIntParam(w, r, "signupId")
 	if !ok {
 		return
 	}
+	signupMemberId, ok := dbGetSignupMemberId(w, tripId, signupId)
+	if !ok {
+		return
+	}
+
 	promote, err := strconv.ParseBool(chi.URLParam(r, "promote"))
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
