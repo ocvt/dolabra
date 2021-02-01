@@ -161,6 +161,7 @@ func stageEmailTripApproval(w http.ResponseWriter, tripId int, memberId int, gui
 		return false
 	}
 
+	date := prettyPrintDate(trip.StartDatetime)
 	email := emailStruct{
 		NotificationTypeId: "TRIP_APPROVAL",
 		ReplyToId:          8000000,
@@ -187,7 +188,7 @@ func stageEmailTripApproval(w http.ResponseWriter, tripId int, memberId int, gui
 			"<a href=\"%s/tripapproval/%s/approve\">Approve Trip</a><br>"+
 			"<br>"+
 			"<a href=\"%s/tripapproval/%s/deny\">Deny Trip</a><br>",
-		trip.Name, trip.CreateDatetime, trip.Summary, trip.Description, url, tripId, url, tripId, url, guidCode, url, guidCode)
+		trip.Name, date, trip.Summary, trip.Description, url, tripId, url, tripId, url, guidCode, url, guidCode)
 
 	return stageEmail(w, email)
 }

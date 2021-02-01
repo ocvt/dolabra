@@ -20,6 +20,7 @@ func prettyPrintDate(date string) string {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+	t = t.Local()
 	return t.Format("Monday, Jan 2, 2006")
 }
 
