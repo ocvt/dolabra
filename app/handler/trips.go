@@ -424,7 +424,7 @@ func GetTripsArchive(w http.ResponseWriter, r *http.Request) {
 		SELECT id
 		FROM trip
 		WHERE id > 0 AND id <= ? AND publish = true
-		ORDER BY datetime(end_datetime) ASC
+		ORDER BY datetime(end_datetime) DESC
 		LIMIT ?`
 	rows, err := db.Query(stmt, tripStartId, tripsPerPage)
 	if !checkError(w, err) {
