@@ -112,12 +112,12 @@ func stageEmailNewTrip(w http.ResponseWriter, tripId int) bool {
 	locationDetails := ""
 	if trip.Location != "" {
 		locationDetails +=
-			"Location: " + trip.Location + "<br>" +
+			"<strong>Location:</strong> " + trip.Location + "<br>" +
 				"<br>"
 	}
 	if trip.LocationDirections != "" {
 		locationDetails +=
-			"Location Directions: " + trip.LocationDirections + "<br>" +
+			"<strong>Location Directions</strong>: " + trip.LocationDirections + "<br>" +
 				"<br>"
 	}
 
@@ -133,7 +133,7 @@ func stageEmailNewTrip(w http.ResponseWriter, tripId int) bool {
 		"A new trip has been posted to %s scheduled for %s:<br>"+
 			"<h3>%s</h3>"+
 			"<br>"+
-			"Trip Summary: %s<br>"+
+			"<strong>Trip Summary</strong>: %s<br>"+
 			"<br>"+
 			"%s"+
 			"<br>"+
@@ -173,13 +173,13 @@ func stageEmailTripApproval(w http.ResponseWriter, tripId int, memberId int, gui
 	email.Body = fmt.Sprintf(
 		"The following trip needs approval:<br>"+
 			"<br>"+
-			"Title: %s<br>"+
+			"<strong>Title:</strong> %s<br>"+
 			"<br>"+
-			"Scheduled for: %s<br>"+
+			"<strong>Scheduled for:</strong> %s<br>"+
 			"<br>"+
-			"Summary: %s<br>"+
+			"<strong>Summary:</strong> %s<br>"+
 			"<br>"+
-			"Description: %s<br>"+
+			"<strong>Description:</strong> %s<br>"+
 			"<br>"+
 			"<br>"+
 			"To View this trip go <a href=\"%s/trips/%d\">here</a><br>"+
