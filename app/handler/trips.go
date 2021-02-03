@@ -424,7 +424,7 @@ func GetTripsArchive(w http.ResponseWriter, r *http.Request) {
 		SELECT id
 		FROM trip
 		WHERE id > 0 AND id <= ? AND publish = true
-		ORDER BY datetime(end_datetime) DESC
+		ORDER BY datetime(end_datetime) ASC
 		LIMIT ?`
 	rows, err := db.Query(stmt, tripStartId, tripsPerPage)
 	if !checkError(w, err) {
@@ -529,7 +529,7 @@ func GetTripsSummary(w http.ResponseWriter, r *http.Request) {
 			cancel = false
 			AND publish = true
 			AND datetime(end_datetime) >= datetime('now')
-		ORDER BY datetime(start_datetime) DESC`
+		ORDER BY datetime(start_datetime) ASC`
 	rows, err := db.Query(stmt)
 	if !checkError(w, err) {
 		return
