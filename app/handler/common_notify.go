@@ -208,7 +208,7 @@ func stageEmailTripReminder(tripId int) error {
 	}
 	email.Subject = "Trip Reminder: " + trip.Name
 	email.Body = fmt.Sprintf(
-		"This is a reminder for the trip scheduled tomorrow:<br>"+
+		"This is a reminder for the upcoming trip:<br>"+
 			"<h3>%s</h3>"+
 			"<br>"+
 			"Full trip details can be found at "+

@@ -30,7 +30,7 @@ func PostTripsNotifyGroup(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	email.ToId = 0
+	email.ToId = 8000000
 	email.TripId = tripId
 	email.ReplyToId = memberId
 
