@@ -10,7 +10,7 @@ import (
 	"net/http"
 	//	"strings"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 )
 
 func deleteAuthCookies(w http.ResponseWriter) {
