@@ -47,8 +47,8 @@ func sendEmail(sesService *ses.SES, email rawEmailStruct) (*ses.SendRawEmailOutp
 	msg.SetHeader("Reply-To", fmt.Sprintf("%s <%s>", email.ReplyToName, email.ReplyToEmail))
 	msg.SetHeader("To", fmt.Sprintf("%s <%s>", email.ToName, email.ToEmail))
 	msg.SetHeader("Subject", email.Subject)
-	msg.SetBody("text/html", email.Body)
 	msg.SetBody("text/plain", html2text.HTML2Text(email.Body))
+	msg.AddAlternative("text/html", email.Body)
 
 	var rawMsg bytes.Buffer
 	msg.WriteTo(&rawMsg)
