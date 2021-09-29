@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/k3a/html2text"
 	"github.com/ocvt/dolabra/utils"
 	"gopkg.in/mail.v2"
 )
@@ -47,6 +48,7 @@ func sendEmail(sesService *ses.SES, email rawEmailStruct) (*ses.SendRawEmailOutp
 	msg.SetHeader("To", fmt.Sprintf("%s <%s>", email.ToName, email.ToEmail))
 	msg.SetHeader("Subject", email.Subject)
 	msg.SetBody("text/html", email.Body)
+	msg.SetBody("text/plain", html2text.HTML2Text(email.Body))
 
 	var rawMsg bytes.Buffer
 	msg.WriteTo(&rawMsg)

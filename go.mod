@@ -7,6 +7,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/golang-jwt/jwt v3.2.1+incompatible
+	github.com/k3a/html2text v1.0.8
 	github.com/mattn/go-sqlite3 v1.11.0
 	github.com/rs/cors v1.7.0
 	github.com/stripe/stripe-go/v71 v71.46.0
