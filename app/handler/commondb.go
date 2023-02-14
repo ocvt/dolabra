@@ -121,7 +121,7 @@ func dbExtendMembership(w http.ResponseWriter, memberId int, years int) bool {
 		stmt := `
 			UPDATE member
 			SET paid_expire_datetime = datetime('now')
-			WHERE id = ?`
+			WHERE id = ? AND paid_expire_datetime < datetime('now')`
 		_, err := db.Exec(stmt, memberId)
 		if !checkError(w, err) {
 			return false

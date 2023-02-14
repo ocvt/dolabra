@@ -38,8 +38,8 @@ build () {
 }
 
 deps () {
-	go get github.com/houqp/sqlvet
-	go get honnef.co/go/tools/cmd/staticcheck
+  go install github.com/houqp/sqlvet@v1.1.6
+  go install honnef.co/go/tools/cmd/staticcheck@2022.1.3
 }
 
 format () {

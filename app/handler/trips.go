@@ -14,12 +14,12 @@ type attendanceInfoStruct struct {
 }
 
 /*
-	Detailed trip info. Used for:
-	- POST /trips
-	- GET /trips/{tripId}
-	Some information is redacted for:
-	- GET /noauth/trips
-	- GET /noauth/trips/{tripId}
+Detailed trip info. Used for:
+- POST /trips
+- GET /trips/{tripId}
+Some information is redacted for:
+- GET /noauth/trips
+- GET /noauth/trips/{tripId}
 */
 type tripStruct struct {
 	/* Managed server side, used for GET /trips/{tripId} */

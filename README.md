@@ -8,6 +8,9 @@ non-outdoor trips.
 
 ## Configuration
 
+- golang. See `.go-version` for specific version. goenv is recommended for managing go versions.
+
+
 ### Photos
 
 Photos are stored on gdrive and require 2 accounts minimum
@@ -27,7 +30,7 @@ folders when photos are uploaded.
 
 ### SMTP
 
-The `SMTP_FROM_-` variables are used to create a system account as the first
+The `SMTP_FROM_` variables are used to create a system account as the first
 entry in the database so it's easy to reference when sending emails without
 additional overhead.
 
@@ -77,7 +80,7 @@ defined:
 ## Running it
 
 `docker-compose up`  starts a local instance for dev or testing purposes. Take
-a look at [our docker repo](https://github.com/ocvt/docker) for examples
+a look at [https://github/ocvt/aws](https://github.com/ocvt/aws) for examples
 running in production.
 
 

@@ -459,6 +459,18 @@ func dbEnsureTripNotCanceled(w http.ResponseWriter, tripId int) bool {
 	return true
 }
 
+func dbEnsureUnpaidTrip(w http.ResponseWriter, tripId int) bool {
+	isPaidOnly, ok := dbIsTripPaidOnly(w, tripId)
+	if !ok {
+		return false
+	}
+	if isPaidOnly {
+		respondError(w, http.StatusForbidden, "Cannot join a paid only trip as an unpaid member.")
+		return false
+	}
+	return true
+}
+
 func dbEnsureValidSignup(w http.ResponseWriter, tripId int, memberId int,
 	carpool bool, driver bool, carCapacity int, pet bool) bool {
 	tooLateSignup, ok := dbIsTooLateSignup(w, tripId)
@@ -588,6 +600,17 @@ func dbIsTripLeader(w http.ResponseWriter, tripId int, memberId int) (bool, bool
 			WHERE (trip_id = ? AND member_id = ? AND leader = true))`
 	var exists bool
 	err := db.QueryRow(stmt, tripId, memberId).Scan(&exists)
+	return exists, checkError(w, err)
+}
+
+func dbIsTripPaidOnly(w http.ResponseWriter, tripId int) (bool, bool) {
+	stmt := `
+		SELECT EXISTS (
+			SELECT 1
+			FROM trip
+			WHERE id = ? AND members_only = true)`
+	var exists bool
+	err := db.QueryRow(stmt, tripId).Scan(&exists)
 	return exists, checkError(w, err)
 }
 

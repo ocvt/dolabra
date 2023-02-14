@@ -479,6 +479,11 @@ func PostTripsSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// If unpaid, ensure trip is not paid only
+	if !isPaid && !dbEnsureUnpaidTrip(w, tripId) {
+		return
+	}
+
 	// Permissions
 	if !dbEnsureMemberIsNotOnTrip(w, tripId, memberId) {
 		return
