@@ -79,7 +79,7 @@ defined:
 
 ## Running it
 
-`docker-compose up`  starts a local instance for dev or testing purposes. Take
+`./launch.sh up`  starts a local instance for dev or testing purposes. Take
 a look at [https://github/ocvt/aws](https://github.com/ocvt/aws) for examples
 running in production.
 
@@ -88,7 +88,7 @@ running in production.
 
 - `./launch static-check` runs `staticcheck` and `sqlvet`
 - `./launch format` runs `go fmt`
-- `./launch integration-test` builds everything and runs python integration tests
+- `./launch full-test` builds everything and runs python integration tests
   from the `tests` folder
 - See `./launch`
 

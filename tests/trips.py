@@ -244,3 +244,5 @@ def TestTripsCancel(s1, s2, s3):
   assert json.loads(r.text) == member_not_officer_tripleader_json
 
 # TODO TEST absent/boot/forceadd/tripleader
+
+# TODO TEST TestTripsPostSignupPaidOnly

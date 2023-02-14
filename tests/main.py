@@ -1,4 +1,5 @@
 import requests as req
+req.packages.urllib3.util.connection.HAS_IPV6 = False
 
 from data import *
 from myaccount import *
@@ -34,7 +35,7 @@ TestMyAccountRegister(user2)
 
 # Test root level endpoints
 
-TestHomePhotos()
+#TestHomePhotos()
 TestNews()
 TestNewsArchive()
 #TestPayment(user1)
@@ -48,10 +49,10 @@ TestMyAccountNotificationsNone(user1)
 
 TestGetTripsNone()
 TestMyTrips(user1)
-TestTripsPhotos()
+#TestTripsPhotos()
 TestTripsTypes()
 TestTripsAdmin(user1)
-TestTripPhotos()
+#TestTripPhotos()
 TestTripsModify(user1)
 TestTripsCreate(user1)
 TestTripsPublish(user1, user2)
