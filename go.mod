@@ -3,7 +3,7 @@ module github.com/ocvt/dolabra
 go 1.14
 
 require (
-	github.com/aws/aws-sdk-go v1.33.11
+	github.com/aws/aws-sdk-go v1.34.0
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/golang-jwt/jwt v3.2.1+incompatible
