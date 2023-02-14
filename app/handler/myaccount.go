@@ -95,7 +95,7 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
 			leader = false,
 			signup_datetime = 0,
 			paid_member = false,
-			attending_code = 'ATTEN',
+			attending_code = 'ATTEND',
 			boot_reason = '',
 			short_notice = false,
 			driver = false,
