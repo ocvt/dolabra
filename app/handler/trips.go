@@ -482,8 +482,8 @@ func GetTripsMyTrips(w http.ResponseWriter, r *http.Request) {
 	stmt := `
 		SELECT id
 		FROM trip
-		WHERE
-			member_id = ?`
+		WHERE member_id = ?
+		ORDER BY datetime(end_datetime) DESC`
 	rows, err := db.Query(stmt, memberId)
 	if !checkError(w, err) {
 		return
