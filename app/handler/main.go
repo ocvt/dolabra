@@ -2,10 +2,12 @@ package handler
 
 import (
 	"container/list"
-	"crypto/rand"
+	crypto_rand "crypto/rand"
 	"database/sql"
 	"fmt"
 	"log"
+	math_rand "math/rand"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	//	"github.com/microcosm-cc/bluemonday"
@@ -38,9 +40,12 @@ func Initialize() {
 	// Initialize HTML sanitizer
 	//	strictHTML = bluemonday.UGCPolicy()
 
+	// Seed math/rand, used trip approval GUIDs
+	math_rand.Seed(time.Now().UnixNano())
+	
 	// Generate cookie encryption key
 	key = make([]byte, 512)
-	_, err = rand.Read(key)
+	_, err = crypto_rand.Read(key)
 	if err != nil {
 		log.Fatal(err)
 	}
