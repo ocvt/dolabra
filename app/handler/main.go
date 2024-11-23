@@ -42,7 +42,7 @@ func Initialize() {
 
 	// Seed math/rand, used for trip approval GUIDs
 	math_rand.Seed(time.Now().UnixNano())
-	
+
 	// Generate cookie encryption key
 	key = make([]byte, 512)
 	_, err = crypto_rand.Read(key)

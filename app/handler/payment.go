@@ -49,20 +49,26 @@ func GetPayment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	paymentOption := chi.URLParam(r, "paymentOption")
+	amount, ok := getURLIntQueryParam(r, "amount")
+	if !ok {
+		return
+	}
 
 	// Permissions
 	if paymentOption != "dues" && paymentOption != "duesShirt" &&
-		paymentOption != "freshmanSpecial" {
+		paymentOption != "freshmanSpecial" && paymentOption != "customAmount" {
 		respondError(w, http.StatusNotFound, "Payment option does not exist.")
 		return
+	}
+	if paymentOption == "customAmount" && customAmount < 5 {
+		respondError(w, http.StatusBadRequest, "Amount must be 5 or more.")
 	}
 
 	// Used for us
 	membershipYears := 0
-	shirt := true
+	shirt := false
 	// Used for stripe
-	var amount int
-	description := ""
+	description := "Custom Amount"
 	if paymentOption == "dues" {
 		membershipYears = 1
 		shirt = false
@@ -72,10 +78,14 @@ func GetPayment(w http.ResponseWriter, r *http.Request) {
 		membershipYears = 1
 		amount = 30
 		description = "Dues for 1 year + shirt"
-	} else {
+		shirt = true
+	} else if paymentOption == "freshmanSpecial" {
 		membershipYears = 4
 		amount = 65
 		description = "Dues for 4 years + shirt"
+		shirt = true
+	} else {
+		description = "Custom Amount"
 	}
 	amount *= 100
 

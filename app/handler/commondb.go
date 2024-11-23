@@ -47,6 +47,15 @@ func getURLIntParam(w http.ResponseWriter, r *http.Request, param string) (int, 
 	return paramInt, true
 }
 
+func getURLIntQueryParam(w http.ResponseWriter, r *http.Request, param string) (int, bool) {
+	paramInt, err := strconv.Atoi(r.URL.Query().Get(param))
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return 0, false
+	}
+	return paramInt, true
+}
+
 // https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-go
 func generateCode(n int) string {
 	byteArr := make([]byte, n)
