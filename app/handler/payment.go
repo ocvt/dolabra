@@ -60,7 +60,7 @@ func GetPayment(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusNotFound, "Payment option does not exist.")
 		return
 	}
-	if paymentOption == "customAmount" && customAmount < 5 {
+	if paymentOption == "customAmount" && amount < 5 {
 		respondError(w, http.StatusBadRequest, "Amount must be 5 or more.")
 	}
 
