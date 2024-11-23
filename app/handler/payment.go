@@ -318,7 +318,7 @@ func PostPaymentSuccess(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stmt := `
+	stmt = `
 		UPDATE payment
 		SET completed = true
 		WHERE
