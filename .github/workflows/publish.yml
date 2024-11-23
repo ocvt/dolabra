@@ -9,11 +9,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
-      - uses: docker/build-push-action@v1
+        uses: actions/checkout@v4
+
+      - uses: docker/login-action@v3
         with:
-          username: ${{ secrets.GHCR_USERNAME }}
-          password: ${{ secrets.GHCR_PASSWORD }}
           registry: ghcr.io
-          repository: ocvt/dolabra
-          tag_with_ref: true
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: ghcr.io/ocvt/dolabra:${{ github.event.release.tag_name }}
