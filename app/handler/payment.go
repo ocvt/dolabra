@@ -49,7 +49,7 @@ func GetPayment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	paymentOption := chi.URLParam(r, "paymentOption")
-	amount, ok := getURLIntQueryParam(r, "amount")
+	amount, ok := getURLIntQueryParam(w, r, "amount")
 	if !ok {
 		return
 	}
