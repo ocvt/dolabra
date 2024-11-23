@@ -118,6 +118,11 @@ func GetPayment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Insert payment
+	if paymentOption == "customAmount" && !dbInsertPayment(
+		w, 8000000, "", memberId, "CUSTOM", membershipYears, amount, "STRIPE",
+		session.ID, false) {
+		return
+	}
 	if membershipYears > 0 && !dbInsertPayment(
 		w, 8000000, "", memberId, "MEMBERSHIP", membershipYears, amount, "STRIPE",
 		session.ID, false) {
@@ -287,6 +292,19 @@ func PostPaymentSuccess(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(event.Data.Raw, &session)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	/* If CUSTOM, mark as done */
+	stmt := `
+		UPDATE payment
+		SET completed = true
+		WHERE
+			store_item_id = 'CUSTOM'
+			AND payment_method = 'STRIPE'
+			AND payment_id = ?`
+	_, err = db.Exec(stmt, session.ID)
+	if !checkError(w, err) {
 		return
 	}
 
