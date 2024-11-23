@@ -1,5 +1,6 @@
 name: Publish container image on new release
 on:
+  workflow_dispatch: ~
   release:
     types: [published]
 
