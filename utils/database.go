@@ -72,6 +72,7 @@ func insertData(db *sql.DB) {
 	execHelper(db, `
 		INSERT OR REPLACE INTO store_item (id, name, description)
 		VALUES
+			('CUSTOM', 'Custom Amount', ''),
 			('MEMBERSHIP', '1 Year of membership', ''),
 			('SHIRT', '1 Shirt', 'Size determined at pickup')
 	`)

@@ -119,7 +119,7 @@ func GetPayment(w http.ResponseWriter, r *http.Request) {
 
 	// Insert payment
 	if paymentOption == "customAmount" && !dbInsertPayment(
-		w, 8000000, "", memberId, "CUSTOM", membershipYears, amount, "STRIPE",
+		w, 8000000, "", memberId, "CUSTOM", 1, amount, "STRIPE",
 		session.ID, false) {
 		return
 	}
