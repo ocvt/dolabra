@@ -126,7 +126,7 @@ func stageEmailNewTrip(w http.ResponseWriter, tripId int) bool {
 	date := prettyPrintDate(trip.StartDatetime)
 	email := emailStruct{
 		NotificationTypeId: trip.NotificationTypeId,
-		ReplyToId:          8000000,
+		ReplyToId:          trip.MemberId,
 		ToId:               8000000,
 		TripId:             tripId,
 	}
