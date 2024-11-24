@@ -73,7 +73,7 @@ func PostWebtoolsEmails(w http.ResponseWriter, r *http.Request) {
 			"This message has been sent via the %s Websystem.<br>"+
 			"You can modify your notification and account settings "+
 			"<a href=\"%s/myocvt\">here</a>.<br> You can also click "+
-			"<a href=\"%s/unsubscribe\">here</a> to unsubscribe.<br>"+
+			"<a href=\"%s/unsubscribe?email=EMAIL_HERE\">here</a> to unsubscribe.<br>"+
 			"<hr>", label, url, url)
 
 	if !stageEmail(w, email) {
