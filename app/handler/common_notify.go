@@ -319,7 +319,7 @@ func stageEmailSignupForce(w http.ResponseWriter, tripId int, tripName string, m
 
 	email := emailStruct{
 		NotificationTypeId: "TRIP_ALERT_FORCE",
-		ReplyToId:          trip.MembeId,
+		ReplyToId:          trip.MemberId,
 		ToId:               memberId,
 		TripId:             tripId,
 		Subject:            "You have been Force Added to the trip " + tripName,
