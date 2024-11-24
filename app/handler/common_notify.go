@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/k3a/html2text"
