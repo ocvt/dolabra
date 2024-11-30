@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -43,7 +44,7 @@ type rawEmailStruct struct {
  * Actually send an email
  */
 func sendEmail(sesService *ses.SES, email rawEmailStruct) (*ses.SendRawEmailOutput, error) {
-	email.Body = strings.Replace(email.Body, "EMAIL_HERE", email.ToEmail, 1)
+	email.Body = strings.Replace(email.Body, "EMAIL_HERE", url.QueryEscape(email.ToEmail), 1)
 
 	msg := mail.NewMessage()
 	msg.SetHeader("From", fmt.Sprintf("%s <%s>", email.FromName, email.FromEmail))
