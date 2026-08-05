@@ -291,6 +291,11 @@ func DoTasks() {
 	for e := emailQueue.Front(); e != nil; e = next {
 		next = e.Next()
 		email := e.Value.(rawEmailStruct)
+		if !validEmail(email.ToEmail) {
+			log.Printf("Skipping invalid recipient address [name: %s] [email: %s]", email.ToName, email.ToEmail)
+			emailQueue.Remove(e)
+			continue
+		}
 		_, err = sendEmail(sesService, email)
 		if err == nil {
 			emailQueue.Remove(e)

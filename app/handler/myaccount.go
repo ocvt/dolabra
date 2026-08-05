@@ -230,6 +230,11 @@ func PatchMyAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !validEmail(member.Email) {
+		respondError(w, http.StatusBadRequest, "Invalid email address")
+		return
+	}
+
 	stmt := `
 		UPDATE member
 		SET
@@ -325,6 +330,11 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&member)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if !validEmail(member.Email) {
+		respondError(w, http.StatusBadRequest, "Invalid email address")
 		return
 	}
 

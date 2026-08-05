@@ -20,6 +20,11 @@ func PostQuicksignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !validEmail(email.Email) {
+		respondError(w, http.StatusBadRequest, "Invalid email address")
+		return
+	}
+
 	stmt := `
 		INSERT OR REPLACE INTO quick_signup (
 			create_datetime,

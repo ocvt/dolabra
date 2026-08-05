@@ -70,6 +70,12 @@ func PostWebtoolsQuicksignups(w http.ResponseWriter, r *http.Request) {
 
 	if action == "add" {
 		for i := 0; i < len(emails.Emails); i++ {
+			if !validEmail(emails.Emails[i]) {
+				respondError(w, http.StatusBadRequest, "Invalid email address: "+emails.Emails[i])
+				return
+			}
+		}
+		for i := 0; i < len(emails.Emails); i++ {
 			stmt := `
 				INSERT OR REPLACE INTO quick_signup (
 					create_datetime,

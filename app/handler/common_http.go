@@ -4,11 +4,18 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"net/mail"
 	"time"
 
 	"github.com/golang-jwt/jwt"
 	"github.com/ocvt/dolabra/utils"
 )
+
+// Returns true if email is a plain valid address (no display name)
+func validEmail(email string) bool {
+	addr, err := mail.ParseAddress(email)
+	return err == nil && addr.Address == email
+}
 
 /************************ COOKIES ************************/
 // Key for signing JWTs
