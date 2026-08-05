@@ -100,7 +100,46 @@ func insertData(db *sql.DB) {
 
 }
 
+/* Clean up rows with undeliverable email addresses */
+// Members are deactivated (not deleted) so they can log in, fix their
+// email, and reactivate; quick signups are just an email list so bad
+// rows are deleted
+func cleanInvalidEmails(db *sql.DB) {
+	rows, err := db.Query(`
+		SELECT id, name, email
+		FROM member
+		WHERE active = true AND email NOT LIKE '%_@_%'`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id int
+		var name, email string
+		err = rows.Scan(&id, &name, &email)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("Deactivating member with invalid email [id: %d] [name: %s] [email: %s]", id, name, email)
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	execHelper(db, `
+		UPDATE member
+		SET active = false
+		WHERE active = true AND email NOT LIKE '%_@_%'`)
+
+	execHelper(db, `
+		DELETE FROM quick_signup
+		WHERE email NOT LIKE '%_@_%'`)
+}
+
 func DBMigrate(db *sql.DB) {
 	createTables(db)
 	insertData(db)
+	cleanInvalidEmails(db)
 }
