@@ -2,18 +2,31 @@ package handler
 
 import (
 	"context"
+	"crypto/hmac"
 	"encoding/json"
 	"net/http"
 )
+
+type unsubscribeStruct struct {
+	Email string `json:"email"`
+	Sig   string `json:"sig"`
+}
 
 func PostUnsubscribeAll(w http.ResponseWriter, r *http.Request) {
 	// Get request body
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
-	var email simpleEmailStruct
+	var email unsubscribeStruct
 	err := decoder.Decode(&email)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Require the HMAC signature from the emailed unsubscribe link so only
+	// the recipient can unsubscribe their address
+	if !hmac.Equal([]byte(email.Sig), []byte(unsubscribeSig(email.Email))) {
+		respondError(w, http.StatusForbidden, "Invalid unsubscribe link")
 		return
 	}
 

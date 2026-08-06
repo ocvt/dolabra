@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -11,6 +14,13 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/ocvt/dolabra/utils"
 )
+
+// HMAC signature binding an unsubscribe link to an email address
+func unsubscribeSig(email string) string {
+	mac := hmac.New(sha256.New, key)
+	mac.Write([]byte("unsubscribe:" + email))
+	return hex.EncodeToString(mac.Sum(nil))
+}
 
 // Returns true if email is a plain valid address (no display name)
 func validEmail(email string) bool {

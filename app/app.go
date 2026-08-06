@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/httprate"
 	"github.com/rs/cors"
 
 	"github.com/ocvt/dolabra/app/handler"
@@ -53,8 +54,12 @@ func setRouters() {
 	r.Get("/news/archive", handler.GetNewsArchive)
 	r.Get("/photo/{photoId}", handler.GetPhoto)
 	r.Patch("/tripapproval/{guidCode}/{action}", handler.PatchTripApproval)
-	r.Post("/quicksignup", handler.PostQuicksignup)
-	r.Post("/unsubscribe/all", handler.PostUnsubscribeAll)
+	// Unauthenticated write endpoints get rate limited per IP
+	r.Group(func(r chi.Router) {
+		r.Use(httprate.LimitByIP(10, time.Minute))
+		r.Post("/quicksignup", handler.PostQuicksignup)
+		r.Post("/unsubscribe/all", handler.PostUnsubscribeAll)
+	})
 	r.Route("/noauth", func(r chi.Router) {
 		r.Get("/trips", handler.GetTripsSummary)
 		r.Get("/trips/{tripId}", handler.GetTripSummary)

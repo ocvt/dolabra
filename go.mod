@@ -5,6 +5,7 @@ go 1.25.0
 require (
 	github.com/aws/aws-sdk-go v1.55.8
 	github.com/go-chi/chi v4.1.2+incompatible
+	github.com/go-chi/httprate v0.16.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/k3a/html2text v1.0.8
 	github.com/mattn/go-sqlite3 v1.14.49
@@ -28,6 +29,8 @@ require (
 	github.com/googleapis/enterprise-certificate-proxy v0.3.19 // indirect
 	github.com/googleapis/gax-go/v2 v2.23.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
+	github.com/zeebo/xxh3 v1.0.2 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.67.0 // indirect
 	go.opentelemetry.io/otel v1.44.0 // indirect

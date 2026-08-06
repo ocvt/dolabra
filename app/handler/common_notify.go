@@ -45,6 +45,7 @@ type rawEmailStruct struct {
  */
 func sendEmail(sesService *ses.SES, email rawEmailStruct) (*ses.SendRawEmailOutput, error) {
 	email.Body = strings.Replace(email.Body, "EMAIL_HERE", url.QueryEscape(email.ToEmail), 1)
+	email.Body = strings.Replace(email.Body, "SIG_HERE", unsubscribeSig(email.ToEmail), 1)
 
 	msg := mail.NewMessage()
 	msg.SetHeader("From", fmt.Sprintf("%s <%s>", email.FromName, email.FromEmail))
@@ -152,7 +153,7 @@ func stageEmailNewTrip(w http.ResponseWriter, tripId int) bool {
 			"This message has been sent via the %s Websystem.<br>"+
 			"You can modify your notification and account settings "+
 			"<a href=\"%s/myocvt\">here</a>.<br> You can also click "+
-			"<a href=\"%s/unsubscribe?email=EMAIL_HERE\">here</a> to unsubscribe.<br>"+
+			"<a href=\"%s/unsubscribe?email=EMAIL_HERE&sig=SIG_HERE\">here</a> to unsubscribe.<br>"+
 			"<hr>",
 		label, date, trip.Name, trip.Summary, locationDetails,
 		url, tripId, url, tripId, label, url, url)
