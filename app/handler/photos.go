@@ -198,7 +198,7 @@ func GetPhoto(w http.ResponseWriter, r *http.Request) {
 
 	_, err = io.Copy(w, photoRes.Body)
 	if err != nil {
-		log.Printf("Failed writing response: " + err.Error())
+		log.Print("Failed writing response: " + err.Error())
 	}
 }
 

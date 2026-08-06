@@ -1,4 +1,4 @@
-FROM golang:1.17-buster
+FROM golang:1.25-bookworm
 
 LABEL org.opencontainers.image.source https://github.com/ocvt/dolabra
 LABEL maintainer="Paul Walko <paul@bigcavemaps.com>"

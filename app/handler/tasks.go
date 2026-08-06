@@ -283,7 +283,7 @@ func DoTasks() {
 		Region: aws.String("us-east-1"),
 	})
 	if err != nil {
-		log.Printf("ERROR: " + err.Error())
+		log.Print("ERROR: " + err.Error())
 	}
 	sesService := ses.New(sesSession)
 
