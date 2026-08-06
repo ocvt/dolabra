@@ -145,6 +145,7 @@ func setRouters() {
 		r.Patch("/payments/{paymentRowId}/completed", handler.PatchWebtoolsPaymentsCompleted)
 		r.Post("/approvers", handler.PostWebtoolsApprovers)
 		r.Post("/emails", handler.PostWebtoolsEmails)
+		r.Post("/emails/direct", handler.PostWebtoolsEmailsDirect)
 		r.Post("/equipment", handler.PostWebtoolsEquipment)
 		r.Post("/payments", handler.PostWebtoolsPayments)
 		r.Post("/payments/generateCode", handler.PostWebtoolsGenerateCode)

@@ -37,6 +37,7 @@ func insertData(db *sql.DB) {
 	execHelper(db, `
 		INSERT OR REPLACE INTO notification_type (id, name, description)
 		VALUES
+			('DIRECT', 'Direct Message', 'Email sent directly to specific members'),
 			('GENERAL_ANNOUNCEMENTS', 'Club Meetings / News / Events', 'Important Club Announcements'),
 			('TRIP_APPROVAL', 'Trip Approval Alert', 'Alert asking member (probably officer) to approve a trip'),
 			('TRIP_ALERT_ATTEND', 'Signup status changed to attending', 'Signup status changed to attending'),

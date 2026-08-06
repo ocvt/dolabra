@@ -112,7 +112,13 @@ func resolveRecipients(email emailStruct) ([]recipientStruct, bool) {
 	doQuickSignup := false
 	var rows *sql.Rows
 	var err error
-	if email.NotificationTypeId == "TRIP_APPROVAL" {
+	if email.NotificationTypeId == "DIRECT" {
+		stmt := `
+			SELECT id
+			FROM member
+			WHERE id = ? AND active = true`
+		rows, err = db.Query(stmt, email.ToId)
+	} else if email.NotificationTypeId == "TRIP_APPROVAL" {
 		stmt := `
 			SELECT member_id
 			FROM trip_approver
@@ -181,7 +187,8 @@ func resolveRecipients(email emailStruct) ([]recipientStruct, bool) {
 
 	recipients := []recipientStruct{}
 	for _, memberId := range memberIds {
-		if email.NotificationTypeId != "TRIP_APPROVAL" &&
+		if email.NotificationTypeId != "DIRECT" &&
+			email.NotificationTypeId != "TRIP_APPROVAL" &&
 			!strings.HasPrefix(email.NotificationTypeId, "TRIP_ALERT") &&
 			!strings.HasPrefix(email.NotificationTypeId, "TRIP_MESSAGE") &&
 			!dbCheckMemberWantsNotification(memberId, email.NotificationTypeId) {

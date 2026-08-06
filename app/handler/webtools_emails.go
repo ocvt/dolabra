@@ -82,3 +82,56 @@ func PostWebtoolsEmails(w http.ResponseWriter, r *http.Request) {
 
 	respondJSON(w, http.StatusNoContent, nil)
 }
+
+type directEmailStruct struct {
+	Subject   string `json:"subject"`
+	Body      string `json:"body"`
+	MemberIds []int  `json:"memberIds"`
+}
+
+/* Send an email directly to specific members, e.g. for testing */
+func PostWebtoolsEmailsDirect(w http.ResponseWriter, r *http.Request) {
+	// Get request body
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	var direct directEmailStruct
+	err := decoder.Decode(&direct)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if len(direct.MemberIds) == 0 || len(direct.MemberIds) > 100 {
+		respondError(w, http.StatusBadRequest, "Select between 1 and 100 members")
+		return
+	}
+
+	label := utils.GetConfig().EmailLabel
+	url := utils.GetConfig().FrontendUrl
+	body := direct.Body + fmt.Sprintf(
+		"<br>"+
+			"<br>"+
+			"<br>"+
+			"<hr>"+
+			"This message has been sent via the %s Websystem.<br>"+
+			"You can modify your notification and account settings "+
+			"<a href=\"%s/myocvt\">here</a>.<br> You can also click "+
+			"<a href=\"%s/unsubscribe?email=EMAIL_HERE&sig=SIG_HERE\">here</a> to unsubscribe.<br>"+
+			"<hr>", label, url, url)
+
+	for _, memberId := range direct.MemberIds {
+		email := emailStruct{
+			NotificationTypeId: "DIRECT",
+			TripId:             3000,
+			ReplyToId:          8000000,
+			ToId:               memberId,
+			Subject:            direct.Subject,
+			Body:               body,
+		}
+		if !stageEmail(w, email) {
+			return
+		}
+	}
+
+	respondJSON(w, http.StatusNoContent, nil)
+}
