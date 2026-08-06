@@ -52,6 +52,11 @@ func sendEmail(sesService *ses.SES, email rawEmailStruct) (*ses.SendRawEmailOutp
 	msg.SetHeader("Reply-To", fmt.Sprintf("%s <%s>", email.ReplyToName, email.ReplyToEmail))
 	msg.SetHeader("To", fmt.Sprintf("%s <%s>", email.ToName, email.ToEmail))
 	msg.SetHeader("Subject", email.Subject)
+	// RFC 8058 one-click unsubscribe; keeps mailbox providers happy and gives
+	// users an unsubscribe button instead of a spam report
+	msg.SetHeader("List-Unsubscribe", fmt.Sprintf("<%s/unsubscribe/oneclick?email=%s&sig=%s>",
+		utils.GetConfig().ApiUrl, url.QueryEscape(email.ToEmail), unsubscribeSig(email.ToEmail)))
+	msg.SetHeader("List-Unsubscribe-Post", "List-Unsubscribe=One-Click")
 	msg.SetBody("text/html", email.Body)
 	msg.AddAlternative("text/plain", html2text.HTML2Text(email.Body))
 
@@ -103,8 +108,13 @@ func stageEmailPlain(email emailStruct) error {
 		email.ReplyToId,
 		email.Subject,
 		email.Body)
+	if err != nil {
+		return err
+	}
 
-	return err
+	// Send on demand instead of waiting for the fallback tick
+	KickEmails()
+	return nil
 }
 
 /* TRIP HELPERS */

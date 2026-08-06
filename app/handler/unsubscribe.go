@@ -12,6 +12,45 @@ type unsubscribeStruct struct {
 	Sig   string `json:"sig"`
 }
 
+/*
+ * Remove email from quick signups and clear the member's notification
+ * preferences
+ */
+func unsubscribeAll(email string) error {
+	notificationsArr, err := json.Marshal(notificationsStruct{})
+	if err != nil {
+		return err
+	}
+	notificationsStr := string(notificationsArr)
+
+	ctx := context.Background()
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	stmt := `
+		DELETE FROM quick_signup
+		WHERE email = ?`
+	_, err = tx.ExecContext(ctx, stmt, email)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	stmt = `
+		UPDATE member
+		SET notification_preference = ?
+		WHERE email = ?`
+	_, err = tx.ExecContext(ctx, stmt, notificationsStr, email)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
+}
+
 func PostUnsubscribeAll(w http.ResponseWriter, r *http.Request) {
 	// Get request body
 	decoder := json.NewDecoder(r.Body)
@@ -30,39 +69,27 @@ func PostUnsubscribeAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	notificationsArr, err := json.Marshal(notificationsStruct{})
-	if !checkError(w, err) {
-		return
-	}
-	notificationsStr := string(notificationsArr)
-
-	ctx := context.Background()
-	tx, err := db.BeginTx(ctx, nil)
-	if !checkError(w, err) {
+	if !checkError(w, unsubscribeAll(email.Email)) {
 		return
 	}
 
-	stmt := `
-		DELETE FROM quick_signup
-		WHERE email = ?`
-	_, err = tx.ExecContext(ctx, stmt, email.Email)
-	if !checkError(w, err) {
-		tx.Rollback()
+	respondJSON(w, http.StatusNoContent, nil)
+}
+
+/*
+ * RFC 8058 one-click unsubscribe target for the List-Unsubscribe header;
+ * mailbox providers POST here directly with no body we care about
+ */
+func PostUnsubscribeOneClick(w http.ResponseWriter, r *http.Request) {
+	email := r.URL.Query().Get("email")
+	sig := r.URL.Query().Get("sig")
+
+	if !hmac.Equal([]byte(sig), []byte(unsubscribeSig(email))) {
+		respondError(w, http.StatusForbidden, "Invalid unsubscribe link")
 		return
 	}
 
-	stmt = `
-		UPDATE member
-		SET notification_preference = ?
-		WHERE email = ?`
-	_, err = tx.ExecContext(ctx, stmt, notificationsStr, email.Email)
-	if !checkError(w, err) {
-		tx.Rollback()
-		return
-	}
-
-	err = tx.Commit()
-	if !checkError(w, err) {
+	if !checkError(w, unsubscribeAll(email)) {
 		return
 	}
 

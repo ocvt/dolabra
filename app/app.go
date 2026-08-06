@@ -59,6 +59,7 @@ func setRouters() {
 		r.Use(httprate.LimitByIP(10, time.Minute))
 		r.Post("/quicksignup", handler.PostQuicksignup)
 		r.Post("/unsubscribe/all", handler.PostUnsubscribeAll)
+		r.Post("/unsubscribe/oneclick", handler.PostUnsubscribeOneClick)
 	})
 	r.Route("/noauth", func(r chi.Router) {
 		r.Get("/trips", handler.GetTripsSummary)
@@ -169,11 +170,11 @@ func Run(host string) {
 		log.Fatal(server.ListenAndServe())
 	}()
 
-	// Run tasks every 5 minutes
+	// Run housekeeping tasks every minute (emails send on demand)
 	ticker := time.NewTicker(1 * time.Minute)
 	tickerQuit := make(chan struct{})
 	go func() {
-		log.Printf("Task ticker started, running every 5 minutes")
+		log.Printf("Task ticker started, running every minute")
 		for {
 			select {
 			case <-ticker.C:

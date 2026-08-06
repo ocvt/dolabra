@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -13,6 +14,7 @@ import (
 	"github.com/ocvt/dolabra/utils"
 )
 
+/* Periodic housekeeping: expired rows + trip reminders */
 func DoTasks() {
 	/* Remove expired trip approvers */
 	stmt := `
@@ -93,8 +95,168 @@ func DoTasks() {
 	}
 	/*****************************/
 
-	/* Load staged emails into queue to send */
-	stmt = `
+	// Fallback nudge in case a kick was missed
+	KickEmails()
+}
+
+/* Email worker */
+// Emails are processed on demand: staging an email kicks the worker, with a
+// periodic fallback tick to retry after SES rate limiting or send errors
+var emailKick = make(chan struct{}, 1)
+
+// Nudge the email worker; safe to call from any goroutine, never blocks
+func KickEmails() {
+	select {
+	case emailKick <- struct{}{}:
+	default:
+	}
+}
+
+func StartEmailWorker() {
+	// Pick up anything left pending by a restart
+	KickEmails()
+
+	go func() {
+		ticker := time.NewTicker(5 * time.Minute)
+		for {
+			select {
+			case <-emailKick:
+			case <-ticker.C:
+			}
+			expandStagedEmails()
+			sendPendingEmails()
+		}
+	}()
+}
+
+type recipientStruct struct {
+	name  string
+	email string
+}
+
+/*
+ * Resolve a staged email to its recipient list based on notification type
+ */
+func resolveRecipients(email emailStruct) ([]recipientStruct, bool) {
+	doQuickSignup := false
+	var rows *sql.Rows
+	var err error
+	if email.NotificationTypeId == "TRIP_APPROVAL" {
+		stmt := `
+			SELECT member_id
+			FROM trip_approver
+			WHERE member_id = ?`
+		rows, err = db.Query(stmt, email.ToId)
+	} else if strings.HasPrefix(email.NotificationTypeId, "TRIP_ALERT") ||
+		email.NotificationTypeId == "TRIP_MESSAGE_DIRECT" {
+		stmt := `
+			SELECT member_id
+			FROM trip_signup
+			WHERE member_id = ? AND trip_id = ?`
+		rows, err = db.Query(stmt, email.ToId, email.TripId)
+	} else if email.NotificationTypeId == "TRIP_MESSAGE_NOTIFY" {
+		stmt := `
+			SELECT member_id
+			FROM trip_signup
+			WHERE trip_id = ? AND
+				(attending_code = 'ATTEND' OR
+				 attending_code = 'FORCE' OR
+				 attending_code = 'WAIT')`
+		rows, err = db.Query(stmt, email.TripId)
+	} else if email.NotificationTypeId == "TRIP_MESSAGE_ATTEND" {
+		stmt := `
+			SELECT member_id
+			FROM trip_signup
+			WHERE trip_id = ? AND
+				(attending_code = 'ATTEND' OR attending_code = 'FORCE')`
+		rows, err = db.Query(stmt, email.TripId)
+	} else if email.NotificationTypeId == "TRIP_MESSAGE_WAIT" {
+		stmt := `
+			SELECT member_id
+			FROM trip_signup
+			WHERE trip_id = ? AND attending_code = 'WAIT'`
+		rows, err = db.Query(stmt, email.TripId)
+	} else {
+		doQuickSignup = true
+		// Send to all ACTIVE members with notification preference set and quicksignups
+		stmt := `
+			SELECT id
+			FROM member
+			WHERE active = true`
+		rows, err = db.Query(stmt)
+	}
+
+	if err != nil {
+		log.Print("ERROR resolving recipients: " + err.Error())
+		return nil, false
+	}
+	defer rows.Close()
+
+	memberIds := []int{}
+	for rows.Next() {
+		var memberId int
+		err = rows.Scan(&memberId)
+		if err != nil {
+			log.Print("ERROR resolving recipients: " + err.Error())
+			return nil, false
+		}
+		memberIds = append(memberIds, memberId)
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Print("ERROR resolving recipients: " + err.Error())
+		return nil, false
+	}
+
+	recipients := []recipientStruct{}
+	for _, memberId := range memberIds {
+		if email.NotificationTypeId != "TRIP_APPROVAL" &&
+			!strings.HasPrefix(email.NotificationTypeId, "TRIP_ALERT") &&
+			!strings.HasPrefix(email.NotificationTypeId, "TRIP_MESSAGE") &&
+			!dbCheckMemberWantsNotification(memberId, email.NotificationTypeId) {
+			continue
+		}
+		toName, toEmail := dbGetMemberNameEmail(memberId)
+		recipients = append(recipients, recipientStruct{name: toName, email: toEmail})
+	}
+
+	if doQuickSignup {
+		stmt := `
+			SELECT DISTINCT email
+			FROM quick_signup`
+		qsRows, err := db.Query(stmt)
+		if err != nil {
+			log.Print("ERROR resolving quicksignups: " + err.Error())
+			return nil, false
+		}
+		defer qsRows.Close()
+
+		for qsRows.Next() {
+			var emailAddress string
+			err = qsRows.Scan(&emailAddress)
+			if err != nil {
+				log.Print("ERROR resolving quicksignups: " + err.Error())
+				return nil, false
+			}
+			recipients = append(recipients, recipientStruct{name: "", email: emailAddress})
+		}
+		err = qsRows.Err()
+		if err != nil {
+			log.Print("ERROR resolving quicksignups: " + err.Error())
+			return nil, false
+		}
+	}
+
+	return recipients, true
+}
+
+/*
+ * Expand unexpanded staged emails into per-recipient rows. Expansion and
+ * marking the email row are one transaction; the UNIQUE(email_id, to_email)
+ * constraint dedups members who are also quick signups.
+ */
+func expandStagedEmails() {
+	stmt := `
 		SELECT
 			id,
 			notification_type_id,
@@ -105,13 +267,14 @@ func DoTasks() {
 			body
 		FROM email
 		WHERE sent_datetime is NULL`
-	rows, err = db.Query(stmt)
+	rows, err := db.Query(stmt)
 	if err != nil {
-		log.Fatal(err)
+		log.Print("ERROR loading staged emails: " + err.Error())
+		return
 	}
 	defer rows.Close()
 
-	emails := list.New()
+	emails := []emailStruct{}
 	for rows.Next() {
 		email := emailStruct{}
 		err = rows.Scan(
@@ -123,187 +286,176 @@ func DoTasks() {
 			&email.Subject,
 			&email.Body)
 		if err != nil {
-			log.Fatal(err)
+			log.Print("ERROR loading staged emails: " + err.Error())
+			return
 		}
-		emails.PushBack(email)
+		emails = append(emails, email)
 	}
 	err = rows.Err()
 	if err != nil {
-		log.Fatal(err)
+		log.Print("ERROR loading staged emails: " + err.Error())
+		return
 	}
 
-	for e := emails.Front(); e != nil; e = e.Next() {
-		email := e.Value.(emailStruct)
-		// Always send from System Account
-		fromName, fromEmail := dbGetMemberNameEmail(8000000)
-		replyToName, replyToEmail := dbGetMemberNameEmail(email.ReplyToId)
-
-		doQuickSignup := false
-		var rows *sql.Rows
-		var err error
-		if email.NotificationTypeId == "TRIP_APPROVAL" {
-			stmt := `
-				SELECT member_id
-				FROM trip_approver
-				WHERE member_id = ?`
-			rows, err = db.Query(stmt, email.ToId)
-		} else if strings.HasPrefix(email.NotificationTypeId, "TRIP_ALERT") ||
-			email.NotificationTypeId == "TRIP_MESSAGE_DIRECT" {
-			stmt := `
-				SELECT member_id
-				FROM trip_signup
-				WHERE member_id = ? AND trip_id = ?`
-			rows, err = db.Query(stmt, email.ToId, email.TripId)
-		} else if email.NotificationTypeId == "TRIP_MESSAGE_NOTIFY" {
-			stmt := `
-				SELECT member_id
-				FROM trip_signup
-				WHERE trip_id = ? AND
-					(attending_code = 'ATTEND' OR
-					 attending_code = 'FORCE' OR
-					 attending_code = 'WAIT')`
-			rows, err = db.Query(stmt, email.TripId)
-		} else if email.NotificationTypeId == "TRIP_MESSAGE_ATTEND" {
-			stmt := `
-				SELECT member_id
-				FROM trip_signup
-				WHERE trip_id = ? AND
-					(attending_code = 'ATTEND' OR attending_code = 'FORCE')`
-			rows, err = db.Query(stmt, email.TripId)
-		} else if email.NotificationTypeId == "TRIP_MESSAGE_WAIT" {
-			stmt := `
-				SELECT member_id
-				FROM trip_signup
-				WHERE trip_id = ? AND attending_code = 'WAIT'`
-			rows, err = db.Query(stmt, email.TripId)
-		} else {
-			doQuickSignup = true
-			// Send to all ACTIVE members with notification preference set and quicksignups
-			stmt := `
-				SELECT id
-				FROM member
-				WHERE active = true`
-			rows, err = db.Query(stmt)
+	for _, email := range emails {
+		recipients, ok := resolveRecipients(email)
+		if !ok {
+			continue
 		}
 
+		tx, err := db.Begin()
 		if err != nil {
-			log.Fatal(err)
+			log.Print("ERROR expanding email: " + err.Error())
+			continue
 		}
-		defer rows.Close()
-
-		// Members
-		memberIds := list.New()
-		for rows.Next() {
-			var memberId int
-			err = rows.Scan(&memberId)
-			if err != nil {
-				log.Fatal(err)
-			}
-			memberIds.PushBack(memberId)
-		}
-
-		for m := memberIds.Front(); m != nil; m = m.Next() {
-			memberId := m.Value.(int)
-			if email.NotificationTypeId != "TRIP_APPROVAL" &&
-				!strings.HasPrefix(email.NotificationTypeId, "TRIP_ALERT") &&
-				!strings.HasPrefix(email.NotificationTypeId, "TRIP_MESSAGE") &&
-				!dbCheckMemberWantsNotification(memberId, email.NotificationTypeId) {
+		ok = true
+		for _, recipient := range recipients {
+			if !validEmail(recipient.email) {
+				log.Printf("Skipping invalid recipient address [name: %s] [email: %s]", recipient.name, recipient.email)
 				continue
 			}
-			toName, toEmail := dbGetMemberNameEmail(memberId)
-
-			// Put into queue
-			rawEmail := rawEmailStruct{
-				FromName:     fromName,
-				FromEmail:    fromEmail,
-				ReplyToEmail: replyToEmail,
-				ReplyToName:  replyToName,
-				ToName:       toName,
-				ToEmail:      toEmail,
-				Subject:      email.Subject,
-				Body:         email.Body,
-			}
-
-			emailQueue.PushBack(rawEmail)
-		}
-		err = rows.Err()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// Quick Signups
-		if doQuickSignup {
-			stmt = `
-				SELECT DISTINCT email
-				FROM quick_signup`
-			rows, err = db.Query(stmt)
+			stmt := `
+				INSERT OR IGNORE INTO email_recipient (
+					email_id,
+					to_name,
+					to_email)
+				VALUES (?, ?, ?)`
+			_, err = tx.Exec(stmt, email.Id, recipient.name, recipient.email)
 			if err != nil {
-				log.Fatal(err)
-			}
-			defer rows.Close()
-
-			for rows.Next() {
-				var emailAddress string
-				err = rows.Scan(&emailAddress)
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				// Put into queue
-				rawEmail := rawEmailStruct{
-					FromName:     fromName,
-					FromEmail:    fromEmail,
-					ReplyToEmail: replyToEmail,
-					ReplyToName:  replyToName,
-					ToName:       "",
-					ToEmail:      emailAddress,
-					Subject:      email.Subject,
-					Body:         email.Body,
-				}
-
-				emailQueue.PushBack(rawEmail)
+				log.Print("ERROR expanding email: " + err.Error())
+				tx.Rollback()
+				ok = false
+				break
 			}
 		}
+		if !ok {
+			continue
+		}
 
-		// Mark email as sent
-		stmt = `
+		stmt := `
 			UPDATE email
-			SET
-				sent_datetime = datetime('now')
+			SET sent_datetime = datetime('now')
 			WHERE id = ?`
-		_, err = db.Exec(stmt, email.Id)
+		_, err = tx.Exec(stmt, email.Id)
 		if err != nil {
-			log.Fatal(err)
+			log.Print("ERROR expanding email: " + err.Error())
+			tx.Rollback()
+			continue
+		}
+		err = tx.Commit()
+		if err != nil {
+			log.Print("ERROR expanding email: " + err.Error())
 		}
 	}
-	/***************************/
+}
 
-	/* Send emails from queue */
+/*
+ * Send unsent recipient rows, marking each sent only after SES accepts it.
+ * Rate limiting stops the pass; the next kick or tick resumes it.
+ */
+func sendPendingEmails() {
+	stmt := `
+		SELECT
+			email_recipient.id,
+			email_recipient.to_name,
+			email_recipient.to_email,
+			email.reply_to_id,
+			email.subject,
+			email.body
+		FROM email_recipient
+		JOIN email ON email.id = email_recipient.email_id
+		WHERE email_recipient.sent_datetime IS NULL AND email_recipient.failed = 0
+		ORDER BY email_recipient.id`
+	rows, err := db.Query(stmt)
+	if err != nil {
+		log.Print("ERROR loading pending emails: " + err.Error())
+		return
+	}
+	defer rows.Close()
+
+	type pendingStruct struct {
+		id        int
+		toName    string
+		toEmail   string
+		replyToId int
+		subject   string
+		body      string
+	}
+	pending := []pendingStruct{}
+	for rows.Next() {
+		p := pendingStruct{}
+		err = rows.Scan(&p.id, &p.toName, &p.toEmail, &p.replyToId, &p.subject, &p.body)
+		if err != nil {
+			log.Print("ERROR loading pending emails: " + err.Error())
+			return
+		}
+		pending = append(pending, p)
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Print("ERROR loading pending emails: " + err.Error())
+		return
+	}
+
+	if len(pending) == 0 {
+		return
+	}
+
+	// Always send from System Account
+	fromName, fromEmail := dbGetMemberNameEmail(8000000)
+	replyToCache := map[int][2]string{}
+
 	sesSession, err := session.NewSession(&aws.Config{
 		Region: aws.String("us-east-1"),
 	})
 	if err != nil {
 		log.Print("ERROR: " + err.Error())
+		return
 	}
 	sesService := ses.New(sesSession)
 
-	var next *list.Element
-	for e := emailQueue.Front(); e != nil; e = next {
-		next = e.Next()
-		email := e.Value.(rawEmailStruct)
-		if !validEmail(email.ToEmail) {
-			log.Printf("Skipping invalid recipient address [name: %s] [email: %s]", email.ToName, email.ToEmail)
-			emailQueue.Remove(e)
-			continue
+	for _, p := range pending {
+		replyTo, ok := replyToCache[p.replyToId]
+		if !ok {
+			replyToName, replyToEmail := dbGetMemberNameEmail(p.replyToId)
+			replyTo = [2]string{replyToName, replyToEmail}
+			replyToCache[p.replyToId] = replyTo
 		}
-		_, err = sendEmail(sesService, email)
+
+		rawEmail := rawEmailStruct{
+			FromName:     fromName,
+			FromEmail:    fromEmail,
+			ReplyToName:  replyTo[0],
+			ReplyToEmail: replyTo[1],
+			ToName:       p.toName,
+			ToEmail:      p.toEmail,
+			Subject:      p.subject,
+			Body:         p.body,
+		}
+
+		_, err = sendEmail(sesService, rawEmail)
 		if err == nil {
-			emailQueue.Remove(e)
+			stmt := `
+				UPDATE email_recipient
+				SET sent_datetime = datetime('now')
+				WHERE id = ?`
+			_, err = db.Exec(stmt, p.id)
+			if err != nil {
+				log.Print("ERROR marking email sent: " + err.Error())
+			}
 		} else if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == ses.ErrCodeLimitExceededException {
-			// Rate limited, try again next time
-			break
+			// Rate limited, resume on next kick or tick
+			return
 		} else {
-			emailQueue.Remove(e)
+			stmt := `
+				UPDATE email_recipient
+				SET failed = 1
+				WHERE id = ?`
+			_, execErr := db.Exec(stmt, p.id)
+			if execErr != nil {
+				log.Print("ERROR marking email failed: " + execErr.Error())
+			}
+
 			// Attempt to send error to system email, otherwise log error
 			nameSystem := utils.GetConfig().SmtpFromNameDefault
 			emailSystem := utils.GetConfig().SmtpFromEmailDefault
@@ -314,7 +466,7 @@ func DoTasks() {
 				ReplyToEmail: emailSystem,
 				ToName:       nameSystem,
 				ToEmail:      emailSystem,
-				Subject:      "Error sending email [name: " + email.ToName + "] [email: " + email.ToEmail + "]",
+				Subject:      "Error sending email [name: " + p.toName + "] [email: " + p.toEmail + "]",
 				Body:         "Error occured sending email: " + err.Error(),
 			}
 			_, err = sendEmail(sesService, rawEmail)
@@ -323,5 +475,4 @@ func DoTasks() {
 			}
 		}
 	}
-	/**************************/
 }

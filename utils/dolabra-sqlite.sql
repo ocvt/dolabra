@@ -31,6 +31,20 @@ CREATE TABLE IF NOT EXISTS email (
       FOREIGN KEY(reply_to_id) REFERENCES member(id)
 );
 
+-- Table: email_recipient
+-- Per-recipient send state (sent_datetime set only after SES accepts)
+-- NOTE: no semicolons in comments, createTables splits this file on them
+CREATE TABLE IF NOT EXISTS email_recipient (
+      id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
+      email_id INTEGER NOT NULL,
+      to_name TEXT NOT NULL,
+      to_email TEXT NOT NULL,
+      sent_datetime DATETIME,
+      failed INTEGER NOT NULL DEFAULT 0,
+      UNIQUE(email_id, to_email),
+      FOREIGN KEY(email_id) REFERENCES email(id)
+);
+
 -- Table: equipment
 CREATE TABLE IF NOT EXISTS equipment (
       id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,

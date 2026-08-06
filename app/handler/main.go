@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"container/list"
 	crypto_rand "crypto/rand"
 	"database/sql"
 	"encoding/hex"
@@ -17,7 +16,6 @@ import (
 )
 
 var db *sql.DB
-var emailQueue *list.List
 
 //var strictHTML *bluemonday.Policy
 
@@ -75,9 +73,6 @@ func Initialize() {
 		log.Fatal(err)
 	}
 
-	// Initialize email queue
-	emailQueue = list.New()
-
 	err = dbCreateSystemMember()
 	if err != nil {
 		log.Fatal("Error creating System Member: ", err)
@@ -87,6 +82,9 @@ func Initialize() {
 	if err != nil {
 		log.Fatal("Error creating null trip (for announcements): ", err)
 	}
+
+	// Start on-demand email worker
+	StartEmailWorker()
 }
 
 // Allow db to be closed from app package
