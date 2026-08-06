@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -95,38 +94,10 @@ func DoTasks() {
 	}
 	/*****************************/
 
-	// Fallback nudge in case a kick was missed
-	KickEmails()
-}
-
-/* Email worker */
-// Emails are processed on demand: staging an email kicks the worker, with a
-// periodic fallback tick to retry after SES rate limiting or send errors
-var emailKick = make(chan struct{}, 1)
-
-// Nudge the email worker; safe to call from any goroutine, never blocks
-func KickEmails() {
-	select {
-	case emailKick <- struct{}{}:
-	default:
-	}
-}
-
-func StartEmailWorker() {
-	// Pick up anything left pending by a restart
-	KickEmails()
-
-	go func() {
-		ticker := time.NewTicker(5 * time.Minute)
-		for {
-			select {
-			case <-emailKick:
-			case <-ticker.C:
-			}
-			expandStagedEmails()
-			sendPendingEmails()
-		}
-	}()
+	/* Process emails: expand staged emails to recipients, then send */
+	expandStagedEmails()
+	sendPendingEmails()
+	/*****************************************************************/
 }
 
 type recipientStruct struct {

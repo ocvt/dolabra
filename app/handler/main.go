@@ -82,9 +82,6 @@ func Initialize() {
 	if err != nil {
 		log.Fatal("Error creating null trip (for announcements): ", err)
 	}
-
-	// Start on-demand email worker
-	StartEmailWorker()
 }
 
 // Allow db to be closed from app package

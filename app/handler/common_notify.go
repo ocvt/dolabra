@@ -108,13 +108,7 @@ func stageEmailPlain(email emailStruct) error {
 		email.ReplyToId,
 		email.Subject,
 		email.Body)
-	if err != nil {
-		return err
-	}
-
-	// Send on demand instead of waiting for the fallback tick
-	KickEmails()
-	return nil
+	return err
 }
 
 /* TRIP HELPERS */
