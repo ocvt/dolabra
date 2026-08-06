@@ -81,6 +81,14 @@ func PostUnsubscribeAll(w http.ResponseWriter, r *http.Request) {
  * mailbox providers POST here directly with no body we care about
  */
 func PostUnsubscribeOneClick(w http.ResponseWriter, r *http.Request) {
+	// RFC 8058 requires this exact form body on real user-initiated
+	// unsubscribes; mail security scanners blindly POSTing links from
+	// scanned emails don't send it
+	if r.FormValue("List-Unsubscribe") != "One-Click" {
+		respondError(w, http.StatusBadRequest, "Missing one-click body")
+		return
+	}
+
 	email := r.URL.Query().Get("email")
 	sig := r.URL.Query().Get("sig")
 
