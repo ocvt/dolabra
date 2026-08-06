@@ -6,18 +6,40 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/go-chi/chi"
 	"github.com/ocvt/dolabra/utils"
 	"google.golang.org/api/drive/v3"
 )
 
+const PHOTO_CACHE_DIR = "data/photo-cache"
+
+// Drive file ids are url-safe base64; anything else is rejected before the
+// id is used as a cache filename
+var photoIdRegexp = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+
+// Shared drive service; constructing one per request leaks the underlying
+// transport and its connection pool
+var driveService *drive.Service
+var driveServiceOnce sync.Once
+var driveServiceErr error
+
+func getDriveService() (*drive.Service, error) {
+	driveServiceOnce.Do(func() {
+		driveService, driveServiceErr = drive.NewService(context.Background())
+	})
+	return driveService, driveServiceErr
+}
+
 /* HELPERS */
 func getPhotos(w http.ResponseWriter, tripFolderId string) ([]map[string]string, []map[string]string, bool) {
-	// Use Google Application Default Credentials
-	service, err := drive.NewService(context.Background())
+	service, err := getDriveService()
 	if !checkError(w, err) {
 		return nil, nil, false
 	}
@@ -50,8 +72,7 @@ func getPhotos(w http.ResponseWriter, tripFolderId string) ([]map[string]string,
 }
 
 func getTripFolderId(w http.ResponseWriter, tripId string) (string, bool, bool) {
-	// Use Google Application Default Credentials
-	service, err := drive.NewService(context.Background())
+	service, err := getDriveService()
 	if !checkError(w, err) {
 		return "", false, false
 	}
@@ -73,8 +94,7 @@ func getTripFolderId(w http.ResponseWriter, tripId string) (string, bool, bool) 
 }
 
 func newTripFolderId(w http.ResponseWriter, tripId string) (string, bool) {
-	// Use Google Application Default Credentials
-	service, err := drive.NewService(context.Background())
+	service, err := getDriveService()
 	if !checkError(w, err) {
 		return "", false
 	}
@@ -100,8 +120,7 @@ func uploadTripPhoto(w http.ResponseWriter, r *http.Request, tripId string, file
 	}
 	defer file.Close()
 
-	// Use Google Application Default Credentials env var
-	service, err := drive.NewService(context.Background())
+	service, err := getDriveService()
 	if !checkError(w, err) {
 		return false
 	}
@@ -138,8 +157,7 @@ func uploadTripPhoto(w http.ResponseWriter, r *http.Request, tripId string, file
 
 /* MAIN FUNCTIONS */
 func GetAllTripsPhotos(w http.ResponseWriter, r *http.Request) {
-	// Use Google Application Default Credentials
-	service, err := drive.NewService(context.Background())
+	service, err := getDriveService()
 	if !checkError(w, err) {
 		return
 	}
@@ -183,22 +201,56 @@ func GetHomePhotos(w http.ResponseWriter, r *http.Request) {
 
 func GetPhoto(w http.ResponseWriter, r *http.Request) {
 	photoId := chi.URLParam(r, "photoId")
+	if !photoIdRegexp.MatchString(photoId) {
+		respondError(w, http.StatusBadRequest, "Invalid photo id")
+		return
+	}
 
-	// Use Google Application Default Credentials
-	service, err := drive.NewService(context.Background())
+	// Serve from disk cache if present
+	cachePath := filepath.Join(PHOTO_CACHE_DIR, photoId)
+	if cached, err := os.Open(cachePath); err == nil {
+		defer cached.Close()
+		_, err = io.Copy(w, cached)
+		if err != nil {
+			log.Print("Failed writing response: " + err.Error())
+		}
+		return
+	}
+
+	service, err := getDriveService()
 	if !checkError(w, err) {
 		return
 	}
 
-	// Download & return photo
+	// Download photo, teeing it into the cache while responding
 	photoRes, err := service.Files.Get(photoId).Download()
 	if !checkError(w, err) {
 		return
 	}
+	defer photoRes.Body.Close()
 
-	_, err = io.Copy(w, photoRes.Body)
+	tmp, err := os.CreateTemp(PHOTO_CACHE_DIR, photoId+".tmp*")
 	if err != nil {
+		// Cache dir unavailable; still serve the photo
+		log.Print("Photo cache unavailable: " + err.Error())
+		_, err = io.Copy(w, photoRes.Body)
+		if err != nil {
+			log.Print("Failed writing response: " + err.Error())
+		}
+		return
+	}
+	defer os.Remove(tmp.Name())
+	defer tmp.Close()
+
+	_, err = io.Copy(w, io.TeeReader(photoRes.Body, tmp))
+	if err != nil {
+		// Client hung up or download failed; drop the partial cache file
 		log.Print("Failed writing response: " + err.Error())
+		return
+	}
+	err = os.Rename(tmp.Name(), cachePath)
+	if err != nil {
+		log.Print("Failed caching photo: " + err.Error())
 	}
 }
 

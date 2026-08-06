@@ -25,19 +25,28 @@ var emailQueue *list.List
 func Initialize() {
 	log.SetFlags(log.Lshortfile)
 
-	// Setup db
+	// Setup db. WAL keeps readers from blocking the writer, the busy timeout
+	// retries instead of surfacing SQLITE_BUSY (which we log.Fatal on), and a
+	// single connection bounds memory and serializes writes.
 	config := utils.GetConfig()
-	dbURI := fmt.Sprintf("./data/%s.sqlite3?_foreign_keys=1", config.DBName)
+	dbURI := fmt.Sprintf("./data/%s.sqlite3?_foreign_keys=1&_journal_mode=WAL&_busy_timeout=5000", config.DBName)
 	var err error
 	db, err = sql.Open("sqlite3", dbURI)
 	if err != nil {
 		log.Fatal("Error opening database: ", err)
 	}
+	db.SetMaxOpenConns(1)
 	err = db.Ping()
 	if err != nil {
 		log.Fatal(err)
 	}
 	utils.DBMigrate(db)
+
+	// Photo disk cache
+	err = os.MkdirAll(PHOTO_CACHE_DIR, 0755)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Initialize HTML sanitizer
 	//	strictHTML = bluemonday.UGCPolicy()
