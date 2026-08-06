@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/ocvt/dolabra/utils"
@@ -37,8 +38,28 @@ func getDriveService() (*drive.Service, error) {
 	return driveService, driveServiceErr
 }
 
+// Folder listings hit the drive api; cache them briefly so page views don't
+// each pay a drive round trip. Uploads invalidate their folder.
+const PHOTO_LIST_CACHE_TTL = 5 * time.Minute
+
+type photoListEntry struct {
+	mainphoto []map[string]string
+	imageList []map[string]string
+	expires   time.Time
+}
+
+var photoListCache = map[string]photoListEntry{}
+var photoListMutex sync.Mutex
+
 /* HELPERS */
 func getPhotos(w http.ResponseWriter, tripFolderId string) ([]map[string]string, []map[string]string, bool) {
+	photoListMutex.Lock()
+	entry, hit := photoListCache[tripFolderId]
+	photoListMutex.Unlock()
+	if hit && time.Now().Before(entry.expires) {
+		return entry.mainphoto, entry.imageList, true
+	}
+
 	service, err := getDriveService()
 	if !checkError(w, err) {
 		return nil, nil, false
@@ -67,6 +88,14 @@ func getPhotos(w http.ResponseWriter, tripFolderId string) ([]map[string]string,
 			})
 		}
 	}
+
+	photoListMutex.Lock()
+	photoListCache[tripFolderId] = photoListEntry{
+		mainphoto: mainphoto,
+		imageList: imageList,
+		expires:   time.Now().Add(PHOTO_LIST_CACHE_TTL),
+	}
+	photoListMutex.Unlock()
 
 	return mainphoto, imageList, true
 }
@@ -152,7 +181,16 @@ func uploadTripPhoto(w http.ResponseWriter, r *http.Request, tripId string, file
 	}
 
 	_, err = service.Files.Create(driveFile).Media(file).Do()
-	return checkError(w, err)
+	if !checkError(w, err) {
+		return false
+	}
+
+	// New photo; drop the folder's cached listing
+	photoListMutex.Lock()
+	delete(photoListCache, tripFolderId)
+	photoListMutex.Unlock()
+
+	return true
 }
 
 /* MAIN FUNCTIONS */
