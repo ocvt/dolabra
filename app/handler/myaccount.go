@@ -122,7 +122,7 @@ func DeleteMyAccountDelete(w http.ResponseWriter, r *http.Request) {
 func GetLogout(w http.ResponseWriter, r *http.Request) {
 	deleteAuthCookies(w)
 
-	http.Redirect(w, r, r.URL.Query().Get("state"), http.StatusTemporaryRedirect)
+	http.Redirect(w, r, safeReturnUrl(r.URL.Query().Get("state")), http.StatusTemporaryRedirect)
 }
 
 func GetMyAccount(w http.ResponseWriter, r *http.Request) {

@@ -3,8 +3,12 @@ package handler
 import (
 	"context"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/hex"
 	"net/http"
+	"net/url"
+	"os"
+	"strings"
 
 	"github.com/go-chi/chi"
 	"github.com/ocvt/dolabra/utils"
@@ -23,8 +27,18 @@ var googleOAuthConfig = &oauth2.Config{
 }
 
 const SUB_LENGTH = 16
+const OAUTH_STATE_COOKIE = "DOLABRA_OAUTH_STATE"
+const OAUTH_NONCE_LENGTH = 32
 
 /* HELPERS */
+// Only allow redirects back to the frontend to prevent open redirects
+func safeReturnUrl(returnUrl string) string {
+	frontendUrl := utils.GetConfig().FrontendUrl
+	if strings.HasPrefix(returnUrl, frontendUrl+"/") || returnUrl == frontendUrl {
+		return returnUrl
+	}
+	return frontendUrl
+}
 func processIdp(w http.ResponseWriter, idp string, idpSub string) bool {
 	// Generate hash from idpSub
 	idpHashBytes := sha256.Sum256([]byte(idpSub))
@@ -86,10 +100,29 @@ func DevLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, r.URL.Query().Get("state"), http.StatusTemporaryRedirect)
+	http.Redirect(w, r, safeReturnUrl(r.URL.Query().Get("state")), http.StatusTemporaryRedirect)
 }
 
 func GoogleCallback(w http.ResponseWriter, r *http.Request) {
+	// Verify oauth state against the nonce issued at login
+	stateCookie, err := getCookie(r, OAUTH_STATE_COOKIE)
+	deleteCookie(w, OAUTH_STATE_COOKIE)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "Missing oauth state cookie")
+		return
+	}
+	nonce, escapedReturnUrl, found := strings.Cut(stateCookie, "|")
+	state := r.FormValue("state")
+	if !found || len(state) != OAUTH_NONCE_LENGTH ||
+		subtle.ConstantTimeCompare([]byte(nonce), []byte(state)) != 1 {
+		respondError(w, http.StatusBadRequest, "Invalid oauth state")
+		return
+	}
+	returnUrl, err := url.QueryUnescape(escapedReturnUrl)
+	if err != nil {
+		returnUrl = ""
+	}
+
 	// Get access token
 	accessToken, err := googleOAuthConfig.Exchange(context.Background(), r.FormValue("code"))
 	if err != nil {
@@ -118,11 +151,26 @@ func GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, r.URL.Query().Get("state"), http.StatusTemporaryRedirect)
+	http.Redirect(w, r, safeReturnUrl(returnUrl), http.StatusTemporaryRedirect)
 }
 
 func GoogleLogin(w http.ResponseWriter, r *http.Request) {
+	// Random nonce as the oauth state; the desired return url rides along in a
+	// short-lived cookie and is verified against the nonce on callback
+	nonce := generateCode(OAUTH_NONCE_LENGTH)
+	returnUrl := safeReturnUrl(r.URL.Query().Get("state"))
+	http.SetCookie(w, &http.Cookie{
+		Domain:   utils.GetConfig().CookieDomain,
+		HttpOnly: true,
+		MaxAge:   600,
+		Name:     OAUTH_STATE_COOKIE,
+		Path:     "/",
+		SameSite: http.SameSiteLaxMode,
+		Secure:   os.Getenv("DEV") != "1",
+		Value:    nonce + "|" + url.QueryEscape(returnUrl),
+	})
+
 	promptParam := oauth2.SetAuthURLParam("prompt", "consent select_account")
-	url := googleOAuthConfig.AuthCodeURL(r.URL.Query().Get("state"), promptParam)
-	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+	authUrl := googleOAuthConfig.AuthCodeURL(nonce, promptParam)
+	http.Redirect(w, r, authUrl, http.StatusTemporaryRedirect)
 }

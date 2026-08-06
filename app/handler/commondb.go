@@ -1,9 +1,10 @@
 package handler
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"log"
-	"math/rand"
+	"math/big"
 	"net/http"
 	"strconv"
 
@@ -61,7 +62,11 @@ func generateCode(n int) string {
 	byteArr := make([]byte, n)
 
 	for i := range byteArr {
-		byteArr[i] = LETTER_BYTES[rand.Intn(len(LETTER_BYTES))]
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(LETTER_BYTES))))
+		if err != nil {
+			log.Fatal(err)
+		}
+		byteArr[i] = LETTER_BYTES[num.Int64()]
 	}
 	return string(byteArr)
 }

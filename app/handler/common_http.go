@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"net/mail"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -40,11 +41,14 @@ func createJWT(w http.ResponseWriter, sub string) (string, error) {
 func deleteCookie(w http.ResponseWriter, name string) {
 	cookieDomain := utils.GetConfig().CookieDomain
 	cookie := http.Cookie{
-		Domain: cookieDomain,
-		MaxAge: -1,
-		Name:   name,
-		Path:   "/",
-		Value:  "",
+		Domain:   cookieDomain,
+		HttpOnly: true,
+		MaxAge:   -1,
+		Name:     name,
+		Path:     "/",
+		SameSite: http.SameSiteLaxMode,
+		Secure:   os.Getenv("DEV") != "1",
+		Value:    "",
 	}
 	http.SetCookie(w, &cookie)
 }
@@ -61,10 +65,13 @@ func getCookie(r *http.Request, name string) (string, error) {
 func setCookie(w http.ResponseWriter, name string, payload string) {
 	cookieDomain := utils.GetConfig().CookieDomain
 	cookie := http.Cookie{
-		Domain: cookieDomain,
-		Name:   name,
-		Path:   "/",
-		Value:  payload,
+		Domain:   cookieDomain,
+		HttpOnly: true,
+		Name:     name,
+		Path:     "/",
+		SameSite: http.SameSiteLaxMode,
+		Secure:   os.Getenv("DEV") != "1",
+		Value:    payload,
 	}
 	http.SetCookie(w, &cookie)
 }

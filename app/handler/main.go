@@ -6,8 +6,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	math_rand "math/rand"
-	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	//	"github.com/microcosm-cc/bluemonday"
@@ -39,9 +37,6 @@ func Initialize() {
 
 	// Initialize HTML sanitizer
 	//	strictHTML = bluemonday.UGCPolicy()
-
-	// Seed math/rand, used for trip approval GUIDs
-	math_rand.Seed(time.Now().UnixNano())
 
 	// Generate cookie encryption key
 	key = make([]byte, 512)
