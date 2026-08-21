@@ -101,6 +101,48 @@ func insertData(db *sql.DB) {
 
 }
 
+/*
+ * Strip surrounding whitespace from stored addresses. A trailing space still
+ * matches the LIKE filter in cleanInvalidEmails but is rejected at send time,
+ * so the member stays active while silently receiving nothing.
+ */
+func trimEmails(db *sql.DB) {
+	rows, err := db.Query(`
+		SELECT id, name, email
+		FROM member
+		WHERE email != trim(email)`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id int
+		var name, email string
+		err = rows.Scan(&id, &name, &email)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("Trimming whitespace from member email [id: %d] [name: %s] [email: %q]", id, name, email)
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	execHelper(db, `
+		UPDATE member
+		SET email = trim(email)
+		WHERE email != trim(email)`)
+
+	// quick_signup.email is UNIQUE, so trimming can collide with an existing
+	// row; OR REPLACE drops the duplicate instead of aborting startup
+	execHelper(db, `
+		UPDATE OR REPLACE quick_signup
+		SET email = trim(email)
+		WHERE email != trim(email)`)
+}
+
 /* Clean up rows with undeliverable email addresses */
 // Members are deactivated (not deleted) so they can log in, fix their
 // email, and reactivate; quick signups are just an email list so bad
@@ -142,5 +184,6 @@ func cleanInvalidEmails(db *sql.DB) {
 func DBMigrate(db *sql.DB) {
 	createTables(db)
 	insertData(db)
+	trimEmails(db)
 	cleanInvalidEmails(db)
 }

@@ -37,6 +37,8 @@ func PostMyAccountMigrate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	oldMember.Email = normalizeEmail(oldMember.Email)
+
 	// Convert oldsite M/F and name to new site format
 	oldMember.Name = oldMember.FirstName + " " + oldMember.LastName
 	oldMember.Pronouns = "he/him"
@@ -54,6 +56,7 @@ func PostMyAccountMigrate(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	member.Email = normalizeEmail(member.Email)
 
 	ctx := context.Background()
 	tx, err := db.BeginTx(ctx, nil)

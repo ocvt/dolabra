@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/mail"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -20,6 +21,12 @@ func unsubscribeSig(email string) string {
 	mac := hmac.New(sha256.New, key)
 	mac.Write([]byte("unsubscribe:" + email))
 	return hex.EncodeToString(mac.Sum(nil))
+}
+
+// Strips surrounding whitespace so a pasted address does not get stored in a
+// form that validEmail later rejects, silently dropping the member from sends
+func normalizeEmail(email string) string {
+	return strings.TrimSpace(email)
 }
 
 // Returns true if email is a plain valid address (no display name)

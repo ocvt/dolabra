@@ -68,6 +68,10 @@ func PostWebtoolsQuicksignups(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for i := 0; i < len(emails.Emails); i++ {
+		emails.Emails[i] = normalizeEmail(emails.Emails[i])
+	}
+
 	if action == "add" {
 		for i := 0; i < len(emails.Emails); i++ {
 			if !validEmail(emails.Emails[i]) {

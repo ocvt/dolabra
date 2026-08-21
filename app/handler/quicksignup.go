@@ -20,6 +20,7 @@ func PostQuicksignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	email.Email = normalizeEmail(email.Email)
 	if !validEmail(email.Email) {
 		respondError(w, http.StatusBadRequest, "Invalid email address")
 		return

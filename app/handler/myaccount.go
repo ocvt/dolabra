@@ -230,6 +230,7 @@ func PatchMyAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	member.Email = normalizeEmail(member.Email)
 	if !validEmail(member.Email) {
 		respondError(w, http.StatusBadRequest, "Invalid email address")
 		return
@@ -333,6 +334,7 @@ func PostMyAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	member.Email = normalizeEmail(member.Email)
 	if !validEmail(member.Email) {
 		respondError(w, http.StatusBadRequest, "Invalid email address")
 		return
