@@ -106,6 +106,18 @@ type recipientStruct struct {
 }
 
 /*
+ * Bulk mail is anything a member opted into via notification preferences, as
+ * opposed to transactional mail tied to a specific trip or signup. Only bulk
+ * mail carries unsubscribe headers and an unsubscribe footer.
+ */
+func isBulkNotification(notificationTypeId string) bool {
+	return notificationTypeId != "DIRECT" &&
+		notificationTypeId != "TRIP_APPROVAL" &&
+		!strings.HasPrefix(notificationTypeId, "TRIP_ALERT") &&
+		!strings.HasPrefix(notificationTypeId, "TRIP_MESSAGE")
+}
+
+/*
  * Resolve a staged email to its recipient list based on notification type
  */
 func resolveRecipients(email emailStruct) ([]recipientStruct, bool) {
@@ -187,10 +199,7 @@ func resolveRecipients(email emailStruct) ([]recipientStruct, bool) {
 
 	recipients := []recipientStruct{}
 	for _, memberId := range memberIds {
-		if email.NotificationTypeId != "DIRECT" &&
-			email.NotificationTypeId != "TRIP_APPROVAL" &&
-			!strings.HasPrefix(email.NotificationTypeId, "TRIP_ALERT") &&
-			!strings.HasPrefix(email.NotificationTypeId, "TRIP_MESSAGE") &&
+		if isBulkNotification(email.NotificationTypeId) &&
 			!dbCheckMemberWantsNotification(memberId, email.NotificationTypeId) {
 			continue
 		}
@@ -338,6 +347,7 @@ func sendPendingEmails() {
 			email_recipient.to_name,
 			email_recipient.to_email,
 			email.reply_to_id,
+			email.notification_type_id,
 			email.subject,
 			email.body
 		FROM email_recipient
@@ -352,17 +362,18 @@ func sendPendingEmails() {
 	defer rows.Close()
 
 	type pendingStruct struct {
-		id        int
-		toName    string
-		toEmail   string
-		replyToId int
-		subject   string
-		body      string
+		id                 int
+		toName             string
+		toEmail            string
+		replyToId          int
+		notificationTypeId string
+		subject            string
+		body               string
 	}
 	pending := []pendingStruct{}
 	for rows.Next() {
 		p := pendingStruct{}
-		err = rows.Scan(&p.id, &p.toName, &p.toEmail, &p.replyToId, &p.subject, &p.body)
+		err = rows.Scan(&p.id, &p.toName, &p.toEmail, &p.replyToId, &p.notificationTypeId, &p.subject, &p.body)
 		if err != nil {
 			log.Print("ERROR loading pending emails: " + err.Error())
 			return
@@ -409,6 +420,7 @@ func sendPendingEmails() {
 			ToEmail:      p.toEmail,
 			Subject:      p.subject,
 			Body:         p.body,
+			Bulk:         isBulkNotification(p.notificationTypeId),
 		}
 
 		_, err = sendEmail(sesService, rawEmail)

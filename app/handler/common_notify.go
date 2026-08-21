@@ -38,6 +38,7 @@ type rawEmailStruct struct {
 	ToEmail      string
 	Subject      string
 	Body         string
+	Bulk         bool
 }
 
 /*
@@ -52,11 +53,14 @@ func sendEmail(sesService *ses.SES, email rawEmailStruct) (*ses.SendRawEmailOutp
 	msg.SetHeader("Reply-To", fmt.Sprintf("%s <%s>", email.ReplyToName, email.ReplyToEmail))
 	msg.SetHeader("To", fmt.Sprintf("%s <%s>", email.ToName, email.ToEmail))
 	msg.SetHeader("Subject", email.Subject)
-	// RFC 8058 one-click unsubscribe; keeps mailbox providers happy and gives
-	// users an unsubscribe button instead of a spam report
-	msg.SetHeader("List-Unsubscribe", fmt.Sprintf("<%s/unsubscribe/oneclick?email=%s&sig=%s>",
-		utils.GetConfig().ApiUrl, url.QueryEscape(email.ToEmail), unsubscribeSig(email.ToEmail)))
-	msg.SetHeader("List-Unsubscribe-Post", "List-Unsubscribe=One-Click")
+	// RFC 8058 one-click unsubscribe, bulk mail only. Gmail reads these headers
+	// as a bulk signal and files tagged mail under Promotions, so transactional
+	// mail (approvals, trip alerts) must go without them or nobody sees it.
+	if email.Bulk {
+		msg.SetHeader("List-Unsubscribe", fmt.Sprintf("<%s/unsubscribe/oneclick?email=%s&sig=%s>",
+			utils.GetConfig().ApiUrl, url.QueryEscape(email.ToEmail), unsubscribeSig(email.ToEmail)))
+		msg.SetHeader("List-Unsubscribe-Post", "List-Unsubscribe=One-Click")
+	}
 	msg.SetBody("text/html", email.Body)
 	msg.AddAlternative("text/plain", html2text.HTML2Text(email.Body))
 
