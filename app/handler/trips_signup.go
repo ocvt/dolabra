@@ -333,21 +333,10 @@ func PatchTripsSignupForceadd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Change next person from WAIT to ATTEND if possible
-	currentStatus, ok := dbGetTripSignupStatus(w, tripId, signupMemberId)
-	if !ok {
-		return
-	}
-	if currentStatus == "ATTEND" {
-		memberIdToChange, ok := dbGetNextWaitlist(w, tripId)
-		if !ok {
-			return
-		}
-
-		if memberIdToChange > 0 && !dbSetSignupStatus(w, tripId, memberIdToChange, "ATTEND") {
-			return
-		}
-	}
+	// No waitlist promotion here: ATTEND and FORCE both count against
+	// capacity, so moving this member between them frees nothing. Promoting
+	// anyway would push the trip over max_people and mail someone who was
+	// never actually given a spot.
 
 	if !dbSetSignupStatus(w, tripId, signupMemberId, "FORCE") {
 		return
@@ -395,21 +384,10 @@ func PatchTripsSignupTripLeaderPromote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Change next person from WAIT to ATTEND if possible
-	currentStatus, ok := dbGetTripSignupStatus(w, tripId, signupMemberId)
-	if !ok {
-		return
-	}
-	if currentStatus == "ATTEND" {
-		memberIdToChange, ok := dbGetNextWaitlist(w, tripId)
-		if !ok {
-			return
-		}
-
-		if memberIdToChange > 0 && !dbSetSignupStatus(w, tripId, memberIdToChange, "ATTEND") {
-			return
-		}
-	}
+	// No waitlist promotion here: ATTEND and FORCE both count against
+	// capacity, so moving this member between them frees nothing. Promoting
+	// anyway would push the trip over max_people and mail someone who was
+	// never actually given a spot.
 
 	stmt := `
 		UPDATE trip_signup

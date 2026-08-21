@@ -90,7 +90,7 @@ func dbGetNextWaitlist(w http.ResponseWriter, tripId int) (int, bool) {
 		FROM trip_signup
 		INNER JOIN member ON member.id = trip_signup.member_id
 		WHERE trip_signup.trip_id = ? AND trip_signup.attending_code = 'WAIT'
-		ORDER BY paid DESC
+		ORDER BY paid DESC, datetime(trip_signup.signup_datetime) ASC, trip_signup.id ASC
 		LIMIT 1`
 	rows, err := db.Query(stmt, tripId)
 	if err != nil && err == sql.ErrNoRows {
@@ -277,17 +277,21 @@ func dbIsTripFull(w http.ResponseWriter, tripId int) (bool, bool) {
 		return false, false
 	}
 
+	// FORCE counts against capacity the same as ATTEND, including the trip
+	// creator, who is auto-set to FORCE on trip creation
 	stmt = `
 		SELECT COUNT(*)
 		FROM trip_signup
-		WHERE trip_id = ? AND attending_code = 'ATTEND'`
+		WHERE trip_id = ? AND attending_code IN ('ATTEND', 'FORCE')`
 	var count int
 	err = db.QueryRow(stmt, tripId).Scan(&count)
 	if !checkError(w, err) {
 		return false, false
 	}
 
-	if count == maxPeople {
+	// Must be >=: force adds can push the count past max_people, and an
+	// equality test would read an over-full trip as having room forever
+	if count >= maxPeople {
 		return true, true
 	}
 	return false, true
