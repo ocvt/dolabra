@@ -49,9 +49,13 @@ func sendEmail(sesService *ses.SES, email rawEmailStruct) (*ses.SendRawEmailOutp
 	email.Body = strings.Replace(email.Body, "SIG_HERE", unsubscribeSig(email.ToEmail), 1)
 
 	msg := mail.NewMessage()
-	msg.SetHeader("From", fmt.Sprintf("%s <%s>", email.FromName, email.FromEmail))
-	msg.SetHeader("Reply-To", fmt.Sprintf("%s <%s>", email.ReplyToName, email.ReplyToEmail))
-	msg.SetHeader("To", fmt.Sprintf("%s <%s>", email.ToName, email.ToEmail))
+	// SetAddressHeader quotes and encodes the display name. Interpolating it
+	// raw breaks on names containing a comma, which parse as a second address
+	// with no domain, and on non-ASCII names, which swallow the address into
+	// the encoded-word.
+	msg.SetAddressHeader("From", email.FromEmail, email.FromName)
+	msg.SetAddressHeader("Reply-To", email.ReplyToEmail, email.ReplyToName)
+	msg.SetAddressHeader("To", email.ToEmail, email.ToName)
 	msg.SetHeader("Subject", email.Subject)
 	// RFC 8058 one-click unsubscribe, bulk mail only. Gmail reads these headers
 	// as a bulk signal and files tagged mail under Promotions, so transactional
