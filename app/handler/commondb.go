@@ -21,6 +21,12 @@ import (
 const MAX_INT = 4294967295
 const LETTER_BYTES = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
+// The founding admin (member 8000001) can manage any officer regardless of
+// security. Without this, adding an officer at security 100 (the admin's own
+// level) produces a row nobody can remove, since the security guards block
+// modifying an officer at equal or higher security.
+const SUPER_ADMIN_MEMBER_ID = 8000001
+
 /* General non-db helpers */
 func checkError(w http.ResponseWriter, err error) bool {
 	if err != nil {

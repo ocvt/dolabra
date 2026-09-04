@@ -40,17 +40,20 @@ func DeleteWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	memberSecurity, ok := dbGetSecurity(w, memberId)
-	if !ok {
-		return
-	}
-	officerSecurity, ok := dbGetSecurity(w, officerId)
-	if !ok {
-		return
-	}
-	if memberSecurity <= officerSecurity {
-		respondError(w, http.StatusForbidden, "Cannot modify officer with equal or higher security.")
-		return
+	// Super admin can remove any officer; everyone else is capped by security
+	if memberId != SUPER_ADMIN_MEMBER_ID {
+		memberSecurity, ok := dbGetSecurity(w, memberId)
+		if !ok {
+			return
+		}
+		officerSecurity, ok := dbGetSecurity(w, officerId)
+		if !ok {
+			return
+		}
+		if memberSecurity <= officerSecurity {
+			respondError(w, http.StatusForbidden, "Cannot modify officer with equal or higher security.")
+			return
+		}
 	}
 
 	stmt := `
@@ -135,13 +138,16 @@ func PostWebtoolsOfficers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	memberSecurity, ok := dbGetSecurity(w, memberId)
-	if !ok {
-		return
-	}
-	if memberSecurity < officer.Security {
-		respondError(w, http.StatusForbidden, "Cannot add officer with higher security.")
-		return
+	// Super admin can grant any security level; everyone else is capped
+	if memberId != SUPER_ADMIN_MEMBER_ID {
+		memberSecurity, ok := dbGetSecurity(w, memberId)
+		if !ok {
+			return
+		}
+		if memberSecurity < officer.Security {
+			respondError(w, http.StatusForbidden, "Cannot add officer with higher security.")
+			return
+		}
 	}
 
 	stmt := `
