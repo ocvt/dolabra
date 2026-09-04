@@ -1,16 +1,21 @@
 package handler
 
 import (
+	"bytes"
 	"container/list"
 	"database/sql"
 	"log"
+	"net/http"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/ocvt/dolabra/utils"
+	"github.com/stripe/stripe-go/v71"
+	checkoutsession "github.com/stripe/stripe-go/v71/checkout/session"
 )
 
 /* Periodic housekeeping: expired rows + trip reminders */
@@ -94,11 +99,125 @@ func DoTasks() {
 	}
 	/*****************************/
 
+	/* Complete card payments the Stripe webhook never confirmed */
+	reconcileStripePayments()
+	/*************************************************************/
+
 	/* Process emails: expand staged emails to recipients, then send */
 	expandStagedEmails()
 	sendPendingEmails()
 	/*****************************************************************/
 }
+
+/*
+ * The webhook is the only thing that completes a card payment, and after the
+ * Aug 2026 proxy migration it silently delivered nothing for a month. Poll
+ * Stripe for sessions the webhook has not confirmed and complete the ones that
+ * actually paid. Runs every 5 minutes; skips sessions under 10 minutes old so
+ * the webhook gets first crack, and stops looking after 45 days (Checkout
+ * sessions expire after 24h, so anything older is an abandoned checkout).
+ */
+var lastStripeReconcile time.Time
+
+func reconcileStripePayments() {
+	stripeKey := utils.GetConfig().StripeSecretKey
+	if stripeKey == "" || time.Since(lastStripeReconcile) < 5*time.Minute {
+		return
+	}
+	lastStripeReconcile = time.Now()
+
+	stmt := `
+		SELECT DISTINCT payment_id
+		FROM payment
+		WHERE
+			payment_method = 'STRIPE'
+			AND (store_item_id = 'MEMBERSHIP' OR store_item_id = 'CUSTOM')
+			AND completed = false
+			AND datetime(create_datetime) > datetime('now', '-45 days')
+			AND datetime(create_datetime) < datetime('now', '-10 minutes')`
+	rows, err := db.Query(stmt)
+	if err != nil {
+		log.Print("ERROR loading unconfirmed Stripe sessions: " + err.Error())
+		return
+	}
+	defer rows.Close()
+
+	sessionIds := []string{}
+	for rows.Next() {
+		var sessionId string
+		err = rows.Scan(&sessionId)
+		if err != nil {
+			log.Print("ERROR loading unconfirmed Stripe sessions: " + err.Error())
+			return
+		}
+		sessionIds = append(sessionIds, sessionId)
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Print("ERROR loading unconfirmed Stripe sessions: " + err.Error())
+		return
+	}
+
+	stripe.Key = stripeKey
+	for _, sessionId := range sessionIds {
+		params := &stripe.CheckoutSessionParams{}
+		params.AddExpand("payment_intent")
+		checkoutSession, err := checkoutsession.Get(sessionId, params)
+		if err != nil {
+			log.Printf("ERROR fetching Stripe session %s: %s", sessionId, err.Error())
+			continue
+		}
+		if checkoutSession.PaymentIntent == nil ||
+			checkoutSession.PaymentIntent.Status != stripe.PaymentIntentStatusSucceeded ||
+			stripeSessionRefunded(checkoutSession) {
+			continue
+		}
+
+		rw := newDiscardResponseWriter()
+		applied, ok := completeStripeSession(rw, sessionId)
+		if !ok {
+			log.Printf("ERROR completing Stripe session %s: %s", sessionId, rw.body.String())
+			continue
+		}
+		if applied {
+			log.Printf("Reconciled Stripe session %s (webhook never confirmed it)", sessionId)
+		}
+	}
+}
+
+/*
+ * A refund leaves the payment intent reading "succeeded", so check the charge.
+ * Refunding a duplicate checkout in Stripe is then enough on its own: the
+ * sweep will not turn the refunded session into membership years.
+ */
+func stripeSessionRefunded(s *stripe.CheckoutSession) bool {
+	if s.PaymentIntent == nil || s.PaymentIntent.Charges == nil {
+		return false
+	}
+	for _, charge := range s.PaymentIntent.Charges.Data {
+		if charge.Refunded {
+			return true
+		}
+	}
+	return false
+}
+
+/*
+ * Lets the request-scoped db helpers run from the task ticker, where there is
+ * no client to answer. The error body they would have sent is kept for the log.
+ */
+type discardResponseWriter struct {
+	header http.Header
+	body   bytes.Buffer
+}
+
+func newDiscardResponseWriter() *discardResponseWriter {
+	return &discardResponseWriter{header: http.Header{}}
+}
+
+func (d *discardResponseWriter) Header() http.Header         { return d.header }
+func (d *discardResponseWriter) Write(b []byte) (int, error) { return d.body.Write(b) }
+func (d *discardResponseWriter) WriteHeader(int)             {}
 
 type recipientStruct struct {
 	name  string

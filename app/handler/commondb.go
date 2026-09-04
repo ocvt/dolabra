@@ -130,24 +130,16 @@ func dbExtendMembership(w http.ResponseWriter, memberId int, years int) bool {
 		return false
 	}
 
-	// Ensure membership is extended by current time instead of expiration time
+	// Extend from now if expired, otherwise from the current expiration. One
+	// statement, so a failure can never strand a member at "expires now".
 	if years > 0 {
 		stmt := `
 			UPDATE member
-			SET paid_expire_datetime = datetime('now')
-			WHERE id = ? AND paid_expire_datetime < datetime('now')`
-		_, err := db.Exec(stmt, memberId)
-		if !checkError(w, err) {
-			return false
-		}
-	}
-
-	for i := 0; i < years; i++ {
-		stmt := `
-			UPDATE member
-			SET paid_expire_datetime = datetime(paid_expire_datetime, '+1 year')
+			SET paid_expire_datetime = datetime(
+				coalesce(max(datetime(paid_expire_datetime), datetime('now')), datetime('now')),
+				'+' || ? || ' years')
 			WHERE id = ?`
-		_, err := db.Exec(stmt, memberId)
+		_, err := db.Exec(stmt, years, memberId)
 		if !checkError(w, err) {
 			return false
 		}
@@ -191,24 +183,6 @@ func dbGetActiveMemberId(w http.ResponseWriter, sub string) (int, bool) {
 		return 0, false
 	}
 	return memberId, true
-}
-
-func dbGetItemCount(w http.ResponseWriter, storeItemId string,
-	paymentMethod string, paymentId string) (int, int, bool) {
-	stmt := `
-		SELECT
-			member_id,
-			store_item_count
-		FROM payment
-		WHERE payment_method = ? AND payment_id = ?`
-	var memberId int
-	var storeItemCount int
-	err := db.QueryRow(stmt, paymentMethod, paymentId).Scan(&memberId, &storeItemCount)
-	if !checkError(w, err) {
-		return 0, 0, false
-	}
-
-	return memberId, storeItemCount, true
 }
 
 func dbGetMemberId(w http.ResponseWriter, sub string) (int, bool) {

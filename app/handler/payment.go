@@ -3,6 +3,7 @@ package handler
 import (
 	"container/list"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -62,6 +63,7 @@ func GetPayment(w http.ResponseWriter, r *http.Request) {
 	}
 	if paymentOption == "customAmount" && amount < 5 {
 		respondError(w, http.StatusBadRequest, "Amount must be 5 or more.")
+		return
 	}
 
 	// Used for us
@@ -295,40 +297,60 @@ func PostPaymentSuccess(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	/* If CUSTOM, mark as done */
+	if _, ok := completeStripeSession(w, session.ID); !ok {
+		return
+	}
+
+	respondJSON(w, http.StatusNoContent, nil)
+}
+
+/*
+ * Mark a paid Stripe checkout session's MEMBERSHIP / CUSTOM rows completed and
+ * extend the membership. SHIRT rows are left for officers to complete at
+ * pickup. The rows are claimed before anything is granted, so calling this
+ * twice for one session (Stripe retries, the reconcile sweep in tasks.go)
+ * cannot stack years: the second call finds nothing to claim and returns
+ * applied = false.
+ */
+func completeStripeSession(w http.ResponseWriter, sessionId string) (applied bool, ok bool) {
 	stmt := `
-		UPDATE payment
-		SET completed = true
+		SELECT member_id, store_item_count
+		FROM payment
 		WHERE
-			store_item_id = 'CUSTOM'
+			store_item_id = 'MEMBERSHIP'
 			AND payment_method = 'STRIPE'
-			AND payment_id = ?`
-	_, err = db.Exec(stmt, session.ID)
-	if !checkError(w, err) {
-		return
-	}
-
-	// Add years and complete payment
-	memberId, membershipYears, ok := dbGetItemCount(w, "MEMBERSHIP", "STRIPE", session.ID)
-	if !ok {
-		return
-	}
-
-	if !dbExtendMembership(w, memberId, membershipYears) {
-		return
+			AND payment_id = ?
+			AND completed = false`
+	memberId := 0
+	membershipYears := 0
+	err := db.QueryRow(stmt, sessionId).Scan(&memberId, &membershipYears)
+	if err != nil && err != sql.ErrNoRows {
+		checkError(w, err)
+		return false, false
 	}
 
 	stmt = `
 		UPDATE payment
 		SET completed = true
 		WHERE
-			store_item_id = 'MEMBERSHIP'
+			(store_item_id = 'MEMBERSHIP' OR store_item_id = 'CUSTOM')
 			AND payment_method = 'STRIPE'
-			AND payment_id = ?`
-	_, err = db.Exec(stmt, session.ID)
+			AND payment_id = ?
+			AND completed = false`
+	result, err := db.Exec(stmt, sessionId)
 	if !checkError(w, err) {
-		return
+		return false, false
+	}
+	claimed, err := result.RowsAffected()
+	if !checkError(w, err) {
+		return false, false
+	}
+	if claimed == 0 {
+		return false, true
 	}
 
-	respondJSON(w, http.StatusNoContent, nil)
+	if membershipYears > 0 && !dbExtendMembership(w, memberId, membershipYears) {
+		return false, false
+	}
+	return true, true
 }

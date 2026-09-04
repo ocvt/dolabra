@@ -181,9 +181,60 @@ func cleanInvalidEmails(db *sql.DB) {
 		WHERE email NOT LIKE '%_@_%'`)
 }
 
+/*
+ * A completed MEMBERSHIP row should mean the member got the years. Webtools has
+ * a "completed" tick that only flips the flag, and during the Aug-Sep 2026
+ * webhook outage every stranded row was ticked by hand, which would hide them
+ * from the reconcile sweep. Re-open rows from that window whose member's
+ * expiry shows the payment never took effect; the sweep settles them against
+ * Stripe. A granted payment always leaves the expiry at or past
+ * create_datetime + years, so those are left alone.
+ */
+func resetUnappliedStripePayments(db *sql.DB) {
+	rows, err := db.Query(`
+		SELECT payment.id, payment.member_id, member.name, payment.create_datetime
+		FROM payment
+		INNER JOIN member ON member.id = payment.member_id
+		WHERE payment.payment_method = 'STRIPE'
+			AND payment.store_item_id = 'MEMBERSHIP'
+			AND payment.completed = true
+			AND datetime(payment.create_datetime) > datetime('2026-08-06')
+			AND datetime(member.paid_expire_datetime) <
+				datetime(payment.create_datetime, '+' || payment.store_item_count || ' years')`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id, memberId int
+		var name, created string
+		err = rows.Scan(&id, &memberId, &name, &created)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("Re-opening Stripe payment never applied to membership [payment: %d] [member: %d %s] [created: %s]", id, memberId, name, created)
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	execHelper(db, `
+		UPDATE payment
+		SET completed = false
+		WHERE payment_method = 'STRIPE'
+			AND store_item_id = 'MEMBERSHIP'
+			AND completed = true
+			AND datetime(create_datetime) > datetime('2026-08-06')
+			AND datetime((SELECT paid_expire_datetime FROM member WHERE member.id = payment.member_id)) <
+				datetime(create_datetime, '+' || store_item_count || ' years')`)
+}
+
 func DBMigrate(db *sql.DB) {
 	createTables(db)
 	insertData(db)
 	trimEmails(db)
 	cleanInvalidEmails(db)
+	resetUnappliedStripePayments(db)
 }
