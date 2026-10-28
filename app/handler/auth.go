@@ -10,7 +10,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/ocvt/dolabra/utils"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"

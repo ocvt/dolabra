@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/ocvt/dolabra/utils"
 	"github.com/stripe/stripe-go/v71"
 	"github.com/stripe/stripe-go/v71/checkout/session"
