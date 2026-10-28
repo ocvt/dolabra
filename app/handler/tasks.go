@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/aws/aws-sdk-go/service/sesv2"
 	"github.com/ocvt/dolabra/utils"
 	"github.com/stripe/stripe-go/v71"
 	checkoutsession "github.com/stripe/stripe-go/v71/checkout/session"
@@ -104,6 +105,7 @@ func DoTasks() {
 	/*************************************************************/
 
 	/* Process emails: expand staged emails to recipients, then send */
+	syncSuppressionList()
 	expandStagedEmails()
 	sendPendingEmails()
 	/*****************************************************************/
@@ -218,6 +220,140 @@ func newDiscardResponseWriter() *discardResponseWriter {
 func (d *discardResponseWriter) Header() http.Header         { return d.header }
 func (d *discardResponseWriter) Write(b []byte) (int, error) { return d.body.Write(b) }
 func (d *discardResponseWriter) WriteHeader(int)             {}
+
+/*
+ * SES accepts a send to an address on the account suppression list without
+ * error, then mails a bounce back to the From address. Every bulk email then
+ * generates one bounce per suppressed member, so keep a copy of the list and
+ * skip those addresses at expansion. cleanSuppressedEmails also deactivates
+ * them, but trip alerts and approvals do not check active, so the skip is
+ * still needed. Refreshed hourly; on failure the last
+ * good copy is kept (empty until the first success, which just means the old
+ * behavior). Needs ses:ListSuppressedDestinations.
+ */
+var suppressedEmails = map[string]bool{}
+var lastSuppressionSync time.Time
+
+func syncSuppressionList() {
+	if time.Since(lastSuppressionSync) < time.Hour {
+		return
+	}
+	lastSuppressionSync = time.Now()
+
+	sesSession, err := session.NewSession(&aws.Config{
+		Region: aws.String("us-east-1"),
+	})
+	if err != nil {
+		log.Print("ERROR syncing SES suppression list: " + err.Error())
+		return
+	}
+
+	suppressed := map[string]bool{}
+	err = sesv2.New(sesSession).ListSuppressedDestinationsPages(
+		&sesv2.ListSuppressedDestinationsInput{},
+		func(page *sesv2.ListSuppressedDestinationsOutput, lastPage bool) bool {
+			for _, d := range page.SuppressedDestinationSummaries {
+				suppressed[strings.ToLower(aws.StringValue(d.EmailAddress))] = true
+			}
+			return true
+		})
+	if err != nil {
+		log.Print("ERROR syncing SES suppression list: " + err.Error())
+		return
+	}
+	suppressedEmails = suppressed
+
+	cleanSuppressedEmails()
+}
+
+/*
+ * Same treatment as cleanInvalidEmails at startup: members are deactivated
+ * (not deleted) so they can log in, fix their email, and reactivate; quick
+ * signups are just an email list so suppressed rows are deleted
+ */
+func cleanSuppressedEmails() {
+	type rowStruct struct {
+		id    int
+		name  string
+		email string
+	}
+
+	rows, err := db.Query(`
+		SELECT id, name, email
+		FROM member
+		WHERE active = true`)
+	if err != nil {
+		log.Print("ERROR loading members for suppression cleanup: " + err.Error())
+		return
+	}
+	defer rows.Close()
+
+	members := []rowStruct{}
+	for rows.Next() {
+		m := rowStruct{}
+		err = rows.Scan(&m.id, &m.name, &m.email)
+		if err != nil {
+			log.Print("ERROR loading members for suppression cleanup: " + err.Error())
+			return
+		}
+		if suppressedEmails[strings.ToLower(m.email)] {
+			members = append(members, m)
+		}
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Print("ERROR loading members for suppression cleanup: " + err.Error())
+		return
+	}
+
+	for _, m := range members {
+		log.Printf("Deactivating member with SES suppressed email [id: %d] [name: %s] [email: %s]", m.id, m.name, m.email)
+		_, err = db.Exec(`
+			UPDATE member
+			SET active = false
+			WHERE id = ?`, m.id)
+		if err != nil {
+			log.Print("ERROR deactivating member: " + err.Error())
+		}
+	}
+
+	qsRows, err := db.Query(`
+		SELECT id, email
+		FROM quick_signup`)
+	if err != nil {
+		log.Print("ERROR loading quick signups for suppression cleanup: " + err.Error())
+		return
+	}
+	defer qsRows.Close()
+
+	quickSignups := []rowStruct{}
+	for qsRows.Next() {
+		q := rowStruct{}
+		err = qsRows.Scan(&q.id, &q.email)
+		if err != nil {
+			log.Print("ERROR loading quick signups for suppression cleanup: " + err.Error())
+			return
+		}
+		if suppressedEmails[strings.ToLower(q.email)] {
+			quickSignups = append(quickSignups, q)
+		}
+	}
+	err = qsRows.Err()
+	if err != nil {
+		log.Print("ERROR loading quick signups for suppression cleanup: " + err.Error())
+		return
+	}
+
+	for _, q := range quickSignups {
+		log.Printf("Deleting quick signup with SES suppressed email [id: %d] [email: %s]", q.id, q.email)
+		_, err = db.Exec(`
+			DELETE FROM quick_signup
+			WHERE id = ?`, q.id)
+		if err != nil {
+			log.Print("ERROR deleting quick signup: " + err.Error())
+		}
+	}
+}
 
 type recipientStruct struct {
 	name  string
@@ -418,6 +554,10 @@ func expandStagedEmails() {
 		for _, recipient := range recipients {
 			if !validEmail(recipient.email) {
 				log.Printf("Skipping invalid recipient address [name: %s] [email: %s]", recipient.name, recipient.email)
+				continue
+			}
+			if suppressedEmails[strings.ToLower(recipient.email)] {
+				log.Printf("Skipping SES suppressed recipient address [name: %s] [email: %s]", recipient.name, recipient.email)
 				continue
 			}
 			stmt := `
